@@ -51,7 +51,7 @@ export function viewDashboard(){
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
     ['suelo','Cubrir el suelo en lluvias','Cobertura y labranza mínima',!(f.sueloDesnudoMeses.length||f.labranza==='convencional')]];
   return `
-  ${S.msg?`<div class="notice" role="status"><span>${esc(S.msg)}</span></div>`:''}
+  ${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
   ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis y especies sirven para mostrar cómo funciona la app, no son mediciones.</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
   <section class="panel">
     <div class="row between">

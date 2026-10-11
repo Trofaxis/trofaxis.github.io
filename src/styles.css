@@ -289,6 +289,8 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .stats .k,.summary .k{color:var(--side-hi);font-size:12px}
 .stats .v{font-size:19px;font-weight:700;margin-top:4px}
 .cards.relaciones{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+/* Texto solo para lectores de pantalla */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 /* Pantallas táctiles: objetivos de toque de 44 px con separación entre ellos (WCAG 2.2, criterio 2.5.8 pide 24; 44 es la recomendación). Escritorio sin cambios. */
 @media (max-width:700px){
   .btn,.btn.sm,.btn.small{min-height:44px}

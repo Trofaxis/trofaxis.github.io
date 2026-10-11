@@ -27,6 +27,7 @@ import { extraerRiego } from './riego/extraer.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
 import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
+import { anunciar } from './ui/avisos.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
@@ -51,8 +52,12 @@ function sesionLista() {
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
 // Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
-function avisoGuardado(){const app=document.getElementById('app');if(!app)return;app.querySelector('#aviso-guardado')?.remove();
-  if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
+// Devuelve el texto solo cuando el aviso aparece por primera vez, para anunciarlo una vez y no en cada redibujado.
+let avisoVisible=false;
+function avisoGuardado(){const app=document.getElementById('app');if(!app)return'';app.querySelector('#aviso-guardado')?.remove();
+  const visible=guardado.fallo&&!guardado.descartado;
+  if(visible)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);
+  const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 function render(){
   // Conserva el foco y el cursor del control que se estaba usando (campo, botón de mes, simulador o acción de fila).
@@ -60,9 +65,9 @@ function render(){
   const ae=document.activeElement;const sel=app&&app.contains(ae)?selectorDeFoco(ae):null;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
   const views={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,riego:viewRiego,fertilizacion:viewFertilizacion,plaguicidas:viewPlaguicidas,casos:viewCasos,ajustes:viewSettings};
   app.innerHTML=(views[S.view]||viewDashboard)();
-  S.msg='';
+  const msg=S.msg;S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
+  montarMapa();applyTheme();guardarLocal(S);anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
