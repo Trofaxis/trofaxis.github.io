@@ -89,6 +89,7 @@ export const tiposPlantilla = () => Object.keys(TPL).filter((k) => !TPL[k].pesta
 export const S = {
   farm: demoFarm(), demo: true, view: 'dashboard', step: 0,
   theme: 'system', // tema visual: system | light | dark
+  problema: '', // problema abierto en el ApiRadar del dashboard: '' | spathodea
   done: {}, // recomendaciones del plan de acción marcadas como hechas
   sim: { n: false, pol: false, riego: false, suelo: false, selec: false }, // cambios activos en el simulador
   io: '', ioMsg: '', confirmReset: false, // respaldo en texto y confirmación de borrado

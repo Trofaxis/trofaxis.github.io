@@ -13,6 +13,7 @@ import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
 import { panelClima } from './clima.js';
+import { panelApiRadar } from './apiradar.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -82,6 +83,7 @@ export function viewDashboard(){
       </article>`).join('')}
     </div></section>
   </div>
+  ${panelApiRadar(f,cfg,X)}
   <section class="panel">
     <div><h2>Presión por mes</h2><p class="muted">Cuántas coincidencias de riesgo caen en cada mes. Pasa el cursor sobre una barra para ver cuáles son.</p></div>
     <div class="scroll">${pressureChart(R.mh)}</div>

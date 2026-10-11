@@ -25,6 +25,17 @@ export const CONFIG = {
       fuenteMetodo: 'Monitoreo en Cultivos Hortícolas, AH Protección Vegetal (Zamorano), diapositiva 5' },
   },
 
+  // ApiRadar: diagnóstico del problema "Spathodea campanulata y abejas nativas" (src/apiradar/diagnostico.js).
+  // No agrega pesos: reutiliza la rúbrica del módulo Polinizadores. Aquí solo van los valores propios del ApiRadar.
+  apiradar: {
+    // Radio de exclusión alrededor de los árboles de riesgo para ubicar colonias o refugios. FUENTE: Barrantes-Vásquez
+    // et al. (2018) dan 300-500 m como rango de vuelo de Trigona fulviventris (resumen del artículo, Guanacaste, Costa Rica).
+    // Para Plebeia melanica no hay cifra en los documentos del proyecto: se usa el mismo radio como referencia (criterio propio).
+    radioExclusionM: [300, 500],
+    // Meses de floración de riesgo desde los que se pide registrar la fecha de las abejas muertas (solo texto de ayuda).
+    topeAcciones: 6,
+  },
+
   // Módulos activos, en el orden en que aparecen en el dashboard.
   modulosActivos: ['poli', 'fert', 'agua', 'suelo', 'troficas'],
 
