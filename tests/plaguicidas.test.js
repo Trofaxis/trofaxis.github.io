@@ -325,7 +325,7 @@ test('llenar el formulario desde el cuadro SAG', () => {
   // Reingreso "S": no se convierte en horas.
   const k = desdeSag(plagBorrador(), 12); // Kumulus
   assert.equal(k.borrador.reingreso, null);
-  assert.ok(k.notas.some((n) => /Reingreso "S"/.test(n)));
+  assert.ok(k.notas.some((n) => /Reingreso "S".*hasta que seque.*criterio propio/.test(n)));
   // Sin producto, se limpia la elección.
   assert.equal(desdeSag({ ...b }, null).borrador.sag, null);
   // Ingredientes nuevos del catálogo.
