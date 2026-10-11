@@ -69,7 +69,7 @@ h3{font-size:15px;font-weight:600}
 p{margin:0}
 .muted{color:var(--muted)}
 .small{font-size:13px}
-.label{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .panel.flat{background:transparent;border-style:dashed;box-shadow:none}
 .notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--pollen-soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px}
@@ -184,7 +184,7 @@ svg text{font-family:var(--f-body)}
 .caso h3{margin:0;font-size:15px;line-height:1.3}
 .caso p{margin:0}
 .caso .sim{font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--accent)}
-.badge{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.badge{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
 .badge.ejemplo{background:var(--pollen-soft);color:var(--pollen)}
 .badge.propio{background:var(--accent-soft);color:var(--ink)}
 .badge.nube{background:var(--accent-soft);color:var(--ink);border-style:dashed}
@@ -195,7 +195,7 @@ pre.formula{white-space:pre-wrap;overflow-x:auto}
 /* Rúbrica por módulo */
 table.rubrica{font-size:13px}
 table.rubrica td{padding:6px 4px}
-.estado{font-size:11px;font-weight:600;margin-top:2px;color:var(--muted)}
+.estado{font-size:12px;font-weight:600;margin-top:2px;color:var(--muted)}
 .estado.verificado{color:var(--good)}
 .estado.criterio-propio{color:var(--pollen)}
 .estado.no-verificado{color:var(--crit)}
@@ -215,7 +215,7 @@ table.cal th.rowh{white-space:normal}
 table.cal tr.inten th.rowh{white-space:normal;vertical-align:top;padding-top:6px}
 table.cal tr.inten td{height:auto;vertical-align:top;padding:4px 1px;overflow:hidden}
 table.cal tr.inten td b{display:block;font-size:14px}
-table.cal tr.inten td span{display:block;font-size:10px;color:var(--muted)}
+table.cal tr.inten td span{display:block;font-size:12px;color:var(--muted)}
 table.cal tr.inten td.i1{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
 table.cal tr.inten td.i2{background:color-mix(in srgb,var(--crit) 28%,var(--surface))}
 table.cal tr.inten td.i3{background:color-mix(in srgb,var(--crit) 50%,var(--surface))}
@@ -270,10 +270,10 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .mapa-zoom{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,.25)}
 .mapa-zoom button{width:32px;height:32px;font:600 18px var(--f-body);background:#fff;color:#1B2A22;border:none;cursor:pointer}
 .mapa-zoom button+button{border-top:1px solid #D8DED4}
-.mapa-atrib{position:absolute;right:0;bottom:0;max-width:100%;font-size:10px;line-height:1.3;padding:2px 6px;background:rgba(255,255,255,.8);color:#1B2A22;border-top-left-radius:6px;text-decoration:none}
+.mapa-atrib{position:absolute;right:0;bottom:0;max-width:100%;font-size:12px;line-height:1.3;padding:2px 6px;background:rgba(255,255,255,.8);color:#1B2A22;border-top-left-radius:6px;text-decoration:none}
 .mapa-ctrl button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .mapa-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 16px;margin:6px 0}
-.mapa-datos dt{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.mapa-datos dt{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 .mapa-datos dd{margin:0;font-family:var(--f-mono);font-size:13.5px}
 .mapa-aviso{color:var(--warn);margin:4px 0}
 .mapa-msg{margin:4px 0}
@@ -281,11 +281,11 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 
 /* Tarjetas KPI del resumen de la finca: verde oscuro como en el diseño de Figma */
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.summary .k{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.summary .k{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .summary .v{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.3;margin-top:4px}
 .stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 @media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stats>div,.summary>div{padding:12px}.stats .v{font-size:16px}}
 .stats>div,.summary>div{border-radius:16px;padding:14px 16px;color:var(--side-ink);background:linear-gradient(135deg,var(--side) 0%,var(--side-2) 100%);box-shadow:0 8px 20px rgba(20,60,45,.18)}
-.stats .k,.summary .k{color:var(--side-hi);font-size:11.5px}
+.stats .k,.summary .k{color:var(--side-hi);font-size:12px}
 .stats .v{font-size:19px;font-weight:700;margin-top:4px}
 .cards.relaciones{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}

@@ -8,8 +8,8 @@ export function gauge(v,level){
     <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="var(--chip)" stroke-width="16" stroke-linecap="round"/>
     <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${Math.max(v,1)} 100"/>
     <text x="100" y="88" text-anchor="middle" font-size="38" font-weight="600" fill="var(--ink)" font-family="JetBrains Mono, monospace">${v}</text>
-    <text x="20" y="116" text-anchor="middle" font-size="11" fill="var(--muted)">0</text>
-    <text x="180" y="116" text-anchor="middle" font-size="11" fill="var(--muted)">100</text></svg>
+    <text x="20" y="116" text-anchor="middle" font-size="12" fill="var(--muted)">0</text>
+    <text x="180" y="116" text-anchor="middle" font-size="12" fill="var(--muted)">100</text></svg>
     <span class="pill ${level}">Riesgo ${level.toLowerCase()}</span></div>`;
 }
 // Índice global cuando ningún módulo tiene datos suficientes: no se dibuja un número que parezca un resultado.
@@ -26,7 +26,7 @@ export function radar(mods){
   mods.forEach((m,i)=>{const[x,y]=pt(i,R);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;
     const[lx,ly]=pt(i,R+20);const anchor=Math.abs(lx-cx)<8?'middle':lx>cx?'start':'end';
     g+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" font-size="12.5" fill="var(--muted)">${m.nombre}</text><text x="${lx}" y="${ly+15}" text-anchor="${anchor}" font-size="13" font-weight="600" fill="var(--ink)">${m.score}</text>`;});
-  g+=`<text x="${cx+4}" y="${cy-R*.5+4}" font-size="10" fill="var(--muted)">50</text>`;
+  g+=`<text x="${cx+4}" y="${cy-R*.5+4}" font-size="12" fill="var(--muted)">50</text>`;
   const poly=mods.map((m,i)=>pt(i,R*m.score/100).join(',')).join(' ');
   g+=`<polygon points="${poly}" fill="var(--accent)" fill-opacity=".22" stroke="var(--accent)" stroke-width="2"/>`;
   mods.forEach((m,i)=>{const[x,y]=pt(i,R*m.score/100);const c=m.level==='Alto'?'var(--crit)':m.level==='Medio'?'var(--warn)':'var(--good)';
@@ -36,7 +36,7 @@ export function radar(mods){
 export function pressureChart(mh){
   const W=640,H=190,L=30,T=22,B=30,iw=W-L-8,ih=H-T-B;const mx=Math.max(3,...mh.map(a=>a.length));
   const y=v=>T+ih-(v/mx)*ih;const bw=iw/12*.6;let g='';
-  for(let v=0;v<=mx;v++)g+=`<line x1="${L}" x2="${W-8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
+  for(let v=0;v<=mx;v++)g+=`<line x1="${L}" x2="${W-8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)">${v}</text>`;
   mh.forEach((a,i)=>{const cx=L+iw*(i+.5)/12;const n=a.length;const col=n>=2?'var(--crit)':'var(--warn)';
     if(n)g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${T+ih-y(n)}" rx="3" fill="${col}"><title>${MFULL[i]}: ${a.join('; ')}</title></rect><text x="${cx}" y="${y(n)-5}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">${n}</text>`;
     else g+=`<rect x="${cx-bw/2}" y="${T+ih-3}" width="${bw}" height="3" rx="1.5" fill="var(--good)"><title>${MFULL[i]}: sin coincidencias</title></rect>`;
@@ -72,12 +72,12 @@ export function tplChart(t){
   const maxV=Math.max(t.objetivo||0,...vals,1)*1.15;
   const W=640,H=240,L=48,B=32,T=16,Rr=16,iw=W-L-Rr,ih=H-T-B,bw=rows.length?Math.min(48,iw/rows.length*0.6):0;
   const y=v=>T+ih-(v/maxV)*ih;
-  let g='';[0,.25,.5,.75,1].forEach(k=>{const v=maxV*k;g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${Math.round(v)}</text>`;});
+  let g='';[0,.25,.5,.75,1].forEach(k=>{const v=maxV*k;g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)">${Math.round(v)}</text>`;});
   rows.forEach((r,i)=>{const cx=L+iw*(i+.5)/rows.length;const v=vals[i];const over=t.objetivo>0&&v>t.objetivo;
     g+=`<rect x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${T+ih-y(v)}" rx="3" fill="${over?'var(--crit)':'var(--accent)'}" fill-opacity="${over?.85:.75}"><title>${esc(r.fecha)} · ${esc(r.lote)}: ${v} ${def.unidad}</title></rect>
-    <text x="${cx}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(String(r.fecha).slice(5))}</text>
-    <text x="${cx}" y="${y(v)-6}" text-anchor="middle" font-size="11" fill="var(--ink)">${Math.round(v)}</text>`;});
-  if(t.objetivo>0)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(t.objetivo)}" y2="${y(t.objetivo)}" stroke="var(--pollen)" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-Rr}" y="${y(t.objetivo)-6}" text-anchor="end" font-size="11" fill="var(--pollen)">Objetivo ${t.objetivo}</text>`;
+    <text x="${cx}" y="${H-12}" text-anchor="middle" font-size="12" fill="var(--muted)">${esc(String(r.fecha).slice(5))}</text>
+    <text x="${cx}" y="${y(v)-6}" text-anchor="middle" font-size="12" fill="var(--ink)">${Math.round(v)}</text>`;});
+  if(t.objetivo>0)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(t.objetivo)}" y2="${y(t.objetivo)}" stroke="var(--pollen)" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-Rr}" y="${y(t.objetivo)-6}" text-anchor="end" font-size="12" fill="var(--pollen)">Objetivo ${t.objetivo}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Registros frente al objetivo" style="width:100%;min-width:480px;height:auto">${g}</svg>`;
 }
 // Dispersión de un par de módulos: cada punto es una finca (x = riesgo de A, y = riesgo de B, de 0 a 100).
@@ -87,9 +87,9 @@ export function dispersion(par,puntos){
   const W=300,H=260,L=40,T=12,R=12,B=40,iw=W-L-R,ih=H-T-B;
   const x=v=>L+v/100*iw,y=v=>T+ih-v/100*ih;let g='';
   [0,25,50,75,100].forEach(v=>{g+=`<line x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${T+ih}" stroke="var(--line)"/><line x1="${L}" x2="${L+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>`
-    +`<text x="${x(v)}" y="${T+ih+14}" text-anchor="middle" font-size="10" fill="var(--muted)">${v}</text><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;});
-  g+=`<text x="${L+iw/2}" y="${H-6}" text-anchor="middle" font-size="11.5" fill="var(--ink)">Riesgo de ${esc(par.nombreA.toLowerCase())}</text>`;
-  g+=`<text transform="translate(11 ${T+ih/2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--ink)">Riesgo de ${esc(par.nombreB.toLowerCase())}</text>`;
+    +`<text x="${x(v)}" y="${T+ih+14}" text-anchor="middle" font-size="12" fill="var(--muted)">${v}</text><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${v}</text>`;});
+  g+=`<text x="${L+iw/2}" y="${H-6}" text-anchor="middle" font-size="12" fill="var(--ink)">Riesgo de ${esc(par.nombreA.toLowerCase())}</text>`;
+  g+=`<text transform="translate(11 ${T+ih/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="var(--ink)">Riesgo de ${esc(par.nombreB.toLowerCase())}</text>`;
   const ord=[...puntos].sort((p,q)=>(p.origen==='actual')-(q.origen==='actual'));
   ord.forEach(p=>{const cx=x(p.v[par.a]),cy=y(p.v[par.b]);const tip=`<title>${esc(p.etiqueta)}: ${par.nombreA} ${p.v[par.a]}, ${par.nombreB} ${p.v[par.b]}</title>`;
     if(p.origen==='actual')g+=`<path d="M${cx} ${cy-7}L${cx+7} ${cy}L${cx} ${cy+7}L${cx-7} ${cy}Z" fill="var(--crit)" stroke="var(--surface)" stroke-width="1.5">${tip}</path>`;
