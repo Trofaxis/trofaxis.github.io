@@ -4,7 +4,7 @@
 
 **Riesgo del módulo = Σ peso × puntaje ÷ Σ peso**, solo con las variables que tienen dato.
 
-**Confianza de datos = peso con dato ÷ peso total.** Un dato faltante baja la confianza; no cuenta como riesgo cero. Una variable que **no aplica** a la finca (p. ej. fertirriego si no se usa) no cuenta para nada.
+**Confianza de datos = peso con dato ÷ peso total.** Un dato faltante baja la confianza; no cuenta como riesgo cero. Una variable que **no aplica** a la finca (p. ej. fertirriego si no se usa) no cuenta para nada. Una pregunta **sin responder** (pendiente, distancia al agua, sistema de riego y labranza empiezan en `null`) tampoco es dato: «sin riego» o «plana» solo cuentan cuando el usuario los elige.
 
 Niveles: **Alto** ≥ 67 · **Medio** ≥ 34 · **Bajo** < 34. Pesos, cortes y niveles se ajustan en `src/core/config.js`.
 

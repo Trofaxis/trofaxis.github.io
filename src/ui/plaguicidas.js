@@ -180,7 +180,7 @@ export function viewPlaguicidas() {
           ${numero('pq-cos', 'Días a cosecha', 'draftPlag.diasCosecha', d.diasCosecha, 'Intervalo de seguridad para tu cultivo')}
           ${numero('pq-rei', 'Horas de reingreso', 'draftPlag.reingreso', d.reingreso, 'Antes de volver a entrar al lote')}
           ${numero('pq-max', 'Aplicaciones por ciclo', 'draftPlag.aplicMax', d.aplicMax, 'Máximo que permite la etiqueta')}
-          ${numero('pq-fr', 'Franja sin aplicar hacia el agua (m)', 'draftPlag.franja', d.franja, `Tu cuerpo de agua está a ${fmt(f.distAgua, 0)} m`)}
+          ${numero('pq-fr', 'Franja sin aplicar hacia el agua (m)', 'draftPlag.franja', d.franja, f.distAgua == null ? 'Aún no indicas la distancia al cuerpo de agua (paso Finca)' : `Tu cuerpo de agua está a ${fmt(f.distAgua, 0)} m`)}
           ${numero('pq-phmin', 'pH mínimo del agua', 'draftPlag.phMin', d.phMin, 'Si la etiqueta lo indica', 'max="14"')}
           ${numero('pq-phmax', 'pH máximo del agua', 'draftPlag.phMax', d.phMax, '', 'max="14"')}
         </div>

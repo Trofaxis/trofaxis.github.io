@@ -14,8 +14,8 @@ export default {
     const variables = [
       variable('sueloDesnudoLluvia', 'Suelo desnudo en meses de lluvia', R.sueloDesnudoLluvia.peso,
         f.lluviaMeses.length ? porCortes(ovs, R.sueloDesnudoLluvia) : null, f.lluviaMeses.length ? `${ovs} mes(es)` : 'Sin meses de lluvia'),
-      variable('labranza', 'Tipo de labranza', R.labranza.peso, K.labranza[f.labranza], f.labranza),
-      variable('pendiente', 'Pendiente', R.pendiente.peso, K.pendiente[f.pendiente], f.pendiente),
+      variable('labranza', 'Tipo de labranza', R.labranza.peso, K.labranza[f.labranza] ?? null, f.labranza ?? 'Sin responder'),
+      variable('pendiente', 'Pendiente', R.pendiente.peso, K.pendiente[f.pendiente] ?? null, f.pendiente ?? 'Sin responder'),
       { ...variable('fertSueloDesnudo', 'Fertilizante sobre suelo desnudo en lluvias', R.fertSueloDesnudo.peso,
         plan && f.lluviaMeses.length ? porCortes(plan.fracSueloDesnudo, R.fertSueloDesnudo) : null,
         !plan ? '' : !f.lluviaMeses.length ? 'Sin meses de lluvia' : `${Math.round(plan.fracSueloDesnudo * 100)} % del N y P₂O₅`,

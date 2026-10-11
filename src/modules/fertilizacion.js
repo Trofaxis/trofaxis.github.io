@@ -28,8 +28,8 @@ export default {
         plan ? `${pct(plan.fracUreaVoleo)} del N` : sinPlan),
       variable('fosforo', 'Dosis de P₂O₅ frente al objetivo', R.fosforo.peso, plan ? porCortes(plan.ratio.p, R.fosforo) : null,
         !plan ? sinPlan : plan.ratio.p == null ? 'Sin objetivo de P₂O₅' : `${Math.round(plan.tot.p)} de ${f.pObjetivo} kg/ha (${pct(plan.ratio.p)})`),
-      variable('pendiente', 'Pendiente (arrastre por escorrentía)', R.pendiente.peso, cfg.categorias.pendiente[f.pendiente], f.pendiente),
-      variable('distancia', 'Distancia al cuerpo de agua', R.distancia.peso, porCortes(f.distAgua, R.distancia), `${f.distAgua} m`),
+      variable('pendiente', 'Pendiente (arrastre por escorrentía)', R.pendiente.peso, cfg.categorias.pendiente[f.pendiente] ?? null, f.pendiente ?? 'Sin responder'),
+      variable('distancia', 'Distancia al cuerpo de agua', R.distancia.peso, porCortes(f.distAgua, R.distancia), f.distAgua == null ? 'Sin responder' : `${f.distAgua} m`),
     ];
     const recs = [];
     if (ratio > 1) recs.push(`La dosis supera el objetivo de la finca en ${Math.round((ratio - 1) * 100)} %. Ajustar hacia ${f.nObjetivo} kg N/ha.`);

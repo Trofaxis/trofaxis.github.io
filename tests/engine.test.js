@@ -65,7 +65,7 @@ test('cada variable tiene puntaje 0, 50, 100 o sin dato, y dice su estado de evi
 });
 
 const EXPECT_DEMO = [["poli",88,"Alto",1],["fert",60,"Medio",1],["agua",71,"Alto",0.67],["suelo",63,"Medio",1],["troficas",58,"Medio",1]];
-const EXPECT_EMPTY = [["poli",0,"Bajo",0],["fert",0,"Bajo",0.2],["agua",0,"Bajo",0.5],["suelo",0,"Bajo",0.59],["troficas",0,"Bajo",0]];
+const EXPECT_EMPTY = [["poli",0,"Bajo",0],["fert",0,"Bajo",0],["agua",0,"Bajo",0],["suelo",0,"Bajo",0],["troficas",0,"Bajo",0]];
 
 import { simular } from '../src/core/engine.js';
 
@@ -116,6 +116,25 @@ test('la fila de intensidad tiene una celda por mes, igual que el calendario (is
   assert.equal((html.match(/<td /g) || []).length, 12);
   assert.equal((html.match(/<th /g) || []).length, 1);
   assert.match(html, /<b>2<\/b><span>Pol<\/span><span>Sue<\/span>/);
+});
+
+test('una pregunta sin responder no cuenta como dato: la finca vacía tiene confianza 0 en todos los módulos', () => {
+  const f = emptyFarm();
+  assert.deepEqual([f.pendiente, f.distAgua, f.riego, f.labranza], [null, null, null, null]);
+  evaluar(f).mods.forEach((m) => assert.equal(m.conf, 0, `${m.id} no debería tener confianza sin respuestas`));
+});
+
+test('responder una pregunta sí cuenta: «Sin riego» y «plana» son respuestas', () => {
+  const R = evaluar({ ...emptyFarm(), riego: 'ninguno', pendiente: 'plana', distAgua: 500, labranza: 'cero' });
+  const conf = Object.fromEntries(R.mods.map((m) => [m.id, m.conf]));
+  assert.ok(conf.agua > 0 && conf.suelo > 0 && conf.fert > 0);
+});
+
+test('sin responder, las recomendaciones no inventan problemas (distancia al agua y riego)', () => {
+  const R = evaluar(emptyFarm());
+  const recs = R.mods.flatMap((m) => m.recs).join(' | ');
+  assert.ok(!/franja de amortiguamiento/.test(recs));
+  assert.ok(!/diseño de riego/.test(recs));
 });
 
 test('el simulador de nitrógeno baja el N al objetivo y no toca el fósforo ni el potasio de un NPK', () => {

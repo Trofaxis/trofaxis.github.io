@@ -138,7 +138,7 @@ test('cargar la finca valida lo que baja y una sesión vencida pide volver a ent
   const f = await crearCliente({ cfg: cfgOk, fetchFn: s.fn }).cargarFinca(sesion);
   assert.equal(f.nombre, 'Mi finca');
   assert.equal(f.area, 0);
-  assert.equal(f.pendiente, 'plana');
+  assert.equal(f.pendiente, null);
   const vencida = simulador(respuesta({ msg: 'jwt expired' }, 401));
   await assert.rejects(() => crearCliente({ cfg: cfgOk, fetchFn: vencida.fn }).cargarFinca(sesion), (e) => e instanceof ErrorNube && e.estado === 401);
   const vacia = simulador(respuesta([]));

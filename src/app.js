@@ -170,7 +170,7 @@ document.addEventListener('click',e=>{
 });
 function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
-  else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else o[k]=el.value;
+  else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else if(el.tagName==='SELECT'&&el.value===''&&'nullable' in el.dataset)o[k]=null;else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
 document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);avisoGuardado();}});
 document.addEventListener('change',e=>{const el=e.target;

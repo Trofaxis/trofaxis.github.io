@@ -33,7 +33,7 @@ export function normalizarFinca(o) {
     nombre: txt(o.nombre), depto: txt(o.depto),
     area: num(o.area), areaProd: num(o.areaProd), altitud: num(o.altitud),
     pendiente: opcion(o.pendiente, ['plana', 'ondulada', 'fuerte'], v.pendiente),
-    fuenteAgua: txt(o.fuenteAgua), distAgua: num(o.distAgua, v.distAgua),
+    fuenteAgua: txt(o.fuenteAgua), distAgua: numONulo(o.distAgua, 1e6),
     tieneCultivos: bool(o.tieneCultivos),
     cultivos: lista(o.cultivos, (c) => c && { nombre: txt(c.nombre), ha: num(c.ha), siembra: meses(c.siembra), cosecha: meses(c.cosecha) }),
     especies: lista(o.especies, (e) => e && {

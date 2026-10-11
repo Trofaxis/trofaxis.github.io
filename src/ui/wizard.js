@@ -33,7 +33,7 @@ export function viewWizard(){
     ${field('w-alt','Altitud','farm.altitud',f.altitud,'number','Metros sobre el nivel del mar')}
     ${select('w-pend','Pendiente predominante','farm.pendiente',f.pendiente,[['plana','Plana'],['ondulada','Ondulada'],['fuerte','Fuerte']])}
     ${field('w-fuente','Fuente de agua principal','farm.fuenteAgua',f.fuenteAgua,'text','Pozo, quebrada, río, reservorio')}
-    ${field('w-dist','Distancia al cuerpo de agua más cercano','farm.distAgua',f.distAgua,'number','Metros')}
+    ${field('w-dist','Distancia al cuerpo de agua más cercano','farm.distAgua',f.distAgua,'number','Metros',true)}
   </div>${f.areaProd>f.area&&f.area>0?'<p class="warnmsg">El área productiva no puede ser mayor que el área total.</p>':''}
   ${bloqueUbicacion()}`;
   if(s===1)body=`<h2>¿Tienes cultivos?</h2>

@@ -31,9 +31,9 @@ export function perfil(f, cfg = CONFIG) {
   return {
     cultivo: cultivoPrincipal(f),
     cultivoNombre: nombreCultivoPrincipal(f),
-    pendiente: PENDIENTE[f.pendiente],
-    riego: f.riego,
-    distAgua: Math.min(f.distAgua, tope) / tope,
+    pendiente: PENDIENTE[f.pendiente] ?? null,
+    riego: f.riego ?? null,
+    distAgua: f.distAgua == null ? null : Math.min(f.distAgua, tope) / tope,
     propNativas: silvestres.length ? silvestres.filter((e) => e.origen === 'nativa').length / silvestres.length : null,
     mesesCoincidencia: R.mh.filter((a) => a.length).length / 12,
     scores: Object.fromEntries(R.mods.map((m) => [m.id, m.score / 100])),

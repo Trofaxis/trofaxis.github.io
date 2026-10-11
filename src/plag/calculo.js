@@ -245,7 +245,7 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
     : aviso('criterio', 'Aplicación en mes de cosecha', `Aplicas en ${mesesTxt(enCosecha)}. Anota los días a cosecha de la etiqueta para revisar el intervalo de seguridad.`, 'etiquetas'));
   if (a.aplicMax != null && a.meses.length > a.aplicMax) out.push(aviso('advertencia', 'Más aplicaciones que las que permite la etiqueta',
     `Aplicas en ${a.meses.length} meses y la etiqueta permite ${a.aplicMax} aplicación(es) por ciclo.`, 'etiquetas'));
-  if (a.franja != null && f.distAgua < a.franja) out.push(aviso('error', 'Muy cerca del agua',
+  if (a.franja != null && f.distAgua != null && f.distAgua < a.franja) out.push(aviso('error', 'Muy cerca del agua',
     `El cuerpo de agua está a ${fmt(f.distAgua, 0)} m y la etiqueta pide una franja de ${fmt(a.franja, 0)} m sin aplicar.`, 'etiquetas'));
   // 6. Monitoreo previo (clase: Monitoreo en cultivos hortícolas).
   if (USOS_MONITOREO.includes(a.uso) && !a.monitoreo) out.push(aviso('criterio', 'Sin monitoreo previo registrado',
