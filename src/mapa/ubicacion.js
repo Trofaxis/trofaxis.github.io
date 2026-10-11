@@ -43,3 +43,24 @@ export function guardarUbicacion(u) {
 export function borrarUbicacion() {
   try { localStorage.removeItem(CLAVE); } catch { /* sin almacenamiento */ }
 }
+
+// Respaldo propio del mapa y el censo: un archivo aparte del de la finca. Lleva coordenadas exactas, por eso nunca
+// se mezcla con el archivo de la finca, la nube ni la memoria de casos.
+export const FORMATO_MAPA = 'biogap-mapa';
+export const VERSION_MAPA = 1;
+export const hayDatosPropios = (u) => !u.ejemplo && !!(u.punto || u.contorno.length || u.arboles.length || u.sitios.length);
+
+export function exportarUbicacion(u) {
+  return JSON.stringify({ formato: FORMATO_MAPA, version: VERSION_MAPA, guardado: new Date().toISOString(), ubicacion: normalizarUbicacion(u) }, null, 2);
+}
+
+// Devuelve la ubicación validada o lanza un Error con un mensaje para el usuario.
+export function importarUbicacion(texto) {
+  let o;
+  try { o = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
+  if (!o || o.formato !== FORMATO_MAPA) throw new Error('El archivo no es un respaldo de mapa y censo de BioG.A.P.');
+  if (typeof o.version !== 'number' || o.version > VERSION_MAPA) throw new Error('El archivo viene de una versión más nueva de la app.');
+  const u = normalizarUbicacion(o.ubicacion);
+  if (!hayDatosPropios(u)) throw new Error('El archivo no trae punto, contorno, árboles ni sitios.');
+  return u;
+}
