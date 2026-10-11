@@ -50,6 +50,7 @@ test('reset-yes borra la finca, las plantillas, lo marcado, el riego propio y la
   dom.almacen.set(CLAVE_MAPA, JSON.stringify({ punto: [14.1, -87.2] })); // la ubicación vive en el navegador
 
   dom.clic('reset-yes');
+  dom.cerrarPagina(); // fuerza el guardado pendiente, si la app guarda con espera
 
   assert.deepEqual(S.farm, emptyFarm());
   assert.equal(S.demo, false);
@@ -233,6 +234,7 @@ test('caso-guardar con el almacenamiento lleno avisa que el caso solo quedó en 
   globalThis.__sinAlmacen = true;
   try {
     dom.clic('caso-guardar');
+    dom.cerrarPagina(); // si la app guarda con espera, el intento de guardar la finca ocurre aquí, con el almacenamiento lleno
   } finally { globalThis.__sinAlmacen = false; }
   assert.equal(S.casos.length, 1, 'el caso queda en la sesión');
   assert.match(dom.pantalla(), /<span>El caso quedó en esta sesión, pero el navegador no permitió guardarlo\.<\/span>/);

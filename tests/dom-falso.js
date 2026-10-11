@@ -1,7 +1,8 @@
 // DOM mínimo para probar las vistas y las acciones de src/app.js en Node, sin navegador ni dependencias.
 // No es un archivo de pruebas (no termina en .test.js): lo importan las pruebas de humo.
 export function instalarDOM() {
-  const escuchas = {};
+  const escuchas = {}; // del documento
+  const escuchasVentana = {}; // de la ventana (pagehide…)
   const elementos = {};
   const crear = (id = '') => ({
     id, innerHTML: '', textContent: '', dataset: {}, style: {}, value: '', checked: false, tagName: 'DIV', children: [],
@@ -19,12 +20,14 @@ export function instalarDOM() {
     removeItem: (k) => { almacen.delete(k); },
   };
   globalThis.document = {
-    activeElement: null, body: crear('body'), documentElement: crear('html'),
+    activeElement: null, visibilityState: 'visible', body: crear('body'), documentElement: crear('html'),
     getElementById: (id) => elementos[id] ?? null,
     querySelector: () => null, querySelectorAll: () => [], createElement: (t) => crear(t), dispatchEvent() {},
     addEventListener: (tipo, fn) => { (escuchas[tipo] ??= []).push(fn); },
   };
-  globalThis.window = { scrollTo() {}, addEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {} }) };
+  const alVentana = (tipo, fn) => { (escuchasVentana[tipo] ??= []).push(fn); };
+  globalThis.addEventListener = alVentana;
+  globalThis.window = { scrollTo() {}, addEventListener: alVentana, matchMedia: () => ({ matches: false, addEventListener() {} }) };
   globalThis.location = { hash: '', pathname: '/', search: '', origin: 'http://prueba.local' };
   globalThis.history = { replaceState() {} };
   const emitir = (tipo, evento) => (escuchas[tipo] ?? []).forEach((fn) => fn(evento));
@@ -38,5 +41,7 @@ export function instalarDOM() {
     // Un clic sobre una pestaña (data-view).
     irA(vista) { emitir('click', { target: { closest: (sel) => (sel === '[data-view]' ? { dataset: { view: vista } } : null) } }); },
     pantalla: () => elementos.app.innerHTML,
+    // La persona cierra o esconde la página: la app guarda lo pendiente (si guarda con espera, aquí se fuerza; si no, no hace nada).
+    cerrarPagina() { (escuchasVentana.pagehide ?? []).forEach((fn) => fn({})); },
   };
 }
