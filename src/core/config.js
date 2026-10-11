@@ -3,6 +3,10 @@
 // mover umbrales de nivel y ajustar factores, sin tocar las fórmulas.
 // Los pesos y cortes son criterio propio salvo que se indique la fuente; están por calibrar con datos reales.
 
+// Tamaño máximo de un respaldo de finca (archivo o texto pegado), en bytes. Criterio propio: una finca real pesa decenas de KB;
+// un texto mucho mayor congelaría la pestaña al hacer JSON.parse.
+export const LIMITE_RESPALDO_BYTES = 2_000_000;
+
 export const CONFIG = {
   // Propósitos de manejo para fincas sin cultivos: cada uno enfoca el dashboard en sus módulos.
   // Para agregar uno nuevo basta con sumarlo aquí.

@@ -3,7 +3,7 @@
 // así un archivo viejo, incompleto o editado a mano nunca rompe la app.
 
 import { emptyFarm, TPL, tiposPlantilla } from './state.js';
-import { CONFIG } from './config.js';
+import { CONFIG, LIMITE_RESPALDO_BYTES } from './config.js';
 import { MODULOS } from '../modules/index.js';
 import { normalizarPlag } from '../plag/modelo.js';
 import { normalizarClima } from '../clima/normales.js';
@@ -133,8 +133,15 @@ export function exportarTexto(farm, ajustes, tpl) {
   return JSON.stringify({ formato: FORMATO, version: VERSION, guardado: new Date().toISOString(), finca: farm, ajustes, ...(tpl ? { plantillas: { ...tpl, paste: '' } } : {}) }, null, 2);
 }
 
+export const MENSAJE_RESPALDO_GRANDE = `El respaldo es demasiado grande (máximo ${LIMITE_RESPALDO_BYTES / 1_000_000} MB).`;
+// Antes de leer el archivo ya se sabe su tamaño; con texto pegado hay que medirlo (un carácter puede ocupar hasta 3 bytes).
+export const respaldoDemasiadoGrande = (bytes) => bytes > LIMITE_RESPALDO_BYTES;
+
 // Devuelve { farm, ajustes } o lanza un Error con un mensaje para el usuario.
 export function importarTexto(texto) {
+  if (typeof texto !== 'string') throw new Error('El archivo no es un JSON válido.');
+  // Primero el largo (barato): si ya pasa el límite en caracteres, pasa también en bytes. Solo si cabe se mide en bytes.
+  if (respaldoDemasiadoGrande(texto.length) || respaldoDemasiadoGrande(new TextEncoder().encode(texto).length)) throw new Error(MENSAJE_RESPALDO_GRANDE);
   let o;
   try { o = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
   if (!o || o.formato !== FORMATO) throw new Error('El archivo no es una finca de BioG.A.P.');
