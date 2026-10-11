@@ -18,7 +18,8 @@ import { extraerFert, PLANTILLA_CSV } from './fert/extraer.js';
 import { nombreCultivoPrincipal } from './casos/perfil.js';
 import { casoAnonimo } from './casos/anonimo.js';
 import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
-import { casoEjemplo, riegoVacio, declaradosEjemplo } from './riego/calculo.js';
+import { riegoVacio } from './riego/calculo.js';
+import { riegoInicial } from './riego/guardado.js';
 import { leerXlsx, ErrorLectura } from './riego/xlsx.js';
 import { leerCsv } from './riego/csv.js';
 import { extraerRiego } from './riego/extraer.js';
@@ -117,7 +118,7 @@ document.addEventListener('click',e=>{
   else if(act==='sim-reset'){Object.keys(S.sim).forEach(k=>S.sim[k]=false);}
   else if(act==='reset'){S.confirmReset=true;}
   else if(act==='reset-no'){S.confirmReset=false;}
-  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
+  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.riego=riegoInicial();S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
   else if(act==='io-copy'){
     const txt=exportarTexto(S.farm,S.ajustes,S.tpl);S.io=txt;render();
     const box=document.getElementById('io-box');const m=document.getElementById('io-msg');
@@ -149,7 +150,7 @@ document.addEventListener('click',e=>{
   else if(act.startsWith('nube-')){nubeAccion(act);return;}
   else if(act==='caso-rm'){S.casos=S.casos.filter(c=>c.id!==a.dataset.id);guardarCasos(S.casos);S.msg='Caso quitado de la memoria.';}
   else if(act==='riego-import'){importarRiego();return;}
-  else if(act==='riego-ejemplo'){S.riego={datos:casoEjemplo(),fuente:'ejemplo',archivo:'',origen:{},declarados:declaradosEjemplo(),faltan:[],omitidas:[]};}
+  else if(act==='riego-ejemplo'){S.riego=riegoInicial();}
   else if(act==='riego-blanco'){S.riego={datos:riegoVacio(),fuente:'manual',archivo:'',origen:{},declarados:{},faltan:[],omitidas:[]};climaARiego();}
   else if(act==='riego-add-suelo'){S.riego.datos.suelo.push({nombre:`Parte ${S.riego.datos.suelo.length+1}`,area:null,textura:'',da:null,cc:null,pmp:null,pedregosidad:null,infiltracion:null});}
   else if(act==='riego-rm-suelo'){S.riego.datos.suelo.splice(+a.dataset.i,1);}

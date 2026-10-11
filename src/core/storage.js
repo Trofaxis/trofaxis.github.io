@@ -7,6 +7,7 @@ import { CONFIG } from './config.js';
 import { MODULOS } from '../modules/index.js';
 import { normalizarPlag } from '../plag/modelo.js';
 import { normalizarClima } from '../clima/normales.js';
+import { riegoAGuardar, normalizarRiego } from '../riego/guardado.js';
 
 export const FORMATO = 'biogap-finca';
 export const VERSION = 1;
@@ -142,7 +143,7 @@ export function importarTexto(texto) {
 
 // Autoguardado en el navegador. Falla en silencio si el navegador lo bloquea.
 export function guardarLocal(S) {
-  try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme })); } catch { /* sin almacenamiento */ }
+  try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, riego: riegoAGuardar(S.riego) })); } catch { /* sin almacenamiento */ }
 }
 
 export function cargarLocal(tplBase) {
@@ -150,9 +151,11 @@ export function cargarLocal(tplBase) {
     const raw = localStorage.getItem(CLAVE_LOCAL);
     if (!raw) return null;
     const o = JSON.parse(raw);
+    const riego = normalizarRiego(o.riego); // sin datos propios guardados, S.riego se queda con el ejemplo
     return {
       farm: normalizarFinca(o.farm), ajustes: normalizarAjustes(o.ajustes), demo: o.demo === true,
       tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'system'),
+      ...(riego ? { riego } : {}),
     };
   } catch { return null; }
 }

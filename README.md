@@ -117,7 +117,8 @@ Este repositorio es la **única versión oficial**. Cualquier asistente (Claude 
 - [x] Mapa satelital con contorno y área (Issue #10)
 - [x] Pestaña Plaguicidas: peligro para himenópteros por ingrediente activo y dosis, etiqueta, condiciones y cuadro SAG
 - [x] Clima por ubicación: Open-Meteo por coordenadas, con respaldo manual (Issue #8)
-- [ ] Guardar los datos de riego con la finca (hoy se pierden al recargar la página)
+- [x] Guardar los datos de riego en el navegador (sobreviven a recargar la página)
+- [ ] Llevar los datos de riego también en el archivo exportado de la finca
 - [ ] Diseño hidráulico y cubicación de reservorio
 - [ ] Más cultivos en `src/riego/referencias.js` (hoy solo maíz)
 - [ ] Perfiles de configuración por cultivo o exportador
