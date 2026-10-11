@@ -45,7 +45,7 @@ export function viewRiego() {
       : `<b>Datos ingresados a mano.</b> Los campos vacíos usan valores de referencia cuando existen.`;
 
   return `
-  ${S.msg ? `<div class="notice" role="status"><span>${esc(S.msg)}</span></div>` : ''}
+  ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
     <div class="row" style="justify-content:space-between">
       <div><p class="label">Riego por goteo</p><h1>${esc(d.cultivo || 'Diseño sin cultivo')}${d.areaLote ? ` · ${fmt(d.areaLote, 2)} ha` : ''}</h1>
