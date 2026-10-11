@@ -13,6 +13,25 @@ const estado = (e, fuente, clave) => estadoFuente(e, fuente, `fuente-ar-${clave}
 const delta = (a) => (a.delta == null ? '<span class="muted small">no se cuantifica</span>'
   : `<span class="delta ${a.delta < 0 ? 'down' : a.delta > 0 ? 'up' : 'zero'}">${a.delta > 0 ? '+' : ''}${a.delta}</span> <span class="muted small">(${a.de} → ${a.a})</span>`);
 
+// Primer nivel: sin cifras técnicas. El detalle de cada acción queda en «4. Qué hacer».
+const cuantoBaja = (a) => {
+  if (a.delta == null) return 'No se puede medir cuánto baja el riesgo con esta acción.';
+  if (a.delta < 0) return `Con este cambio el riesgo baja de <b>${a.de}</b> a <b>${a.a}</b> (<span class="delta down">${a.delta}</span>).`;
+  if (a.delta === 0) return 'Con este cambio el puntaje de riesgo no cambia.';
+  return `Ojo: este cambio, hecho primero, sube el riesgo de <b>${a.de}</b> a <b>${a.a}</b> (<span class="delta up">+${a.delta}</span>). Mira el orden de las acciones más abajo.`;
+};
+function primeroQueHacer(R) {
+  const a = R.acciones[0];
+  if (!a) return '';
+  return `<div class="primero" id="apiradar-primero">
+    <h3>Qué hacer primero</h3>
+    <div class="row between"><b>${esc(a.titulo)}</b><span class="tag">Cuándo: ${esc(a.cuando)}</span></div>
+    <p>${cuantoBaja(a)}</p>
+    <div class="small">${estado(a.estado)}</div>
+    <p class="muted small">Los pasos completos y las demás acciones están más abajo, en «4. Qué hacer».</p>
+  </div>`;
+}
+
 const nf = (x, d = 0) => x.toLocaleString('es-HN', { maximumFractionDigits: d });
 const claseTxt = { alto: 'Alto', medio: 'Medio', bajo: 'Bajo' };
 
@@ -51,12 +70,17 @@ export function panelApiRadar(f, cfg, X) {
   const ubic = ubicacionActual();
   const R = apiRadar(f, cfg, X, abierto ? S.problema : 'spathodea', ubic);
   const sugerido = R.aplica;
-  const cabecera = `<div class="row between"><div><h2>Resolver un problema</h2>
-    <p class="muted">Elige el problema que quieres atender. La app cruza los datos que ya cargaste y te da el ApiRadar: nivel de riesgo, por qué, qué hacer y qué falta.</p></div></div>
-    <div class="row"><div class="f" style="min-width:260px"><label for="problema">Problema</label>
+  const lista = Object.values(PROBLEMAS);
+  // Con un solo problema no hay nada que elegir: se nombra y el botón basta. El selector vuelve cuando haya más de uno.
+  const control = lista.length === 1
+    ? `<p><b>Problema:</b> ${esc(lista[0].nombre)}</p>`
+    : `<div class="f" style="min-width:260px"><label for="problema">Problema</label>
       <select id="problema" data-bind="problema" data-rerender><option value="">Elige un problema…</option>
-        ${Object.values(PROBLEMAS).map((p) => `<option value="${p.id}" ${S.problema === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
-      ${abierto ? '' : `<button class="btn primary" data-act="apiradar" data-p="spathodea">Generar ApiRadar</button>`}</div>
+        ${lista.map((p) => `<option value="${p.id}" ${S.problema === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>`;
+  const cabecera = `<div class="row between"><div><h2>Resolver un problema</h2>
+    <p class="muted">${lista.length === 1 ? '' : 'Elige el problema que quieres atender. '}La app cruza los datos que ya cargaste y te da el ApiRadar: nivel de riesgo, por qué, qué hacer y qué falta.</p></div></div>
+    <div class="row">${control}
+      ${abierto ? '' : `<button class="btn primary" data-act="apiradar" data-p="${lista[0].id}">Generar ApiRadar</button>`}</div>
     ${!abierto && sugerido ? `<p class="muted small">Tu finca tiene una especie de riesgo para polinizadores (${esc(f.especies.filter((e) => e.riesgo).map((e) => e.nombre).join(', '))}): este problema aplica.</p>` : ''}`;
   if (!abierto) return `<section class="panel" id="apiradar">${cabecera}</section>`;
   if (!R.aplica) return `<section class="panel" id="apiradar">${cabecera}<div class="notice"><span>${esc(R.motivo)}</span></div></section>`;
@@ -67,10 +91,11 @@ export function panelApiRadar(f, cfg, X) {
         <p class="label">ApiRadar · ${esc(R.problema.nombre)}</p>
         <h3 style="color:var(--${nivelC})">Riesgo ${R.nivel.toLowerCase()} para las abejas: ${R.score} de 100</h3>
         <p>${esc(R.resumen)}</p>
-        <p class="muted small">Confianza de los datos: ${Math.round(R.conf * 100)} %. Es el riesgo del módulo Polinizadores; el ApiRadar solo lo ordena como diagnóstico y no agrega pesos nuevos.</p>
+        <p class="muted small">Confianza de los datos: ${Math.round(R.conf * 100)} %.</p>
       </div>
       <div>${R.radar.length >= 3 ? radar(R.radar) : '<p class="muted small">Faltan datos para dibujar el radar.</p>'}</div>
     </div>
+    ${primeroQueHacer(R)}
     <h3>1. Qué datos usó</h3>
     <div class="scroll"><table class="data"><thead><tr><th>Dato</th><th>Valor en tu finca</th><th>De dónde sale</th></tr></thead><tbody>
       ${R.datos.map((d) => `<tr><td>${esc(d.dato)}</td><td>${esc(d.valor)}</td><td class="muted">${esc(d.de)}</td></tr>`).join('')}
@@ -79,7 +104,7 @@ export function panelApiRadar(f, cfg, X) {
     <div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th><th class="num">Puntos que aporta</th></tr></thead><tbody>
       ${[...R.evidencia].sort((a, b) => b.puntos - a.puntos).map((v) => `<tr><td>${esc(v.nombre)}<div>${estado(v.estado, v.fuente, v.id ?? v.nombre)}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje, cfg)}</td><td class="num">${v.peso}</td><td class="num">${v.puntos}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="muted small">Puntos que aporta = peso × puntaje ÷ suma de pesos con dato; suman el riesgo. Pasa el cursor sobre ⓘ para ver la fuente. Pesos y cortes son criterio propio, por calibrar, salvo donde diga «Verificado».</p>
+    <p class="muted small">Es el riesgo del módulo Polinizadores; el ApiRadar solo lo ordena como diagnóstico y no agrega pesos nuevos. Puntos que aporta = peso × puntaje ÷ suma de pesos con dato; suman el riesgo. Pasa el cursor sobre ⓘ para ver la fuente. Pesos y cortes son criterio propio, por calibrar, salvo donde diga «Verificado».</p>
     <h3>3. Dónde están los árboles de riesgo</h3>
     ${seccionMapa(R, ubic, cfg)}
     <h3>4. Qué hacer</h3>
