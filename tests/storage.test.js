@@ -1,7 +1,7 @@
 // Pruebas de guardar y cargar fincas.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { exportarTexto, importarTexto, normalizarFinca, normalizarAjustes, configBase } from '../src/core/storage.js';
+import { exportarTexto, importarTexto, normalizarFinca, normalizarAjustes, configBase, guardarLocal, guardarCasos } from '../src/core/storage.js';
 import { demoFarm, emptyFarm } from '../src/core/state.js';
 
 test('exportar e importar devuelve la misma finca', () => {
@@ -52,4 +52,30 @@ test('las plantillas viajan en el respaldo y se validan', () => {
   assert.equal(malo.tipo, 'mec');
   assert.equal(malo.objetivo, 0);
   assert.deepEqual(malo.rows, [{ fecha: '', lote: '', valor: 5 }]);
+});
+
+// ---- Aviso cuando el navegador no deja guardar ----
+import { guardado } from '../src/core/aviso-guardado.js';
+
+const TPL = { tipo: 'mec', objetivo: 0, rows: [], paste: '' };
+test('guardarLocal avisa cuando el navegador no deja guardar y se recupera cuando vuelve a poder', () => {
+  const previo = globalThis.localStorage;
+  const estado = { farm: emptyFarm(), ajustes: configBase(), demo: false, tpl: TPL, done: {}, theme: 'system' };
+  try {
+    globalThis.localStorage = { getItem: () => null, setItem: () => { throw new DOMException('lleno', 'QuotaExceededError'); }, removeItem() {} };
+    assert.equal(guardarLocal(estado), false);
+    assert.equal(guardado.fallo, true);
+    globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
+    assert.equal(guardarLocal(estado), true);
+    assert.equal(guardado.fallo, false);
+  } finally { globalThis.localStorage = previo; }
+});
+
+test('guardar casos también registra el fallo', () => {
+  const previo = globalThis.localStorage;
+  try {
+    globalThis.localStorage = { getItem: () => null, setItem: () => { throw new Error('bloqueado'); }, removeItem() {} };
+    assert.equal(guardarCasos([]), false);
+    assert.equal(guardado.fallo, true);
+  } finally { globalThis.localStorage = previo; guardado.fallo = false; }
 });
