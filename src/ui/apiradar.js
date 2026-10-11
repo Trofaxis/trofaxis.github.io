@@ -5,6 +5,7 @@ import { S } from '../core/state.js';
 import { ESTADOS } from '../core/rubrica.js';
 import { apiRadar, PROBLEMAS } from '../apiradar/diagnostico.js';
 import { radar } from './charts.js';
+import { ubicacionActual } from './mapa.js';
 
 const pill = (p) => (p == null ? '<span class="muted">sin dato</span>' : `<span class="pill ${p >= 67 ? 'Alto' : p >= 34 ? 'Medio' : 'Bajo'}">${p}</span>`);
 const estado = (e, fuente) => `<span class="estado ${e.replace(' ', '-')}" ${fuente ? `title="${esc(fuente)}"` : ''}>${ESTADOS[e]}${fuente ? ' ⓘ' : ''}</span>`;
@@ -13,7 +14,7 @@ const delta = (a) => (a.delta == null ? '<span class="muted small">no se cuantif
 
 export function panelApiRadar(f, cfg, X) {
   const abierto = S.problema && PROBLEMAS[S.problema];
-  const R = apiRadar(f, cfg, X, abierto ? S.problema : 'spathodea');
+  const R = apiRadar(f, cfg, X, abierto ? S.problema : 'spathodea', ubicacionActual());
   const sugerido = R.aplica;
   const cabecera = `<div class="row between"><div><h2>Resolver un problema</h2>
     <p class="muted">Elige el problema que quieres atender. La app cruza los datos que ya cargaste y te da el ApiRadar: nivel de riesgo, por qué, qué hacer y qué falta.</p></div></div>

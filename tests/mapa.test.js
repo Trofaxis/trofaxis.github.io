@@ -87,3 +87,57 @@ test('las coordenadas nunca entran a la finca exportada ni a la memoria de casos
   assert.ok(!('punto' in caso) && !('punto' in caso.finca));
   assert.doesNotMatch(exportarTexto(limpia, {}), /"(punto|contorno)"/);
 });
+
+// ---------- Árboles de riesgo (ApiRadar) ----------
+import { utmALatLon, leerArboles, sitiosFuera, distanciaM } from '../src/mapa/geo.js';
+
+// Longitud del arco de meridiano (WGS84) por integración numérica: sobre el meridiano central, N = k0 · arco(φ).
+function arcoMeridiano(latGrados) {
+  const a = 6378137, e2 = 0.00669437999014, fi = (latGrados * Math.PI) / 180, n = 20000;
+  let s = 0;
+  for (let i = 0; i < n; i++) { const p = ((i + 0.5) / n) * fi; s += (a * (1 - e2)) / (1 - e2 * Math.sin(p) ** 2) ** 1.5; }
+  return (s * fi) / n;
+}
+
+test('UTM → grados: sobre el meridiano central el norte coincide con el arco de meridiano', () => {
+  for (const lat of [14, 15.2, 13.1]) {
+    const g = utmALatLon(500000, 0.9996 * arcoMeridiano(lat), 16);
+    cerca(g.lat, lat, 1e-7); cerca(g.lon, -87, 1e-9);
+  }
+  assert.equal(utmALatLon(500000, 1547400, 17).lon, -81); // la zona 17 N tiene el meridiano central en 81° O
+});
+
+test('UTM: 1 km al este en la latitud 14° son ~0.00927° de longitud', () => {
+  const a = utmALatLon(500000, 1547400, 16), b = utmALatLon(501000, 1547400, 16);
+  cerca(distanciaM([a.lat, a.lon], [b.lat, b.lon]), 1000, 2.5); // la escala de UTM (k0 = 0.9996 en el centro) deja ~0.4 m por km de diferencia
+});
+
+test('leer árboles: grados, UTM, comentarios y errores', () => {
+  const r = leerArboles('14.0108, -87.0044\n501177 1547784\n# comentario\n\nhola\n999, 999');
+  assert.equal(r.arboles.length, 2);
+  assert.deepEqual(r.arboles[0], [14.0108, -87.0044]);
+  cerca(r.arboles[1][0], 14.0005, 0.001); cerca(r.arboles[1][1], -86.9891, 0.001);
+  assert.equal(r.errores.length, 2);
+  assert.equal(leerArboles('501177 1547784', 17).arboles[0][1] > -81, true);
+});
+
+test('sitios fuera del radio: un árbol al centro de un cuadrado de 1 km', () => {
+  // Cuadrado de ~1 km de lado centrado en el árbol. Fuera de 300 m: 1 − π·300²/1e6 = 71.7 %; fuera de 500 m: 1 − π·500²/1e6 = 21.5 %.
+  const lat0 = 14, lon0 = -87, dLat = 500 / 110574, dLon = 500 / (111319.5 * Math.cos((lat0 * Math.PI) / 180));
+  const cont = [[lat0 - dLat, lon0 - dLon], [lat0 - dLat, lon0 + dLon], [lat0 + dLat, lon0 + dLon], [lat0 + dLat, lon0 - dLon]];
+  const r = sitiosFuera([[lat0, lon0]], cont, [300, 500]);
+  cerca(r.fraccionMin, 0.717, 0.02); cerca(r.fraccionMax, 0.215, 0.02);
+  cerca(r.areaHa, 100, 2);
+  cerca(r.mejor.distanciaM, 707, 20); // la esquina: 500·√2
+  assert.equal(sitiosFuera([], cont, [300, 500]), null);
+  assert.equal(sitiosFuera([[lat0, lon0]], cont.slice(0, 2), [300, 500]), null);
+});
+
+test('los árboles de riesgo se guardan en la ubicación del navegador, no en la finca exportada', () => {
+  const u = normalizarUbicacion({ arboles: [[14.0108, -87.0044], [999, 1], 'x'] });
+  assert.deepEqual(u.arboles, [[14.0108, -87.0044]]);
+  assert.deepEqual(ubicacionVacia().arboles, []);
+  // La finca no tiene campo de árboles, y si un archivo lo trae, al cargarlo se descarta.
+  assert.equal('arboles' in demoFarm(), false);
+  assert.equal('arboles' in normalizarFinca({ ...demoFarm(), arboles: [[14.0108, -87.0044]] }), false);
+});

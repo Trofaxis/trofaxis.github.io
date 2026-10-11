@@ -5,7 +5,7 @@
 import { esc } from '../core/utils.js';
 import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
-import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear } from '../mapa/geo.js';
+import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear, leerArboles, sitiosFuera } from '../mapa/geo.js';
 import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
 
@@ -14,6 +14,11 @@ let U = cargarUbicacion();
 let modo = 'ver'; // ver | punto | contorno
 let msg = '';
 let fallas = 0;
+let zonaUtm = 16; // zona UTM con la que se leen las coordenadas de los árboles (16 N: oeste de Honduras; 17 N: este)
+let textoArboles = '';
+
+// Ubicación vigente (punto, contorno y árboles de riesgo), para el ApiRadar. Solo vive en este navegador.
+export const ubicacionActual = () => U;
 
 // Al empezar otra finca o borrar los datos, la ubicación anterior se borra también.
 export function reiniciarMapa() { borrarUbicacion(); U = ubicacionVacia(); modo = 'ver'; msg = ''; S.climaUI = { estado: '', msg: '', llenos: [] }; }
@@ -37,6 +42,13 @@ export function panelMapa() {
       <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" style="flex:1;min-width:200px">
       ${b('ir', 'Ir')}
     </div>
+    <details class="arboles" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
+      <summary>Árboles de riesgo con coordenadas (ApiRadar)${U.arboles.length ? ` · ${U.arboles.length} cargado(s)` : ''}</summary>
+      <p class="muted small">Una línea por árbol: «latitud, longitud» en grados (14.0108, -87.0044) o «este norte» en UTM (501177 1547784). Con el contorno dibujado, el ApiRadar calcula qué parte de la finca queda fuera del radio de exclusión y el punto más alejado. Se guardan solo en este navegador.</p>
+      <div class="f"><label for="mapa-arboles">Coordenadas de los árboles</label><textarea id="mapa-arboles" rows="4" placeholder="14.0108, -87.0044&#10;501177 1547784">${esc(textoArboles)}</textarea></div>
+      <div class="row"><div class="f" style="width:150px"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div>
+        ${b('arboles-cargar', 'Cargar árboles')}${U.arboles.length ? b('arboles-quitar', 'Quitar árboles', '', ' danger') : ''}</div>
+    </details>
     <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
   </div>`;
 }
@@ -51,6 +63,7 @@ function infoHtml() {
       <div><dt>Ubicación</dt><dd>${U.punto ? `${fmt(U.punto[0])}, ${fmt(U.punto[1])}` : 'sin marcar'}</dd></div>
       <div><dt>Área dibujada</dt><dd>${a > 0 ? `${redondear(a)} ha` : U.contorno.length ? `${U.contorno.length} punto(s), faltan ${Math.max(0, 3 - U.contorno.length)}` : 'sin contorno'}</dd></div>
       <div><dt>Área declarada</dt><dd>${S.farm.area || 0} ha</dd></div>
+      <div><dt>Árboles de riesgo</dt><dd>${U.arboles.length ? `${U.arboles.length} con coordenadas` : 'sin cargar'}</dd></div>
     </dl>
     ${avisos.map((t) => `<p class="mapa-aviso">⚠ ${esc(t)}</p>`).join('')}
     ${fallas ? '<p class="mapa-aviso">No se pudo cargar parte de la imagen satelital (sin internet o el servicio no responde). Puedes seguir marcando el punto y el contorno.</p>' : ''}`;
@@ -83,7 +96,19 @@ function dibujar(el) {
   const cerrado = pts.length >= 3 && modo !== 'contorno';
   svg.innerHTML = `${pts.length >= 2 ? `<${cerrado ? 'polygon' : 'polyline'} class="mapa-contorno" points="${pts.map((p) => p.join(',')).join(' ')}"/>` : ''}
     ${modo === 'contorno' ? pts.map((p) => `<circle class="mapa-vertice" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join('') : ''}
+    ${arbolesSvg(xy, lat, zoom)}
     ${U.punto ? (() => { const [x, y] = xy(U.punto); return `<g class="mapa-punto" transform="translate(${x},${y})"><circle r="9"/><circle r="3.5" class="centro"/></g>`; })() : ''}`;
+}
+
+// Árboles de riesgo con su radio de exclusión (mínimo punteado, máximo continuo) y el punto más alejado de todos.
+function arbolesSvg(xy, lat, zoom) {
+  if (!U.arboles.length) return '';
+  const [rMin, rMax] = CONFIG.apiradar.radioExclusionM;
+  const mPorPx = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
+  const s = sitiosFuera(U.arboles, U.contorno, [rMin, rMax]);
+  return U.arboles.map((p) => { const [x, y] = xy(p);
+    return `<circle class="mapa-radio max" cx="${x}" cy="${y}" r="${rMax / mPorPx}"/><circle class="mapa-radio min" cx="${x}" cy="${y}" r="${rMin / mPorPx}"/><circle class="mapa-arbol" cx="${x}" cy="${y}" r="4"><title>Árbol de riesgo</title></circle>`; }).join('')
+    + (s ? (() => { const [x, y] = xy(s.mejor.punto); return `<g class="mapa-sitio" transform="translate(${x},${y})"><circle r="8"/><title>Punto más alejado de los árboles de riesgo: ${s.mejor.distanciaM} m</title></g>`; })() : '');
 }
 
 function actualizarInfo() {
@@ -180,6 +205,8 @@ export function montarMapa() {
   });
 }
 
+document.addEventListener('input', (e) => { if (e.target.id === 'mapa-arboles') textoArboles = e.target.value; });
+
 // Botones del bloque (delegado una sola vez en el documento).
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-mapa]');
@@ -192,8 +219,22 @@ document.addEventListener('click', (e) => {
   else if (a === 'deshacer') U.contorno.pop();
   else if (a === 'terminar') {
     if (U.contorno.length < 3) { msg = 'Un contorno necesita al menos 3 puntos.'; }
-    else modo = 'ver';
+    else { modo = 'ver'; if (U.arboles.length) document.dispatchEvent(new Event('biogap:render')); }
   } else if (a === 'borrar') { U.punto = null; U.contorno = []; modo = 'ver'; }
+  else if (a === 'arboles-cargar') {
+    textoArboles = document.getElementById('mapa-arboles')?.value ?? textoArboles;
+    zonaUtm = +(document.getElementById('mapa-zona')?.value ?? zonaUtm) === 17 ? 17 : 16;
+    const r = leerArboles(textoArboles, zonaUtm);
+    if (!r.arboles.length) msg = r.errores[0] ?? 'Escribe al menos un árbol.';
+    else {
+      U.arboles = r.arboles;
+      const c = r.arboles[0];
+      if (!U.contorno.length) U.vista = { lat: c[0], lon: c[1], zoom: Math.max(U.vista.zoom, 14) };
+      msg = `${r.arboles.length} árbol(es) cargado(s)${r.errores.length ? `. ${r.errores.join(' ')}` : ''}${U.contorno.length >= 3 ? '' : ' Dibuja el contorno de la finca para calcular qué parte queda fuera del radio.'}`;
+      S.abiertos['mapa-arboles'] = true;
+    }
+    guardar(); rerender(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'arboles-quitar') { U.arboles = []; textoArboles = ''; document.dispatchEvent(new Event('biogap:render')); }
   else if (a === 'ir') {
     const r = leerCoordenadas(document.getElementById('mapa-coord')?.value);
     if (r.error) msg = r.error;

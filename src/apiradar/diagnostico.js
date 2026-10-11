@@ -8,6 +8,7 @@ import { conPlan } from '../fert/calculo.js';
 import { cuentaParaAbejas, puntajePeligro, fmtHQ, abejasSinAguijon } from '../plag/calculo.js';
 import { volumenCopa } from '../modules/polinizadores.js';
 import { M, mlist, uniq, inter } from '../core/utils.js';
+import { sitiosFuera } from '../mapa/geo.js';
 
 export const PROBLEMAS = {
   spathodea: { id: 'spathodea', nombre: 'Spathodea campanulata y las abejas nativas', modulo: 'poli' },
@@ -38,7 +39,8 @@ const CAMBIOS = {
   },
 };
 
-export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea') {
+// ubic: ubicación guardada en el navegador ({ contorno, arboles }); no forma parte de la finca ni se exporta.
+export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', ubic = null) {
   const f = conPlan(f0);
   const base = evaluar(f, cfg, extra);
   const mod = base.mods.find((m) => m.id === 'poli');
@@ -113,16 +115,30 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea') {
   // Ubicación del refugio: sin coordenadas de cada árbol, la app no puede decir el punto exacto. Da el radio y lo que implica.
   const [rMin, rMax] = cfg.apiradar.radioExclusionM;
   const haCirculo = (r) => (Math.PI * r * r) / 10000;
+  const nCoord = ubic?.arboles?.length ?? 0;
+  const sitio = sitiosFuera(ubic?.arboles, ubic?.contorno, [rMin, rMax]);
   const radio = {
     min: rMin, max: rMax, haMin: Math.round(haCirculo(rMin)), haMax: Math.round(haCirculo(rMax)),
     fuente: FUENTES.barrantes.corta, hayTrigona: sinAguijon.some((e) => /trigona/i.test(e.nombre)),
-    finca: f.area > 0 ? f.area : null, porArbol: arboles || null,
+    finca: f.area > 0 ? f.area : null, porArbol: arboles || null, coordenadas: nCoord, sitio,
   };
+  const ha = (x) => (x >= 10 ? Math.round(x) : Math.round(x * 10) / 10).toLocaleString('es-HN');
+  const pct = (x) => `${Math.round(x * 100)} %`;
+  let detalleRefugio;
+  if (sitio) {
+    detalleRefugio = `Con las coordenadas de tus ${nCoord} árboles de riesgo y el contorno de tu finca (${ha(sitio.areaHa)} ha): a ${rMin} m o más de todos ellos queda ${pct(sitio.fraccionMin)} de la finca (${ha(sitio.haMin)} ha); a ${rMax} m o más, ${pct(sitio.fraccionMax)} (${ha(sitio.haMax)} ha). `
+      + (sitio.fraccionMin > 0
+        ? `El punto más alejado está en ${sitio.mejor.punto.join(', ')}, a ${sitio.mejor.distanciaM} m del árbol de riesgo más cercano${sitio.mejor.distanciaM >= rMax ? '' : sitio.mejor.distanciaM >= rMin ? ` (cumple ${rMin} m, no ${rMax} m)` : ''}. Está marcado en verde en el mapa. Cualquier punto a más de ${rMin} m sirve: elige el que tenga floración alternativa cerca.`
+        : `Ningún punto de tu finca queda a ${rMin} m de un árbol de riesgo (el más alejado está a ${sitio.mejor.distanciaM} m, en ${sitio.mejor.punto.join(', ')}). Ubicar el refugio no basta: el control de los árboles pesa más.`);
+  } else {
+    detalleRefugio = `Mantén los refugios y las colonias a ${rMin}-${rMax} m o más de cualquier árbol de riesgo y cerca de la floración alternativa. Cada árbol deja sin uso un círculo de ${radio.haMin} a ${radio.haMax} ha${f.area > 0 ? `; tu finca tiene ${f.area} ha, así que ${f.area <= radio.haMax ? 'es probable que el radio cubra buena parte de ella: si el refugio no cabe fuera, el control del árbol pesa más que la ubicación' : 'hay espacio para ubicar fuera del radio si los árboles no están todos juntos'}` : ''}. `
+      + (nCoord ? 'Ya cargaste los árboles: dibuja el contorno de la finca en el mapa para calcular el punto exacto.' : 'Para calcular el punto exacto, carga las coordenadas de los árboles de riesgo y dibuja el contorno de la finca en el mapa.');
+  }
   acciones.push({
     id: 'refugio', titulo: 'Ubicar colonias y refugios fuera del radio de los árboles de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la próxima floración',
-    detalle: `Mantén los refugios y las colonias a ${rMin}-${rMax} m o más de cualquier árbol de riesgo y cerca de la floración alternativa. Cada árbol deja sin uso un círculo de ${radio.haMin} a ${radio.haMax} ha${f.area > 0 ? `; tu finca tiene ${f.area} ha, así que ${f.area <= radio.haMax ? 'es probable que el radio cubra buena parte de ella: si el refugio no cabe fuera, el control del árbol pesa más que la ubicación' : 'hay espacio para ubicar fuera del radio si los árboles no están todos juntos'}` : ''}.`,
+    detalle: detalleRefugio,
     estado: radio.hayTrigona ? 'verificado' : 'criterio propio',
-    nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay cifra en los documentos del proyecto; se usa el mismo radio como referencia (criterio propio). La app no tiene las coordenadas de cada árbol, así que no marca el punto exacto.`,
+    nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay cifra en los documentos del proyecto; se usa el mismo radio como referencia (criterio propio). La app no sabe dónde hay floración alternativa: eso lo decides tú.${nCoord && arboles && nCoord !== arboles ? ` Ojo: registraste ${arboles} árbol(es) en Especies y ${nCoord} con coordenadas.` : ''} Las coordenadas se guardan solo en este navegador.`,
     delta: null,
   });
   if (riesgo.length) {

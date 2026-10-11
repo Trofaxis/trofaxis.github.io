@@ -88,3 +88,90 @@ export function avisosMapa(ubic, areaDeclarada, tol = CONFIG.mapa.toleranciaArea
 }
 
 export const redondear = (ha) => (ha >= 100 ? Math.round(ha) : ha >= 10 ? Math.round(ha * 10) / 10 : Math.round(ha * 100) / 100);
+
+// ---------- Árboles de riesgo y sitios fuera de su radio (ApiRadar) ----------
+// UTM (WGS84, hemisferio norte) → grados. Series de Krüger (Karney 2011, "Transverse Mercator with an accuracy of a few nanometers").
+// Error de milímetros con tres términos. La zona 16 N cubre el oeste de Honduras (meridiano central 87° O) y la 17 N, el este.
+const F_WGS84 = 1 / 298.257223563, K0 = 0.9996;
+export function utmALatLon(este, norte, zona = 16) {
+  const n = F_WGS84 / (2 - F_WGS84), n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  const A = (R / (1 + n)) * (1 + n2 / 4 + n4 / 64);
+  const b = [n / 2 - (2 * n2) / 3 + (37 * n3) / 96 - n4 / 360, n2 / 48 + n3 / 15 - (437 * n4) / 1440, (17 * n3) / 480 - (37 * n4) / 840];
+  const d = [2 * n - (2 * n2) / 3 - 2 * n3, (7 * n2) / 3 - (8 * n3) / 5, (56 * n3) / 15];
+  const xi = norte / (K0 * A), eta = (este - 500000) / (K0 * A);
+  let xp = xi, ep = eta;
+  b.forEach((bj, i) => { const j = 2 * (i + 1); xp -= bj * Math.sin(j * xi) * Math.cosh(j * eta); ep -= bj * Math.cos(j * xi) * Math.sinh(j * eta); });
+  const chi = Math.asin(Math.sin(xp) / Math.cosh(ep));
+  let lat = chi;
+  d.forEach((dj, i) => { lat += dj * Math.sin(2 * (i + 1) * chi); });
+  const lon0 = (zona * 6 - 183) * (Math.PI / 180);
+  return { lat: grad(lat), lon: grad(lon0 + Math.atan2(Math.sinh(ep), Math.cos(xp))) };
+}
+
+// Lee los árboles de riesgo: una línea por árbol, con "latitud, longitud" (grados decimales) o "este norte" (UTM en metros,
+// zona indicada). Distingue por el tamaño del número. Devuelve { arboles: [[lat, lon]], errores: [texto] }.
+export function leerArboles(texto, zona = 16, max = 500) {
+  const arboles = [], errores = [];
+  String(texto ?? '').split(/\r?\n/).forEach((linea, i) => {
+    const l = linea.trim();
+    if (!l || /^[#/]/.test(l)) return;
+    // Con coma decimal y separador por coma no se puede distinguir: se pide punto decimal.
+    const m = l.match(/^(-?\d+(?:\.\d+)?)\s*[,; \t]\s*(-?\d+(?:\.\d+)?)$/);
+    if (!m) { errores.push(`Línea ${i + 1}: escribe dos números, por ejemplo 14.0108, -87.0044 (grados) o 501177 1547784 (UTM).`); return; }
+    const a = +m[1], bb = +m[2];
+    let p;
+    if (Math.abs(a) <= 90 && Math.abs(bb) <= 180) p = [a, bb];
+    else if (a >= 100000 && a <= 900000 && bb > 0 && bb < 10000000) { const g = utmALatLon(a, bb, zona); p = [g.lat, g.lon]; }
+    else { errores.push(`Línea ${i + 1}: no reconozco las coordenadas (${l}).`); return; }
+    arboles.push([+p[0].toFixed(6), +p[1].toFixed(6)]);
+  });
+  if (arboles.length > max) { errores.push(`Se cargaron los primeros ${max} árboles.`); arboles.length = max; }
+  return { arboles, errores };
+}
+
+// Plano local en metros alrededor de una referencia (aproximación equirectangular: sobra para decenas de km).
+const planoDe = (ref) => { const k = Math.cos(rad(ref[0])) * (Math.PI / 180) * R, h = (Math.PI / 180) * R; return { aM: ([la, lo]) => [(lo - ref[1]) * k, (la - ref[0]) * h], aG: ([x, y]) => [ref[0] + y / h, ref[1] + x / k] }; };
+
+export function distanciaM(a, b) {
+  const { aM } = planoDe(a), [x, y] = aM(b);
+  return Math.hypot(x, y);
+}
+
+const dentro = (p, poly) => {
+  let in_ = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) in_ = !in_;
+  }
+  return in_;
+};
+
+// Qué parte de la finca queda fuera del radio de los árboles de riesgo, y el punto más alejado de todos ellos.
+// Rejilla sobre el contorno (hasta 90×90 puntos). radios = [mínimo, máximo] en metros.
+// Devuelve null sin contorno de 3 puntos o sin árboles.
+export function sitiosFuera(arboles, contorno, radios) {
+  if (!Array.isArray(arboles) || !arboles.length || !Array.isArray(contorno) || contorno.length < 3) return null;
+  const { aM, aG } = planoDe(contorno[0]);
+  const poly = contorno.map(aM), tr = arboles.map(aM);
+  const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const paso = Math.max(5, Math.max(x1 - x0, y1 - y0) / 90);
+  let total = 0, fMin = 0, fMax = 0, mejor = null;
+  for (let x = x0 + paso / 2; x < x1; x += paso) {
+    for (let y = y0 + paso / 2; y < y1; y += paso) {
+      if (!dentro([x, y], poly)) continue;
+      let d = Infinity;
+      for (const t of tr) { const e = Math.hypot(x - t[0], y - t[1]); if (e < d) d = e; }
+      total++;
+      if (d >= radios[0]) fMin++;
+      if (d >= radios[1]) fMax++;
+      if (!mejor || d > mejor.d) mejor = { d, x, y };
+    }
+  }
+  if (!total) return null;
+  const ha = areaHa(contorno);
+  return {
+    fraccionMin: fMin / total, fraccionMax: fMax / total, haMin: ha * (fMin / total), haMax: ha * (fMax / total), areaHa: ha,
+    mejor: { distanciaM: Math.round(mejor.d), punto: aG([mejor.x, mejor.y]).map((v) => +v.toFixed(6)) },
+  };
+}

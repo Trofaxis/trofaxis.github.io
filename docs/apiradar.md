@@ -26,6 +26,8 @@ Código: `src/apiradar/diagnostico.js` (lógica) y `src/ui/apiradar.js` (panel).
 | Radio de exclusión 300-500 m | Verificado en el resumen del artículo, no en el texto completo | Barrantes-Vásquez et al. (2018), *Rev. For. Mesoam. Kurú* 16(38): 13-23, rango de vuelo de *Trigona fulviventris* en Guanacaste |
 | Mismo radio para *Plebeia melanica* y otras | Criterio propio, por validar | Sin cifra en los documentos del proyecto |
 | Área excluida por árbol (28-79 ha) | Cálculo geométrico π·r² con ese radio | |
+| Punto del refugio y % de la finca fuera del radio | Cálculo con las coordenadas que carga el usuario, sobre una rejilla dentro del contorno | Distancia en plano local (error de metros en una finca) |
+| Conversión de UTM a grados | Series de Krüger; probada contra el arco de meridiano (WGS84) | Karney (2011) |
 | Volumen de copa, meses de floración | Verificado | Osorio (2025), Kuniyoshi (2025), como ya usa Polinizadores |
 | Otras flores, meses secos, foliares | No verificado: hipótesis | Factores que Kuniyoshi (2025) menciona sin medir |
 | Pesos y cortes de la rúbrica | Criterio propio, por calibrar | `CONFIG.rubrica.poli` |
@@ -34,5 +36,8 @@ Código: `src/apiradar/diagnostico.js` (lógica) y `src/ui/apiradar.js` (panel).
 
 ## Límites conocidos
 
-- Sin coordenadas por árbol no hay punto exacto para el refugio. Siguiente paso posible: registrar coordenadas de los árboles de riesgo y medir distancia al refugio candidato.
+- **Dónde ubicar el refugio.** En el mapa del dashboard, «Árboles de riesgo con coordenadas»: una línea por árbol, en grados («14.0108, -87.0044») o UTM («501177 1547784», zona 16 N o 17 N). Con el contorno de la finca dibujado, el ApiRadar calcula qué parte de la finca queda a 300 m y a 500 m o más de todos los árboles y marca en verde el punto más alejado. Sin contorno, solo dibuja los radios.
+- Esas coordenadas **viven solo en el navegador** (junto con el punto y el contorno): no van en el archivo exportado, en la nube ni en la memoria de casos.
+- El punto más alejado es una referencia, no una ubicación final: la app no sabe dónde hay floración alternativa, agua ni acceso. El criterio doble (lejos del árbol y cerca de flores seguras) lo decide el usuario.
+- Un árbol de riesgo cuenta igual sin importar su tamaño; el radio no cambia con el volumen de copa.
 - Un solo problema por ahora. Agregar otro es sumar una entrada en `PROBLEMAS` y su función de diagnóstico.

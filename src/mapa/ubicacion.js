@@ -7,7 +7,8 @@ const CLAVE = 'biogap:mapa:v1';
 const coord = (p) => Array.isArray(p) && p.length === 2 && p.every((x) => typeof x === 'number' && Number.isFinite(x))
   && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180 ? [p[0], p[1]] : null;
 
-export const ubicacionVacia = () => ({ punto: null, contorno: [], vista: { ...CONFIG.mapa.inicio } });
+// arboles: árboles de riesgo para polinizadores (ApiRadar), [lat, lon]. También viven solo en este navegador.
+export const ubicacionVacia = () => ({ punto: null, contorno: [], arboles: [], vista: { ...CONFIG.mapa.inicio } });
 
 export function normalizarUbicacion(o) {
   const v = ubicacionVacia();
@@ -17,6 +18,7 @@ export function normalizarUbicacion(o) {
   return {
     punto: coord(o.punto),
     contorno: Array.isArray(o.contorno) ? o.contorno.slice(0, 200).map(coord).filter(Boolean) : [],
+    arboles: Array.isArray(o.arboles) ? o.arboles.slice(0, 500).map(coord).filter(Boolean) : [],
     vista: c ? { lat: c[0], lon: c[1], zoom: z } : v.vista,
   };
 }
