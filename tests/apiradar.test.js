@@ -102,3 +102,19 @@ test('con coordenadas de los árboles y el contorno, el ApiRadar da el punto del
   assert.match(acc(apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [{ id: '1', lat: lat0, lon: lon0 }], contorno: [] }), 'refugio').detalle, /dibuja el contorno/);
   assert.match(acc(apiRadar(f), 'refugio').detalle, /carga las coordenadas/);
 });
+
+test('sitios candidatos guardados sin ningún árbol censado no rompen el diagnóstico', () => {
+  const f = demoFarm();
+  const sitios = [{ id: 'S1', lat: 14.0, lon: -87.2 }, { id: 'S2', lat: 14.001, lon: -87.2 }];
+  const r = apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [], contorno: [], sitios });
+  assert.equal(r.aplica, true);
+  assert.deepEqual(r.censo.sitios, []);
+  assert.doesNotMatch(acc(r, 'refugio').detalle, /Sitios que propusiste/);
+});
+
+test('con árboles censados los sitios candidatos sí entran al diagnóstico', () => {
+  const f = demoFarm();
+  const r = apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [{ id: '1', lat: 14.0, lon: -87.2 }], contorno: [], sitios: [{ id: 'S1', lat: 14.0, lon: -87.2 }] });
+  assert.equal(r.censo.sitios.length, 1);
+  assert.match(acc(r, 'refugio').detalle, /Sitios que propusiste: Sitio S1: cerca/);
+});
