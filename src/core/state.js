@@ -1,6 +1,7 @@
 // Estado de la app: finca de ejemplo, finca vacía y borradores de formularios.
 import { CONFIG } from './config.js';
 import { casoEjemplo, declaradosEjemplo } from '../riego/calculo.js';
+import { plagVacio, plagBorrador } from '../plag/modelo.js';
 
 // Resultado de un caso: cómo le fue a la finca después de sus acciones (memoria de casos).
 // ncAntes/ncDespues: n.º de no conformidades GLOBALG.A.P. antes y después.
@@ -30,9 +31,14 @@ export function demoFarm() {
       { mes: 5, producto: 'urea', n: 46, p: 0, k: 0, dosis: 100, metodo: 'voleo' },
       { mes: 6, producto: 'nitrato-amonio', n: 34, p: 0, k: 0, dosis: 127, metodo: 'voleo' },
     ],
+    // Aplicaciones de plaguicidas (ficticias). Las dosis son entradas de ejemplo, no recomendaciones.
     plaguicidas: [
-      { producto: 'Insecticida de amplio espectro', clase: 'amplio', meses: [1, 2] },
-      { producto: 'Fungicida selectivo', clase: 'selectivo', meses: [6, 7] },
+      { ...plagVacio(), producto: 'Insecticida de amplio espectro', clase: 'amplio', meses: [1, 2], uso: 'insecticida', registro: 'PQUA',
+        componentes: [{ ia: 'imidacloprid', nombre: '', conc: 350, dl50: null, mayor: false }], concUnidad: 'g', grupo: '4A', formulacion: 'SC',
+        dosis: 0.3, dosisUnidad: 'Lha', objetivo: 'Mosca blanca', monitoreo: true, hora: '07:00', viento: 6, temp: 24, hr: 70, ph: 6 },
+      { ...plagVacio(), producto: 'Fungicida selectivo', clase: 'selectivo', meses: [6, 7], uso: 'fungicida', registro: 'PQUA',
+        componentes: [{ ia: 'mancozeb', nombre: '', conc: 80, dl50: null, mayor: false }], concUnidad: 'pct', grupo: 'M3', formulacion: 'WP',
+        dosis: 1000, dosisUnidad: 'gBarril', volumen: 300 },
     ],
     sueloDesnudoMeses: [3, 4, 5], labranza: 'convencional',
     plagas: [{ nombre: 'Mosca blanca (Bemisia tabaci)', meses: [1, 2, 3], severidad: 'alta', cultivo: 'Melón' }],
@@ -40,6 +46,7 @@ export function demoFarm() {
     nc: [{ criterio: 'Registro de aplicaciones incompleto', dias: 9 }],
     cultivosAledanos: [{ nombre: 'Café', distancia: 200 }], proposito: [],
     acciones: [], resultado: resultadoVacio(),
+    clima: null, // ficticia: sin ubicación, sin clima
   };
 }
 
@@ -50,12 +57,14 @@ export function emptyFarm() {
     labranza: 'cero', plagas: [], gg: 'no', minorAplicables: 60, minorFallas: 0, nc: [],
     cultivosAledanos: [], proposito: [],
     acciones: [], resultado: resultadoVacio(),
+    // Clima por mes de la ubicación (src/clima/normales.js). Sin coordenadas: esas viven solo en el navegador.
+    clima: null,
   };
 }
 
 export const blankDrafts = () => ({
   draftEsp: { nombre: '', tipo: 'Árbol', origen: 'nativa', floracion: [], atrae: false, riesgo: false, cantidad: null, copaD: null, copaH: null, presencia: '' },
-  draftPlag: { producto: '', clase: 'amplio', meses: [] },
+  draftPlag: plagBorrador(),
   draftPlaga: { nombre: '', meses: [], severidad: 'media', cultivo: '', presencia: '' },
   draftVecino: { nombre: '', distancia: null },
   draftCult: { nombre: '', ha: 0, siembra: [], cosecha: [] },
@@ -64,13 +73,17 @@ export const blankDrafts = () => ({
   draftFert: { mes: 0, producto: 'urea', n: 46, p: 0, k: 0, dosis: '', metodo: 'incorporado' },
 });
 
-// Tipos de plantilla de registro.
+// Tipos de plantilla de registro. `pestana` indica que el tipo ya tiene pestaña propia:
+// no se ofrece en Plantillas, solo se redirige a esa pestaña.
 export const TPL = {
-  fert: { nombre: 'Fertilización', unidad: 'kg N/ha', acum: true, obj: 'Dosis máxima anual' },
-  riego: { nombre: 'Riego', unidad: 'm³/semana', acum: false, obj: 'Volumen máximo por registro' },
+  fert: { nombre: 'Fertilización', unidad: 'kg N/ha', acum: true, obj: 'Dosis máxima anual', pestana: 'fertilizacion' },
+  riego: { nombre: 'Riego', unidad: 'm³/semana', acum: false, obj: 'Volumen máximo por registro', pestana: 'riego' },
   mec: { nombre: 'Mecanización', unidad: 'horas de tractor', acum: true, obj: 'Horas máximas anuales' },
   custom: { nombre: 'Personalizada', unidad: 'unidades', acum: false, obj: 'Valor objetivo' },
 };
+
+// Tipos que se registran en la pestaña Plantillas (los que no tienen pestaña propia).
+export const tiposPlantilla = () => Object.keys(TPL).filter((k) => !TPL[k].pestana);
 
 // Estado global único de la app.
 export const S = {
@@ -84,18 +97,20 @@ export const S = {
   msg: '',
   casos: [],
   espSeccion: '', // sección de especies con el formulario abierto: fauna | arboles | malezas
+  // Nube (Supabase): sesión por enlace al correo, casos de la comunidad y consentimiento de la sesión actual.
+  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false },
   fertImport: null, // último archivo de fertilización cargado: { archivo, hoja, omitidas, avisos }
   fertUnidad: 'kgha', // unidad de dosis en la pestaña Fertilización: kgha | qqmz // casos guardados por el usuario en este navegador (memoria de casos)
+  plagEdit: null, // índice de la aplicación de plaguicida que se está editando (null: agregando una nueva)
+  plagNotas: [], // notas al llenar el formulario desde el cuadro SAG
+  plagMsg: null, // mensaje junto al botón del formulario de plaguicidas: { nivel: 'ok' | 'error', texto }
+  climaUI: { estado: '', msg: '', llenos: [] }, // descarga del clima: '' | cargando | ok | error, y qué se llenó solo
+  abiertos: {}, // secciones plegables que el usuario abrió o cerró (se conservan al volver a dibujar la vista)
   // Módulo de riego: datos de entrada, de dónde salieron y lo que el archivo traía calculado.
   riego: { datos: casoEjemplo(), fuente: 'ejemplo', archivo: '', origen: {}, declarados: declaradosEjemplo(), faltan: [], omitidas: [] },
   ...blankDrafts(),
   tpl: {
-    tipo: 'fert', objetivo: 150, paste: '',
-    rows: [
-      { fecha: '2026-01-10', lote: 'Lote 1', valor: 40 },
-      { fecha: '2026-02-05', lote: 'Lote 1', valor: 45 },
-      { fecha: '2026-06-02', lote: 'Lote 2', valor: 50 },
-      { fecha: '2026-07-01', lote: 'Lote 2', valor: 45 },
-    ],
+    tipo: 'mec', objetivo: 0, paste: '',
+    rows: [],
   },
 };

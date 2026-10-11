@@ -1,7 +1,7 @@
 // Punto de entrada: renderizado y eventos.
 import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
-import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca } from './core/storage.js';
+import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes } from './core/storage.js';
 import { viewDashboard } from './ui/dashboard.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
@@ -9,18 +9,41 @@ import { viewSettings } from './ui/settings.js';
 import { viewRiego } from './ui/riego.js';
 import { viewCasos } from './ui/casos.js';
 import { viewFertilizacion } from './ui/fertilizacion.js';
+import { viewPlaguicidas } from './ui/plaguicidas.js';
+import { montarMapa, reiniciarMapa } from './ui/mapa.js';
+import { marcarManual } from './ui/clima.js';
+import { llenarRiego } from './clima/normales.js';
 import { producto, UNIDADES } from './fert/catalogo.js';
 import { extraerFert, PLANTILLA_CSV } from './fert/extraer.js';
 import { nombreCultivoPrincipal } from './casos/perfil.js';
+import { casoAnonimo } from './casos/anonimo.js';
+import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
 import { casoEjemplo, riegoVacio, declaradosEjemplo } from './riego/calculo.js';
 import { leerXlsx, ErrorLectura } from './riego/xlsx.js';
 import { leerCsv } from './riego/csv.js';
 import { extraerRiego } from './riego/extraer.js';
+import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
+import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
+import { ingrediente } from './plag/catalogo.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
 const previo = cargarLocal(S.tpl);
 if (previo) Object.assign(S, previo);
 S.casos = cargarCasos();
+
+// Nube (opcional): si falta la configuración o la conexión, todo sigue en local.
+const nube = crearCliente();
+const delHash = sesionDeHash(location.hash); // al volver del enlace del correo
+if (delHash) { guardarSesion(delHash); history.replaceState(null, '', location.pathname + location.search); }
+S.nube.sesion = delHash || cargarSesion();
+// Sesión lista para usarse: si el token está por vencer, se renueva con el de renovación (una sola renovación a la vez).
+let renovando = null;
+function sesionLista() {
+  const n = S.nube;
+  if (!n.sesion || !necesitaRenovar(n.sesion)) return Promise.resolve(n.sesion);
+  renovando ??= nube.renovarSesion(n.sesion).then((s) => { guardarSesion(s); n.sesion = s; return s; }).finally(() => { renovando = null; });
+  return renovando;
+}
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
@@ -29,27 +52,34 @@ function render(){
   // Conserva el foco y el cursor del campo que se estaba editando.
   const ae=document.activeElement;const id=ae&&ae.id;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
   const app=document.getElementById('app');
-  const views={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,riego:viewRiego,fertilizacion:viewFertilizacion,casos:viewCasos,ajustes:viewSettings};
+  const views={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,riego:viewRiego,fertilizacion:viewFertilizacion,plaguicidas:viewPlaguicidas,casos:viewCasos,ajustes:viewSettings};
   app.innerHTML=(views[S.view]||viewDashboard)();
   S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  applyTheme();guardarLocal(S);
+  montarMapa();applyTheme();guardarLocal(S);
   if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
 }
-const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plaguicidas:'draftPlag',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
+const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
+// Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
+const alFormPlag=()=>queueMicrotask(()=>document.getElementById('plag-form')?.scrollIntoView({block:'start'}));
+const limpiarPlag=()=>{S.draftPlag=plagBorrador();S.plagEdit=null;S.plagNotas=[];};
+const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.componentes.length)d.componentes=[componenteVacio()];
+  d.grupoAuto=!d.grupo;d.usoAuto=!d.uso;return d;}; // lo ya guardado se respeta al cambiar de ingrediente
 document.addEventListener('click',e=>{
-  const v=e.target.closest('[data-view]');if(v){S.view=v.dataset.view;render();window.scrollTo(0,0);return;}
+  // Secciones plegables con data-keep: se recuerda lo que el usuario abrió o cerró (el navegador hace el cambio).
+  const su=e.target.closest('summary');if(su&&su.parentElement.dataset.keep){S.abiertos[su.parentElement.dataset.keep]=!su.parentElement.open;return;}
+  const v=e.target.closest('[data-view]');if(v){if(S.climaUI.estado==='ok')S.climaUI={estado:'',msg:'',llenos:[]};S.view=v.dataset.view;render();window.scrollTo(0,0);return;}
   const st=e.target.closest('[data-step]');if(st){S.step=+st.dataset.step;render();return;}
   const sm=e.target.closest('[data-sim]');if(sm&&!sm.disabled){S.sim[sm.dataset.sim]=!S.sim[sm.dataset.sim];render();return;}
-  const mb=e.target.closest('[data-month]');if(mb){const[o,k]=getRef(mb.dataset.path);const i=+mb.dataset.month;o[k]=o[k].includes(i)?o[k].filter(x=>x!==i):uniq([...o[k],i]);render();return;}
+  const mb=e.target.closest('[data-month]');if(mb){S.plagMsg=null;const[o,k]=getRef(mb.dataset.path);const i=+mb.dataset.month;o[k]=o[k].includes(i)?o[k].filter(x=>x!==i):uniq([...o[k],i]);render();return;}
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,f=S.farm;
-  S.ioMsg='';
+  S.ioMsg='';S.plagMsg=null;
   if(act==='theme'){S.theme={system:'light',light:'dark',dark:'system'}[S.theme];}
   else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
   else if(act==='prev'){S.step=Math.max(0,S.step-1);}
   else if(act==='finish'){S.view='dashboard';}
-  else if(act==='start-empty'){S.farm=emptyFarm();S.demo=false;S.done={};S.view='wizard';S.step=0;}
-  else if(act==='load-demo'){S.farm=demoFarm();S.demo=true;S.done={};S.view='dashboard';S.msg='Se cargó la finca de ejemplo.';}
+  else if(act==='start-empty'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.view='wizard';S.step=0;}
+  else if(act==='load-demo'){reiniciarMapa();S.farm=demoFarm();S.demo=true;S.done={};S.view='dashboard';S.msg='Se cargó la finca de ejemplo.';}
   else if(act==='cult-yes'){f.tieneCultivos=true;}
   else if(act==='cult-no'){f.tieneCultivos=false;}
   else if(act==='gg'){f.gg=a.dataset.v;}
@@ -61,18 +91,30 @@ document.addEventListener('click',e=>{
   else if(act==='add-vecino'){const d=S.draftVecino;if(!d.nombre.trim())return;f.cultivosAledanos.push({nombre:d.nombre.trim(),distancia:d.distancia>0?Number(d.distancia):null});S.draftVecino=blankDrafts().draftVecino;S.demo=false;}
   else if(act==='plaga-sug'){if(!f.plagas.some(p=>p.nombre===a.dataset.n))f.plagas.push({nombre:a.dataset.n,cultivo:a.dataset.c,meses:[],severidad:'media'});S.demo=false;}
   else if(act==='add-esp'){if(!S.draftEsp.nombre.trim())return;f.especies.push({...S.draftEsp,floracion:[...S.draftEsp.floracion]});S.draftEsp=blankDrafts().draftEsp;S.espSeccion='';}
-  else if(act==='add-plag'){if(!S.draftPlag.producto.trim())return;f.plaguicidas.push({...S.draftPlag,meses:[...S.draftPlag.meses]});S.draftPlag=blankDrafts().draftPlag;}
+  else if(act==='add-plag'){const d=S.draftPlag;
+    if(!d.producto.trim()){S.plagMsg={nivel:'error',texto:'Escribe el nombre del producto.'};document.getElementById('pq-prod')?.focus();}
+    else if(!d.meses.length){S.plagMsg={nivel:'error',texto:'Marca al menos un mes de aplicación.'};}
+    else{const x=normalizarPlag(d),ed=S.plagEdit!=null&&S.plagEdit<f.plaguicidas.length;
+      if(ed)f.plaguicidas[S.plagEdit]=x;else f.plaguicidas.push(x);
+      limpiarPlag();S.plagMsg={nivel:'ok',texto:ed?`Se guardaron los cambios de ${x.producto}.`:`Se agregó ${x.producto}. Ya aparece en la tabla de aplicaciones; puedes registrar otra.`};}}
+  else if(act==='plag-edit'){const i=+a.dataset.i;if(!f.plaguicidas[i])return;S.draftPlag=aBorrador(f.plaguicidas[i]);S.plagEdit=i;S.plagNotas=[];alFormPlag();}
+  else if(act==='plag-dup'){const i=+a.dataset.i;if(!f.plaguicidas[i])return;S.draftPlag={...aBorrador(f.plaguicidas[i]),meses:[]};S.plagEdit=null;S.plagNotas=[];
+    S.plagMsg={nivel:'ok',texto:`Copia de ${f.plaguicidas[i].producto||'la aplicación'} lista: marca los meses de la nueva aplicación y agrégala.`};alFormPlag();}
+  else if(act==='plag-cancel'){limpiarPlag();}
+  else if(act==='plag-rm'){const i=+a.dataset.i;f.plaguicidas.splice(i,1);if(S.plagEdit===i)limpiarPlag();else if(S.plagEdit!=null&&S.plagEdit>i)S.plagEdit--;}
+  else if(act==='plag-add-comp'){if(S.draftPlag.componentes.length<3)S.draftPlag.componentes.push(componenteVacio());}
+  else if(act==='plag-rm-comp'){S.draftPlag.componentes.splice(+a.dataset.i,1);if(!S.draftPlag.componentes.length)S.draftPlag.componentes.push(componenteVacio());}
+  else if(act==='plag-vol'){S.draftPlag.volumen=Number(a.dataset.v)||null;}
   else if(act==='add-plaga'){if(!S.draftPlaga.nombre.trim())return;f.plagas.push({...S.draftPlaga,meses:[...S.draftPlaga.meses]});S.draftPlaga=blankDrafts().draftPlaga;}
   else if(act==='add-cult'){if(!S.draftCult.nombre.trim())return;f.cultivos.push({...S.draftCult,ha:Number(S.draftCult.ha)||0,siembra:[...S.draftCult.siembra],cosecha:[...S.draftCult.cosecha]});S.draftCult=blankDrafts().draftCult;}
   else if(act==='add-nc'){if(!S.draftNC.criterio.trim())return;f.nc.push({criterio:S.draftNC.criterio,dias:Number(S.draftNC.dias)||0});S.draftNC=blankDrafts().draftNC;}
   else if(act==='rm-nc'){f.nc.splice(+a.dataset.i,1);}
   else if(act==='rm-row'){S.tpl.rows.splice(+a.dataset.i,1);}
   else if(act==='add-row'){const d=S.draftRow;if(!d.fecha||d.valor===''||isNaN(Number(d.valor)))return;S.tpl.rows.push({fecha:d.fecha,lote:d.lote||'Sin lote',valor:Number(d.valor)});S.draftRow={fecha:'',lote:d.lote,valor:''};}
-  else if(act==='tpl-to-farm'){const tot=S.tpl.rows.reduce((s,r)=>s+(Number(r.valor)||0),0);f.nAplicado=tot;if(S.tpl.objetivo>0)f.nObjetivo=S.tpl.objetivo;S.demo=false;S.ioMsg=`Nitrógeno aplicado actualizado a ${tot} kg N/ha.`;}
   else if(act==='sim-reset'){Object.keys(S.sim).forEach(k=>S.sim[k]=false);}
   else if(act==='reset'){S.confirmReset=true;}
   else if(act==='reset-no'){S.confirmReset=false;}
-  else if(act==='reset-yes'){S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
+  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
   else if(act==='io-copy'){
     const txt=exportarTexto(S.farm,S.ajustes,S.tpl);S.io=txt;render();
     const box=document.getElementById('io-box');const m=document.getElementById('io-msg');
@@ -101,12 +143,15 @@ document.addEventListener('click',e=>{
     const finca=normalizarFinca(structuredClone(f));const cult=nombreCultivoPrincipal(finca);
     S.casos.push({id:'propio-'+Date.now().toString(36),origen:S.demo?'ejemplo':'propio',etiqueta:`${finca.nombre||'Finca sin nombre'}${cult?' · '+cult:''}`,guardado:new Date().toISOString(),finca});
     S.msg=guardarCasos(S.casos)?`Caso guardado. La memoria tiene ${S.casos.length} caso(s) tuyos.`:'El caso quedó en esta sesión, pero el navegador no permitió guardarlo.';}
+  else if(act.startsWith('nube-')){nubeAccion(act);return;}
   else if(act==='caso-rm'){S.casos=S.casos.filter(c=>c.id!==a.dataset.id);guardarCasos(S.casos);S.msg='Caso quitado de la memoria.';}
   else if(act==='riego-import'){importarRiego();return;}
   else if(act==='riego-ejemplo'){S.riego={datos:casoEjemplo(),fuente:'ejemplo',archivo:'',origen:{},declarados:declaradosEjemplo(),faltan:[],omitidas:[]};}
-  else if(act==='riego-blanco'){S.riego={datos:riegoVacio(),fuente:'manual',archivo:'',origen:{},declarados:{},faltan:[],omitidas:[]};}
+  else if(act==='riego-blanco'){S.riego={datos:riegoVacio(),fuente:'manual',archivo:'',origen:{},declarados:{},faltan:[],omitidas:[]};climaARiego();}
   else if(act==='riego-add-suelo'){S.riego.datos.suelo.push({nombre:`Parte ${S.riego.datos.suelo.length+1}`,area:null,textura:'',da:null,cc:null,pmp:null,pedregosidad:null,infiltracion:null});}
   else if(act==='riego-rm-suelo'){S.riego.datos.suelo.splice(+a.dataset.i,1);}
+  else if(act==='riego-add-tramo'){const p=S.riego.datos.hidraulica.principal;p.push({nombre:String(p.length+1),caudal:null,largo:null,di:null,c:140});}
+  else if(act==='riego-rm-tramo'){S.riego.datos.hidraulica.principal.splice(+a.dataset.i,1);}
   else if(act==='paste'){
     const lines=S.tpl.paste.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);let ok=0,bad=0;
     lines.forEach(l=>{const c=l.split(/\t|;|,/).map(x=>x.trim());const val=Number((c[2]||'').replace(',','.'));if(c.length>=3&&!isNaN(val)){S.tpl.rows.push({fecha:c[0],lote:c[1],valor:val});ok++;}else bad++;});
@@ -122,9 +167,29 @@ document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);
+  cambioPlag(el.dataset.bind,el.value);marcarManual(el.dataset.bind);
   const vuelve=el.tagName==='SELECT'||'rerender' in el.dataset||['farm.area','farm.areaProd','farm.nAplicado','farm.nObjetivo'].includes(el.dataset.bind);
   if(vuelve)queueMicrotask(render);}); // diferido: el cambio puede llegar durante un blur
+// Pestaña Plaguicidas: lo que se llena solo al elegir un producto del cuadro SAG o un ingrediente del catálogo.
+function cambioPlag(bind,v){
+  if(bind==='draftPlag.sag'){const r=desdeSag(S.draftPlag,v===''?null:Number(v));S.draftPlag=r.borrador;S.plagNotas=r.notas;}
+  else if(bind==='draftPlag.enfermedad')S.draftPlag.enfermedad=v===''?null:Number(v);
+  else if(bind==='draftPlag.grupo')S.draftPlag.grupoAuto=!v.trim(); // escrito por el usuario: ya no se reemplaza
+  else if(bind==='draftPlag.uso')S.draftPlag.usoAuto=!v;
+  else if(bind==='draftPlag.formulacion'){const r=alElegirFormulacion(S.draftPlag);if(r){S.draftPlag=r.borrador;S.plagNotas=r.notas;}}
+  else if(bind==='draftPlag.dosis'||bind==='draftPlag.dosisUnidad')S.draftPlag.dosisDeTabla=false; // la escribió el usuario
+  else if(/^draftPlag\.componentes\.\d+\.ia$/.test(bind)){
+    const c=S.draftPlag.componentes[+bind.split('.')[2]];
+    if(c&&ingrediente(c.ia)){c.nombre='';c.dl50=null;c.mayor=false;}
+    S.draftPlag=alElegirIngrediente(S.draftPlag);}
+}
+// Riego nuevo o leído de un archivo: lo que quedó vacío se llena con el clima de la ubicación (Issue #8).
+function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaUI=ll.length?{estado:'ok',msg:'Se usó el clima de tu ubicación.',llenos:ll}:{estado:'',msg:'',llenos:[]};}
+// La descarga del clima y el mapa piden volver a dibujar cuando terminan.
+document.addEventListener('biogap:render',()=>render());
 applyTheme();render();
+if(nube.activo&&S.nube.sesion)sesionLista().then(()=>render(),(err)=>{if(err.estado===401){borrarSesion();S.nube.sesion=null;render();}}); // renueva la sesión al abrir
+if(nube.activo)nubeAccion('nube-comunidad',true); // casos de la comunidad: lectura pública, sin sesión
 
 // Exportar e importar la finca como archivo JSON.
 function nombreArchivo(){const base=(S.farm.nombre||'finca').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'finca';return `biogap-${base}.json`;}
@@ -179,25 +244,54 @@ function importarFert(){
 // Importar datos de riego desde Excel (.xlsx) o CSV. Nada sale del navegador.
 const LIMITE_ARCHIVO=100*1024*1024;
 function importarRiego(){
-  const input=document.createElement('input');input.type='file';input.accept='.xlsx,.csv,.txt';
+  const input=document.createElement('input');input.type='file';input.accept='.xlsx,.xlsm,.csv,.txt';
   input.addEventListener('change',async()=>{
     const file=input.files&&input.files[0];if(!file)return;
     const nombre=file.name.toLowerCase();
     try{
       if(file.size>LIMITE_ARCHIVO)throw new ErrorLectura('El archivo pesa más de 100 MB.');
       let libro;
-      if(nombre.endsWith('.xlsx'))libro=await leerXlsx(await file.arrayBuffer());
+      if(nombre.endsWith('.xlsx')||nombre.endsWith('.xlsm'))libro=await leerXlsx(await file.arrayBuffer());
       else if(nombre.endsWith('.csv')||nombre.endsWith('.txt'))libro=leerCsv(await file.text(),file.name);
       else if(nombre.endsWith('.xls'))throw new ErrorLectura('Es un Excel antiguo (.xls): guárdalo como .xlsx o CSV y vuelve a cargarlo.');
-      else throw new ErrorLectura('Formato no reconocido: usa .xlsx o .csv.');
+      else throw new ErrorLectura('Formato no reconocido: usa .xlsx, .xlsm o .csv.');
       const x=extraerRiego(libro);
       const encontrados=Object.keys(x.origen).length;
+      if(!encontrados&&x.declarados.noRevisa?.length)throw new ErrorLectura(`el archivo trae ${x.declarados.noRevisa.join(' y ')}, y la app todavía no lee esas tablas del archivo. Copia los datos en las secciones Hidráulica y Reservorio de la pestaña Riego.`);
       if(!encontrados)throw new ErrorLectura('No se reconoció ningún dato de riego. Revisa que las etiquetas estén junto a sus valores, o escríbelos a mano.');
-      S.riego={datos:x.datos,fuente:'archivo',archivo:file.name,origen:x.origen,declarados:x.declarados,faltan:x.faltan,omitidas:libro.omitidas||[]};
+      S.riego={datos:x.datos,fuente:'archivo',archivo:file.name,origen:x.origen,declarados:x.declarados,faltan:x.faltan,omitidas:libro.omitidas||[]};climaARiego();
       S.view='riego';
       S.msg=`Se leyeron ${encontrados} datos de ${file.name}.`;
     }catch(err){S.msg=`No se pudo leer ${file.name}: ${err instanceof ErrorLectura?err.message:'el archivo está dañado o no es compatible.'}`;}
     render();
   });
   input.click();
+}
+
+// Acciones de la nube. Cada una avisa con un mensaje y nunca rompe la app si no hay conexión.
+async function nubeAccion(act,silenciosa=false){
+  const n=S.nube;if(n.ocupado)return;n.ocupado=true;if(!silenciosa)render();
+  try{
+    const ses=['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)?await sesionLista():null;
+    if(['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)&&!ses)throw new ErrorNube('Inicia sesión para usar la nube.');
+    if(act==='nube-enlace'){
+      const email=n.email.trim();if(!/^\S+@\S+\.\S+$/.test(email))throw new ErrorNube('Escribe un correo válido.');
+      await nube.enviarEnlace(email,location.origin+location.pathname);S.msg=`Te enviamos un enlace a ${email}. Ábrelo en este navegador para iniciar sesión.`;}
+    else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;S.msg='Sesión cerrada.';}
+    else if(act==='nube-guardar'){await nube.guardarFinca(S.farm,ses);S.msg='Tu finca quedó guardada en la nube (privada).';}
+    else if(act==='nube-cargar'){const f=await nube.cargarFinca(ses);
+      if(!f)S.msg='Todavía no hay una finca tuya en la nube.';
+      else{S.farm=f;S.demo=false;S.done={};S.msg=`Se cargó la finca "${f.nombre||'sin nombre'}" desde la nube.`;}}
+    else if(act==='nube-compartir'){
+      if(!n.consentimiento||S.demo)throw new ErrorNube('Marca el consentimiento con tu finca real para compartir.');
+      await nube.compartirCaso(casoAnonimo(S.farm,configEfectiva(normalizarAjustes(S.ajustes))),ses);
+      n.consentimiento=false;S.msg='Gracias: tu caso anónimo quedó compartido.';
+      n.comunidad=await nube.casosComunidad();}
+    else if(act==='nube-retirar'){await nube.retirarMisCasos(ses);S.msg='Se retiraron todos tus casos compartidos.';n.comunidad=await nube.casosComunidad();}
+    else if(act==='nube-comunidad'){n.comunidad=await nube.casosComunidad();if(!silenciosa)S.msg=`Se descargaron ${n.comunidad.length} caso(s) de la comunidad.`;}
+  }catch(err){
+    if(err instanceof ErrorNube){if(err.estado===401){borrarSesion();n.sesion=null;}if(!silenciosa)S.msg=err.message;}
+    else if(!silenciosa)S.msg='No se pudo completar: la nube respondió algo inesperado.';
+  }
+  n.ocupado=false;render();
 }

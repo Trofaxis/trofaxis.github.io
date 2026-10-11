@@ -61,13 +61,17 @@ export function vecinos(finca, casos, cfg = CONFIG, k = cfg.casos.k) {
   const objetivo = perfil(finca, cfg);
   return casos
     .map((c) => {
-      const p = perfil(c.finca, cfg);
+      const p = c.perfil ?? perfil(c.finca, cfg); // los casos de la nube traen solo el perfil anonimizado
       return { caso: c, perfil: p, ...similitud(objetivo, p, cfg) };
     })
     .filter((v) => v.cobertura >= cfg.casos.coberturaMinima)
     .sort((x, y) => y.sim - x.sim || x.caso.id.localeCompare(y.caso.id))
     .slice(0, k);
 }
+
+// Acciones y resultado de un caso: los de la nube los traen sueltos; los demás, dentro de la finca.
+export const accionesDe = (c) => c.acciones ?? c.finca.acciones;
+export const resultadoDe = (c) => c.resultado ?? c.finca.resultado;
 
 // Cambio logrado por las acciones del caso, en texto corto. Sin dato: lo dice.
 export function resumenResultado(r) {

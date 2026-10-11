@@ -2,9 +2,11 @@
 // Todo lo que entra desde un archivo se valida campo por campo contra la finca vacía,
 // así un archivo viejo, incompleto o editado a mano nunca rompe la app.
 
-import { emptyFarm, TPL } from './state.js';
+import { emptyFarm, TPL, tiposPlantilla } from './state.js';
 import { CONFIG } from './config.js';
 import { MODULOS } from '../modules/index.js';
+import { normalizarPlag } from '../plag/modelo.js';
+import { normalizarClima } from '../clima/normales.js';
 
 export const FORMATO = 'biogap-finca';
 export const VERSION = 1;
@@ -49,7 +51,8 @@ export function normalizarFinca(o) {
       metodo: opcion(a.metodo, ['incorporado', 'voleo', 'fertirriego', 'foliar'], 'voleo'),
     }).slice(0, 60),
     fertMeses: meses(o.fertMeses), lluviaMeses: meses(o.lluviaMeses),
-    plaguicidas: lista(o.plaguicidas, (p) => p && { producto: txt(p.producto), clase: opcion(p.clase, ['amplio', 'selectivo', 'biologico'], 'amplio'), meses: meses(p.meses) }),
+    // Aplicaciones de plaguicidas (pestaña Plaguicidas). Un archivo viejo con { producto, clase, meses } se carga igual.
+    plaguicidas: lista(o.plaguicidas, normalizarPlag).slice(0, 200),
     sueloDesnudoMeses: meses(o.sueloDesnudoMeses),
     labranza: opcion(o.labranza, ['convencional', 'minima', 'cero'], v.labranza),
     plagas: lista(o.plagas, (p) => p && { nombre: txt(p.nombre), meses: meses(p.meses), severidad: opcion(p.severidad, ['baja', 'media', 'alta'], 'media'),
@@ -61,6 +64,7 @@ export function normalizarFinca(o) {
     nc: lista(o.nc, (n) => n && { criterio: txt(n.criterio), dias: num(n.dias) }),
     acciones: lista(o.acciones, (a) => typeof a === 'string' && a.trim() ? txt(a.trim()) : null).slice(0, 30),
     resultado: normalizarResultado(o.resultado),
+    clima: normalizarClima(o.clima),
   };
 }
 
@@ -74,7 +78,7 @@ export function normalizarResultado(r) {
 }
 
 // Casos que el usuario guardó en este navegador (la memoria local de la Etapa 1;
-// la Etapa 2 los llevará a una base de datos con consentimiento y anonimización).
+// la Etapa 2 suma la nube, ver src/nube/ y src/casos/anonimo.js; esta memoria local sigue igual).
 const CLAVE_CASOS = 'biogap:casos:v1';
 export function normalizarCaso(c) {
   if (!c || typeof c !== 'object' || typeof c.id !== 'string') return null;
@@ -112,9 +116,11 @@ export const configEfectiva = (ajustes) => ({ ...CONFIG, ...ajustes });
 // Registros de plantillas: solo filas con fecha, lote y valor numérico.
 export function normalizarTpl(o, base) {
   if (!o || typeof o !== 'object') return base;
+  // Respaldos antiguos con fertilización o riego: esos registros ya no viven en Plantillas.
+  if (TPL[o.tipo]?.pestana) return base;
   const rows = Array.isArray(o.rows) ? o.rows.slice(0, 5000).filter((r) => r && typeof r.valor === 'number' && Number.isFinite(r.valor))
     .map((r) => ({ fecha: txt(r.fecha), lote: txt(r.lote), valor: r.valor })) : base.rows;
-  return { tipo: opcion(o.tipo, Object.keys(TPL), base.tipo), objetivo: num(o.objetivo, base.objetivo), rows, paste: '' };
+  return { tipo: opcion(o.tipo, tiposPlantilla(), base.tipo), objetivo: num(o.objetivo, base.objetivo), rows, paste: '' };
 }
 // Recomendaciones marcadas como hechas: { clave: true }.
 const normalizarHechas = (o) => (o && typeof o === 'object' && !Array.isArray(o)
@@ -131,7 +137,7 @@ export function importarTexto(texto) {
   try { o = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
   if (!o || o.formato !== FORMATO) throw new Error('El archivo no es una finca de BioG.A.P.');
   if (typeof o.version !== 'number' || o.version > VERSION) throw new Error('El archivo viene de una versión más nueva de la app.');
-  return { farm: normalizarFinca(o.finca), ajustes: normalizarAjustes(o.ajustes), tpl: o.plantillas ? normalizarTpl(o.plantillas, { tipo: 'fert', objetivo: 0, rows: [], paste: '' }) : null };
+  return { farm: normalizarFinca(o.finca), ajustes: normalizarAjustes(o.ajustes), tpl: o.plantillas ? normalizarTpl(o.plantillas, { tipo: 'mec', objetivo: 0, rows: [], paste: '' }) : null };
 }
 
 // Autoguardado en el navegador. Falla en silencio si el navegador lo bloquea.

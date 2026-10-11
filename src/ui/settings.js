@@ -22,6 +22,6 @@ export function viewSettings() {
     </div>
     ${invalido ? '<p style="color:var(--crit)">El umbral medio debe ser menor que el alto, y el alto no puede pasar de 100. Mientras tanto se usan los valores por defecto.</p>' : ''}
     <div class="row"><button class="btn" data-act="reset-ajustes">Restablecer ajustes</button><button class="btn" data-act="load-demo">Cargar finca de ejemplo</button></div>
-    <p class="muted" style="font-size:13px">Tus datos se guardan solo en este navegador. Para pasarlos a otro equipo o respaldarlos, usa Exportar finca en el dashboard.</p>
+    <p class="muted" style="font-size:13px">Tus datos se guardan en este navegador. Solo salen de él si inicias sesión en la pestaña Casos y decides guardar tu finca en la nube o compartir un caso anónimo. Para pasarlos a otro equipo sin la nube, usa Exportar finca en el dashboard.</p>
   </section>`;
 }

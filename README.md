@@ -16,17 +16,27 @@ Eso es la **memoria de casos**, y es el valor que crece con el uso. Desde la v0.
 
 ## Qué hace
 
-1. **Cuestionario** de la finca en seis pasos: finca, cultivos (y cultivos aledaños; o, sin cultivos, el propósito de manejo), especies por secciones (plagas sugeridas según el cultivo, polinizadores y fauna, árboles, malezas, cultivos que florecen; nivel de presencia opcional), prácticas, calendarios y certificación.
+1. **Cuestionario** de la finca en seis pasos: finca, cultivos (y cultivos aledaños; o, sin cultivos, el propósito de manejo), especies por secciones (plagas sugeridas según el cultivo, polinizadores y fauna, árboles, malezas, cultivos que florecen; nivel de presencia opcional), prácticas, calendarios y certificación. Los plaguicidas ya no se capturan aquí: tienen su pestaña.
 2. **Dashboard** con el índice ambiental global, el riesgo (0-100) por módulo, la presión por mes, el cruce de calendarios, un **simulador** ("¿qué pasa si cambio esta práctica?") y un **plan de acción** con casillas.
-3. **Plantillas** de registro (fertilización, riego, mecanización y personalizada) comparadas con el objetivo de la finca.
+3. **Plantillas** de registro (mecanización y personalizada; riego y fertilización tienen su pestaña) comparadas con el objetivo de la finca.
 4. **Panel GLOBALG.A.P.** con el margen de Minor Musts y las no conformidades abiertas.
 5. **Ajustes** para activar o desactivar módulos y mover los umbrales de riesgo. Tema claro, oscuro o del sistema.
-6. **Guardar y cargar**: autoguardado en el navegador y exportar o importar la finca como archivo `.json`.
+6. **Guardar y cargar**: autoguardado en el navegador, exportar o importar la finca como archivo `.json`, y copia privada opcional en la nube.
 7. **Memoria de casos (k-NN)**: compara tu finca con los casos guardados por cultivo, riego, pendiente, distancia al agua, especies nativas, meses de coincidencia y riesgo por módulo. Muestra las 3 más parecidas, en qué se parecen, qué hicieron y cómo les fue (no conformidades GLOBALG.A.P. y lámina aplicada/requerida, antes y después). Trae 9 casos de **ejemplo** (ficticios, marcados así en pantalla) y permite guardar tu finca como caso.
 8. **Plan de fertilización**: cada aplicación con producto (grado N-P₂O₅-K₂O), dosis en kg/ha o qq/mz, mes y método. Calcula N, P₂O₅ y K₂O frente al objetivo, N por mes frente a la lluvia, efectos en Suelo y Agua; se escribe a mano o se carga una plantilla Excel/CSV.
 9. **Riego por goteo**: calculadora y validador. El productor sube su Excel o CSV (o escribe sus datos), la app lee los valores por sus etiquetas, recalcula el diseño y revisa cada dato contra FAO-56. Ver [docs/catalogo-riego.md](docs/catalogo-riego.md).
+10. **Mapa satelital de la finca** (debajo del perfil de riesgo): ubicar la finca por coordenadas, tocando el mapa o con el GPS del dispositivo, y dibujar su contorno para calcular el área. Avisa si el punto cae fuera de Honduras o si el área dibujada difiere más de 20 % de la declarada. Imagen EOxCloudless (Sentinel-2, ~10 m): uso no comercial con atribución; un uso comercial necesita licencia de EOX.
+11. **Plaguicidas**: cada aplicación con producto, ingrediente activo, dosis y meses. Calcula el peligro para abejas y otros himenópteros polinizadores con el cociente de peligro de la FAO (HQ = g de i.a./ha ÷ DL50 por contacto; umbral 42 o 85), con un margen ×10 si la finca registra abejas sin aguijón. Revisa la etiqueta, las condiciones de aplicación, la eficacia contra la enfermedad (cuadro de fungicidas de la SAG, 132 productos) y la rotación por grupo, y lo cruza con la floración, la cosecha, el riego y la fertilización. Ver [docs/formulas.md](docs/formulas.md#plaguicidas-pestaña-plaguicidas).
+12. **Clima por ubicación** (Issue #8): con el punto de la finca, la app descarga de Open-Meteo (ERA5, CC BY 4.0) el clima de los últimos 10 años por mes y llena solos los meses de lluvia fuerte, la altitud, la ETo de riego y el clima del reservorio; también avisa en Plaguicidas con el clima típico de los meses de aplicación. Todo se puede corregir a mano. Ver [docs/formulas.md](docs/formulas.md#clima-por-ubicación-issue-8-crítica-3).
 
-Los datos de la finca se guardan solo en el navegador del usuario. No se envían a ningún servidor.
+**Datos y privacidad.** Por defecto, los datos de la finca se guardan solo en el navegador del usuario. La nube es **opcional** (pestaña Casos, panel «Nube y comunidad»):
+
+- **Tu finca completa** (con nombre y todos sus datos) se guarda en Supabase solo si inicias sesión (enlace al correo, sin contraseñas) y pulsas *Guardar mi finca en la nube*. Es privada: la seguridad por filas (RLS) hace que solo tú la leas o la cambies.
+- **Un caso anónimo** se comparte solo si marcas el consentimiento y pulsas *Compartir mi caso anónimo*: perfil por rasgos (0-1), riesgo por módulo, acciones y resultado. Nunca nombre, lugar, especies ni coordenadas. Puedes retirar todos tus casos cuando quieras.
+- Los casos compartidos los puede leer cualquiera, sin sesión y sin saber de quién son.
+- Sin conexión o sin sesión, la app funciona igual que antes. Detalles y decisiones en [docs/nube.md](docs/nube.md).
+- **El clima:** para descargarlo se envían a Open-Meteo las coordenadas redondeadas (~1 km). La finca guarda el clima por mes, no las coordenadas.
+- **El mapa satelital:** las coordenadas se guardan aparte, solo en este navegador, y **no** van en el archivo exportado, en la nube ni en la memoria de casos. El navegador sí descarga las imágenes del servicio de EOX según la zona que se mira.
 
 ## Cómo verla
 
@@ -57,18 +67,27 @@ src/
 ├─ casos/              memoria de casos (Etapa 1 del plan de ML)
 │  ├─ perfil.js         rasgos comparables de una finca
 │  ├─ memoria.js        similitud, k-NN y resumen del resultado
-│  └─ ejemplos.js       9 casos de ejemplo (ficticios)
+│  ├─ ejemplos.js       9 casos de ejemplo (ficticios)
+│  └─ anonimo.js        caso anonimizado para compartir y validación de lo que baja de la nube
+├─ nube/               cliente de Supabase (Auth y REST con fetch, sin dependencias)
+├─ mapa/               geo.js (proyección, teselas, área, avisos) y ubicacion.js (guardado aparte)
 ├─ fert/               plan de fertilización: catálogo, nutrientes, costos y hallazgos
+├─ plag/               plaguicidas
+│  ├─ modelo.js         una aplicación: campos, unidades y validación (los .json viejos se cargan igual)
+│  ├─ catalogo.js       53 ingredientes activos con DL50, grupo y GUS de su ficha del PPDB o BPDB
+│  ├─ sag.js            cuadro de fungicidas de la SAG: productos, enfermedades y eficacia
+│  └─ calculo.js        dosis por hectárea, HQ, avisos con fuente y rotación
 ├─ riego/              módulo de riego por goteo
 │  ├─ referencias.js    valores con fuente (FAO-56, CIMMYT)
 │  ├─ calculo.js        fórmulas del diseño agronómico
 │  ├─ reglas.js         validación: cada alerta con su porqué y su fuente
 │  ├─ xlsx.js, csv.js   lectura de archivos sin dependencias externas
 │  └─ extraer.js        de las celdas a los datos, por etiquetas
-└─ ui/                  vistas: dashboard, cuestionario, plantillas, riego, casos, ajustes y gráficos
+└─ ui/                  vistas: dashboard, cuestionario, plantillas, riego, fertilización, plaguicidas, casos, ajustes y gráficos
 docs/formulas.md        fórmula, supuestos y estado de calibración de cada módulo
 docs/catalogo-riego.md  fórmulas, rangos y reglas del módulo de riego
 docs/adr/               decisiones de diseño
+docs/nube.md            Etapa 2: tablas, políticas, consentimiento y cómo probarla
 tests/                  pruebas del motor
 ```
 
@@ -93,6 +112,9 @@ Este repositorio es la **única versión oficial**. Cualquier asistente (Claude 
 - [x] v0.3: guardar y cargar fincas (JSON) y ajustes por finca (módulos activos y umbrales)
 - [x] v0.4: módulo de riego (calculadora, validador e importador de Excel/CSV), validado con el diseño agronómico del Lab de Riego
 - [x] v0.5: diseño mejorado (índice global, simulador, plan de acción, presión por mes, tema oscuro, edición en el cuestionario, respaldo en texto)
+- [x] Mapa satelital con contorno y área (Issue #10)
+- [x] Pestaña Plaguicidas: peligro para himenópteros por ingrediente activo y dosis, etiqueta, condiciones y cuadro SAG
+- [x] Clima por ubicación: Open-Meteo por coordenadas, con respaldo manual (Issue #8)
 - [ ] Guardar los datos de riego con la finca (hoy se pierden al recargar la página)
 - [ ] Diseño hidráulico y cubicación de reservorio
 - [ ] Más cultivos en `src/riego/referencias.js` (hoy solo maíz)

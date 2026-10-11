@@ -5,12 +5,14 @@ import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
 import { evaluar, simular, nivel } from '../core/engine.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
-import { gauge, radar, pressureChart, calRow, dlt } from './charts.js';
+import { gauge, radar, pressureChart, calRow, dlt, leyendaCal } from './charts.js';
 import { panelVecinosDashboard } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
 import { ESTADOS } from '../core/rubrica.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
+import { panelMapa } from './mapa.js';
+import { panelClima } from './clima.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -68,7 +70,7 @@ export function viewDashboard(){
     <p class="muted small">El índice promedia los módulos activos; cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.</p>
   </section>
   <div class="grid2">
-    <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${radar(mods)}</section>
+    <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${radar(mods)}${panelMapa()}${panelClima()}</section>
     <section class="panel"><h2>Riesgo por módulo</h2><div class="cards">
       ${mods.map(m=>`<article class="card">
         <div class="top"><h3>${m.nombre}</h3><span class="pill ${m.level}">${m.level}</span></div>
@@ -98,6 +100,7 @@ export function viewDashboard(){
       ${calRow('Suelo desnudo',f.sueloDesnudoMeses,'on-gen',inter(f.sueloDesnudoMeses,f.lluviaMeses))}
       ${calRow('Plagas',R.plagaM,'on-gen',inter(R.amplio,R.plagaM))}
     </tbody></table></div>
+    ${leyendaCal(R.mh)}
   </section>
   <section class="panel">
     <div><h2>¿Qué pasa si cambias algo?</h2><p class="muted">Activa uno o varios cambios y mira cómo se mueve el riesgo. No modifica tus respuestas.</p></div>
@@ -144,7 +147,7 @@ export function viewDashboard(){
     <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>
   </section>`:''}
   <section class="panel flat">
-    <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador. Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
+    <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador (la nube es opcional, en la pestaña Casos). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
     <div class="f"><label for="io-box">Respaldo en texto (JSON)</label><textarea id="io-box" data-bind="io" placeholder="Pega aquí un respaldo y pulsa Cargar">${esc(S.io)}</textarea></div>
     <div class="row">
       <button class="btn sm" data-act="io-copy">Copiar respaldo</button>

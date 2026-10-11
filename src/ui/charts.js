@@ -39,6 +39,20 @@ export function pressureChart(mh){
 export function calRow(name,months,cls,hits){
   return `<tr><th class="rowh" scope="row">${name}</th>${M.map((m,i)=>{const h=hits&&hits.includes(i);return `<td class="${months.includes(i)?cls:''}${h?' hit':''}" title="${name}: ${m}">${h?'!':''}</td>`}).join('')}</tr>`;
 }
+// Módulo dueño de cada coincidencia de riesgo (según el módulo que la puntúa: polinizadores.js, fertilizacion.js, suelo.js, troficas.js).
+const MOD_COINC={'Aplicación durante floración visitada':'Polinizadores','Fertilización con lluvia fuerte':'Fertilización','Suelo desnudo con lluvia':'Suelo','Amplio espectro con plaga presente':'Cadenas tróficas','Aplicación en mes de cosecha':'Cadenas tróficas'};
+// Intensidad por mes a partir de R.mh: [{mes, n, mods:{módulo:n}, items:[texto]}].
+export function intensidadMeses(mh){
+  return mh.map((a,i)=>{const mods={};a.forEach(t=>{const m=MOD_COINC[t]||'Otro';mods[m]=(mods[m]||0)+1;});return {mes:i,n:a.length,mods,items:a};});
+}
+export function leyendaCal(mh){
+  const sw=(c,t)=>`<span class="lg"><i class="sw ${c}"></i>${t}</span>`;
+  const inten=intensidadMeses(mh);
+  return `<div class="legend" role="list" aria-label="Leyenda del calendario">
+    ${sw('on-flor','Floración visitada por polinizadores')}${sw('on-riesgo','Floración de especies de riesgo')}${sw('on-apl','Aplicación de plaguicidas')}${sw('on-cult','Siembra / cosecha')}${sw('on-gen','Fertilización, lluvia, suelo desnudo, plagas')}${sw('hit','! Coincidencia de riesgo')}
+  </div>
+  <div class="scroll"><table class="inten"><caption class="muted small">Intensidad por mes: número de coincidencias de riesgo y módulo que las puntúa</caption><thead><tr>${M.map(m=>`<th scope="col">${m}</th>`).join('')}</tr></thead><tbody><tr>${inten.map(x=>`<td class="i${Math.min(x.n,3)}" title="${M[x.mes]}: ${x.n?x.items.join('; '):'sin coincidencias'}"><b>${x.n}</b>${Object.entries(x.mods).map(([k,v])=>`<span>${k}${v>1?' ×'+v:''}</span>`).join('')}</td>`).join('')}</tr></tbody></table></div>`;
+}
 export function dlt(a,b){const d=b-a;return `<span class="delta ${d<0?'down':d>0?'up':'zero'}">${d>0?'+':''}${d}</span>`;}
 export function tplChart(t){
   const def=TPL[t.tipo];const rows=t.rows;let acc=0;

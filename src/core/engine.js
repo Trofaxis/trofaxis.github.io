@@ -7,6 +7,7 @@ import { uniq, inter } from './utils.js';
 import { MODULOS } from '../modules/index.js';
 import { puntuar } from './rubrica.js';
 import { conPlan, nutrientes } from '../fert/calculo.js';
+import { cuentaParaAbejas } from '../plag/calculo.js';
 
 export const nivel = (v, cfg = CONFIG) => (v >= cfg.niveles.alto ? 'Alto' : v >= cfg.niveles.medio ? 'Medio' : 'Bajo');
 
@@ -20,10 +21,12 @@ export function modulosDe(f, cfg = CONFIG) {
 }
 
 // extra.riego: alertas del módulo Riego (validar()), si el usuario cargó sus propios datos de riego.
-export function contexto(f, extra = {}) {
+// aplic: meses con aplicaciones que exponen a los polinizadores. Lo biológico no cuenta, salvo que su HQ supere
+// el umbral o la etiqueta advierta por abejas (src/plag/calculo.js).
+export function contexto(f, extra = {}, cfg = CONFIG) {
   const atraeFlor = uniq(f.especies.filter((e) => e.atrae).flatMap((e) => e.floracion));
   const riesgoFlor = uniq(f.especies.filter((e) => e.riesgo).flatMap((e) => e.floracion));
-  const aplic = uniq(f.plaguicidas.filter((p) => p.clase !== 'biologico').flatMap((p) => p.meses));
+  const aplic = uniq(f.plaguicidas.filter((p) => cuentaParaAbejas(p, f, cfg)).flatMap((p) => p.meses));
   const amplio = uniq(f.plaguicidas.filter((p) => p.clase === 'amplio').flatMap((p) => p.meses));
   const plagaM = uniq(f.plagas.flatMap((p) => p.meses));
   const nativasFauna = f.especies.some((e) => e.tipo === 'Fauna' && e.origen === 'nativa');
@@ -35,7 +38,7 @@ export function contexto(f, extra = {}) {
 
 export function evaluar(f0, cfg = CONFIG, extra = {}) {
   const f = conPlan(f0); // con plan de fertilización, el N y sus meses salen del plan
-  const ctx = contexto(f, extra);
+  const ctx = contexto(f, extra, cfg);
   const helpers = { cfg };
   const mods = modulosDe(f, cfg)
     .map((id) => MODULOS.find((m) => m.id === id))
@@ -64,14 +67,14 @@ export function evaluar(f0, cfg = CONFIG, extra = {}) {
 // Simulador: aplica cambios hipotéticos a una copia de la finca y recalcula. No toca los datos reales.
 export function simular(f, sim, cfg = CONFIG, extra = {}) {
   const g = structuredClone(f);
-  const base = contexto(f);
+  const base = contexto(f, {}, cfg);
   if (sim.n && g.nObjetivo > 0) {
     // Con plan: reduce en la misma proporción las aplicaciones que llevan N.
     const nPlan = g.fertPlan?.reduce((s, a) => s + nutrientes(a).n, 0) ?? 0;
     if (nPlan > g.nObjetivo) g.fertPlan.forEach((a) => { if (a.n > 0) a.dosis *= g.nObjetivo / nPlan; });
     g.nAplicado = Math.min(g.nAplicado, g.nObjetivo);
   }
-  if (sim.pol) g.plaguicidas.forEach((p) => { if (p.clase !== 'biologico') p.meses = p.meses.filter((m) => !base.atraeFlor.includes(m)); });
+  if (sim.pol) g.plaguicidas.forEach((p) => { if (cuentaParaAbejas(p, f, cfg)) p.meses = p.meses.filter((m) => !base.atraeFlor.includes(m)); });
   if (sim.riego && (g.riego === 'gravedad' || g.riego === 'aspersion')) g.riego = 'goteo';
   if (sim.suelo) { g.sueloDesnudoMeses = []; if (g.labranza === 'convencional') g.labranza = 'minima'; }
   if (sim.selec) g.plaguicidas.forEach((p) => { if (p.clase === 'amplio') p.clase = 'selectivo'; });

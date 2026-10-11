@@ -2,6 +2,8 @@
 // nivel: 'error' (dato imposible o fórmula mal), 'advertencia' (revisar), 'criterio' (decisión a justificar), 'ok'.
 
 import { EFICIENCIA_GOTEO, FUENTES } from './referencias.js';
+import { CONFIG } from '../core/config.js';
+import { NOMBRES_MES } from './calculo.js';
 
 const f1 = (x) => (Math.round(x * 10) / 10).toLocaleString('es-HN');
 const f2 = (x) => (Math.round(x * 100) / 100).toLocaleString('es-HN');
@@ -122,8 +124,107 @@ export function validar(r, declarados = {}) {
 
   // 12. Números escritos a mano dentro de fórmulas
   for (const h of declarados.numerosFijos || []) {
-    out.push(alerta(`fijo-${h.celda}`, 'advertencia', `Número escrito a mano en ${h.celda}`,
+    if (h.coincide?.startsWith('casi el área')) {
+      out.push(alerta(`fijo-${h.celda}-${h.numero}`, 'advertencia', `Área redondeada en ${h.celda}`,
+        `La fórmula ${h.formula} multiplica por ${h.numero}, que es ${h.coincide} pero no igual. El resultado queda ${Math.round(Math.abs(1 - Number(h.numero) / d.areaLote) * 100)} % ${Number(h.numero) < d.areaLote ? 'corto' : 'de más'}: conviene referenciar la celda del área.`));
+      continue;
+    }
+    out.push(alerta(`fijo-${h.celda}-${h.numero}`, 'advertencia', `Número escrito a mano en ${h.celda}`,
       `La fórmula ${h.formula} usa ${h.numero} directamente${h.coincide ? `, que es ${h.coincide}` : ''}. Si ese dato cambia, este resultado queda mal sin aviso: conviene referenciar la celda del dato.`));
+  }
+  const aMano = declarados.calculosAMano || [];
+  if (aMano.length) {
+    out.push(alerta('calculos-a-mano', 'criterio', 'Cálculos hechos a mano dentro de celdas',
+      `${aMano.length === 1 ? 'La celda' : `Las ${aMano.length} celdas`} ${aMano.slice(0, 6).join(', ')}${aMano.length > 6 ? '…' : ''} ${aMano.length === 1 ? 'opera' : 'operan'} solo con números escritos (por ejemplo, áreas medidas menos caminos). No es un error, pero anota de dónde salió cada número para que otro pueda revisarlo.`));
+  }
+
+  // 14. Consumo del ciclo
+  const c = r.ciclo;
+  if (c) {
+    if (c.fuenteEto === 'pico') {
+      out.push(alerta('ciclo-eto-pico', 'criterio', 'El consumo del ciclo usa la ETo pico todos los días',
+        `Da ${f1(c.etcCiclo)} mm porque supone ${f2(d.eto)} mm/día de ETo durante los ${r.cicloDias} días. Eso sobreestima el agua del ciclo${typeof declarados.volumenCiclo === 'number' ? ` y no se puede comparar con los ${Math.round(declarados.volumenCiclo).toLocaleString('es-HN')} m³ que dice el archivo` : ''}. Ingresa la fecha de siembra y la ETo media de cada mes en "Consumo del ciclo".`));
+    } else if (c.mesesSinEto.length) {
+      out.push(alerta('ciclo-meses', c.incompleto ? 'advertencia' : 'criterio', 'Faltan meses de ETo en el ciclo',
+        `No hay ETo para ${c.mesesSinEto.join(', ')}. ${c.incompleto ? 'Esos días quedan sin consumo y el ciclo sale corto.' : `Esos días se calcularon con la ETo pico (${f2(d.eto)} mm/día), que sobreestima.`}`));
+    }
+    const dec = declarados.volumenCiclo;
+    if (typeof dec === 'number' && c.volumenNeto && c.fuenteEto === 'mensual') {
+      const neto = cerca(dec, c.volumenNeto, 0.05), bruto = c.volumenBruto && cerca(dec, c.volumenBruto, 0.05);
+      if (neto && c.volumenBruto && !bruto) {
+        out.push(alerta('volumen-ciclo-neto', 'advertencia', 'El volumen por ciclo no incluye la eficiencia',
+          `El archivo dice ${Math.round(dec).toLocaleString('es-HN')} m³, que es el volumen neto (la app calcula ${Math.round(c.volumenNeto).toLocaleString('es-HN')} m³ netos). Con eficiencia de ${f2(d.eficiencia)} hay que disponer de ${Math.round(c.volumenBruto).toLocaleString('es-HN')} m³.`));
+      } else if (!neto && !bruto) {
+        out.push(alerta('dif-volumenCiclo', 'advertencia', 'El volumen por ciclo no cuadra con sus datos',
+          `El archivo dice ${Math.round(dec).toLocaleString('es-HN')} m³; con sus datos la app calcula ${Math.round(c.volumenNeto).toLocaleString('es-HN')} m³ netos${c.volumenBruto ? ` y ${Math.round(c.volumenBruto).toLocaleString('es-HN')} m³ brutos` : ''}. Revisa la ETo, las etapas y el área usadas.`));
+      }
+    }
+  }
+
+  // 15. ETo de diseño = máximo de un solo día
+  if (declarados.etoEsMaximo && d.eto) {
+    out.push(alerta('eto-maximo', 'criterio', 'La ETo de diseño es el día más alto del registro',
+      `Se usa ${f2(d.eto)} mm/día, el máximo de la serie (fórmula MAX). Diseñar para el peor día es conservador y válido, pero un pico aislado sobredimensiona el sistema: compáralo con los máximos de otros años o con un percentil alto.`));
+  }
+
+  // 16. Tablas del archivo que la app no lee
+  if (declarados.noRevisa?.length) {
+    out.push(alerta('no-revisa', 'criterio', 'Tablas del archivo que la app no lee',
+      `El archivo trae ${declarados.noRevisa.join(' y ')}. La app calcula esa parte con los datos que ingreses en "Hidráulica" y "Reservorio", pero todavía no lee esas tablas del archivo: copia ahí los datos del sector más desfavorable.`));
+  }
+
+  // 17. Hidráulica del sector más desfavorable
+  const h = r.hidraulica;
+  if (h) {
+    const hfMax = h.hfMax;
+    if (h.lateral && hfMax) {
+      const max = h.lateralMax ? ` El largo máximo con este diámetro es ${f1(h.lateralMax.largo)} m (${h.lateralMax.emisores} emisores).` : '';
+      out.push(h.lateral.hf > hfMax
+        ? alerta('lateral-largo', 'error', 'El lateral es demasiado largo',
+          `El lateral de ${f1(h.lateral.largo)} m pierde ${f2(h.lateral.hf)} m de presión, más que el límite de ${f2(hfMax)} m (10 % de la presión de operación). Los últimos goteros darán menos agua que los primeros.${max}`)
+        : alerta('lateral-largo', 'ok', 'El lateral cumple la pérdida máxima', `Pierde ${f2(h.lateral.hf)} m de ${f2(hfMax)} m permitidos.${max}`));
+    }
+    if (h.secundaria && hfMax && h.secundaria.hf > hfMax) {
+      out.push(alerta('secundaria-hf', 'advertencia', 'La secundaria pierde más presión de la permitida',
+        `Pierde ${f2(h.secundaria.hf)} m y el límite es ${f2(hfMax)} m. Usa un diámetro mayor o divide la secundaria.`));
+    }
+    const vmax = CONFIG.riego.velocidadMax;
+    const rapidas = [h.secundaria ? ['la secundaria', h.secundaria.v] : null, ...h.principal.filter((t) => !t.incompleto).map((t) => [`el tramo ${t.nombre}`, t.v])]
+      .filter((x) => x && x[1] > vmax);
+    if (rapidas.length) {
+      out.push(alerta('velocidad', 'advertencia', 'Agua demasiado rápida en la tubería',
+        `${rapidas.map(([n, v]) => `En ${n} va a ${f2(v)} m/s`).join('; ')}. Por encima de ${vmax} m/s aumentan las pérdidas y el riesgo de golpe de ariete al cerrar válvulas. Es un criterio común para PVC, no una norma: la hoja del Lab dimensiona las principales a 2 m/s.`));
+    }
+    if (h.principal.some((t) => t.incompleto)) {
+      out.push(alerta('principal-incompleta', 'criterio', 'Tramos de la principal sin datos', 'Algunos tramos no tienen largo o diámetro y no suman a la carga de la bomba.'));
+    }
+    if (h.cdt) {
+      const faltan = h.faltan.filter((x) => x !== 'Presión de operación');
+      out.push(faltan.length
+        ? alerta('cdt', 'criterio', 'Carga de la bomba incompleta',
+          `Suma ${f1(h.cdt)} m sin ${(faltan.length > 1 ? `${faltan.slice(0, -1).join(', ')} ni ${faltan.at(-1)}` : faltan[0]).toLowerCase()}. La carga real es mayor: ingresa esos datos antes de elegir la bomba.`)
+        : alerta('cdt', 'ok', 'Carga total de la bomba calculada', `CDT de ${f1(h.cdt)} m${h.potenciaHp ? `, unos ${f1(h.potenciaHp)} HP con la eficiencia dada` : ''}.`));
+    }
+  }
+
+  // 18. Reservorio
+  const res = r.reservorio;
+  if (res) {
+    const dr = d.reservorio || {};
+    if (dr.aporteFuente === null || dr.aporteFuente === undefined) {
+      out.push(alerta('reservorio-aporte', 'criterio', 'Sin dato de cuánto aporta la fuente', 'Se asumió que todo el ciclo sale del reservorio. Si la fuente aporta una parte, ingrésala como fracción.'));
+    }
+    if (!r.ciclo?.conFecha) {
+      out.push(alerta('reservorio-fecha', 'advertencia', 'Falta la fecha de siembra para la evaporación', 'Sin fecha no se sabe en qué meses está lleno el reservorio, y la evaporación queda en cero.'));
+    } else if (res.mesesSinRadiacion.length) {
+      out.push(alerta('reservorio-radiacion', 'advertencia', 'Faltan meses de radiación',
+        `No hay radiación para ${res.mesesSinRadiacion.map((m) => NOMBRES_MES[m]).join(', ')}: la evaporación de esos meses no se suma y el reservorio queda corto.`));
+    }
+    if (res.noCabe) {
+      out.push(alerta('reservorio-cabe', 'error', 'El volumen no cabe con ese talud', 'Con esas medidas y ese talud el fondo se cierra antes de guardar el volumen. Agranda el reservorio o reduce el talud.'));
+    }
+    out.push(alerta('reservorio-perdidas', 'criterio', 'El reservorio no incluye infiltración ni volumen muerto',
+      `El cálculo suma la demanda del ciclo y la evaporación${(dr.talud ?? 0) > 0 ? '' : ', con paredes verticales'}. Si el fondo no está revestido o queda agua que la bomba no alcanza, hace falta más volumen.`));
   }
 
   // 13. Datos completados con referencia

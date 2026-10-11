@@ -93,3 +93,17 @@ test('el simulador baja el riesgo y no modifica la finca original', () => {
   assert.ok(RS.overall < R.overall);
   assert.equal(RS.mods.find((m) => m.id === 'poli').score < R.mods.find((m) => m.id === 'poli').score, true);
 });
+
+import { intensidadMeses } from '../src/ui/charts.js';
+test('intensidadMeses agrupa por módulo sin alterar mh', () => {
+  const mh = Array.from({ length: 12 }, () => []);
+  mh[3] = ['Aplicación durante floración visitada', 'Aplicación en mes de cosecha', 'Amplio espectro con plaga presente'];
+  const r = intensidadMeses(mh);
+  assert.equal(r[3].n, 3);
+  assert.deepEqual(r[3].mods, { Polinizadores: 1, 'Cadenas tróficas': 2 });
+  assert.equal(r[0].n, 0);
+});
+test('toda coincidencia de evaluar() tiene módulo asignado', () => {
+  const R = evaluar(demoFarm());
+  intensidadMeses(R.mh).forEach((x) => assert.ok(!('Otro' in x.mods)));
+});
