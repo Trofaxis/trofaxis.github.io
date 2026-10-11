@@ -120,7 +120,8 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   const haCirculo = (r) => (Math.PI * r * r) / 10000;
   const nCoord = rc.n;
   const sitio = sitiosFuera(censoArb.map((a) => [a.lat, a.lon]), ubic?.contorno, [rMin, rMax]);
-  const sitios = evaluarSitios(censoArb, ubic?.sitios, [rMin, rMax]);
+  // Un sitio candidato sin ningún árbol censado no se puede juzgar (veredicto null): se queda en el mapa pero no entra al diagnóstico.
+  const sitios = evaluarSitios(censoArb, ubic?.sitios, [rMin, rMax]).filter((s) => s.veredicto);
   const radio = {
     min: rMin, max: rMax, haMin: Math.round(haCirculo(rMin)), haMax: Math.round(haCirculo(rMax)),
     fuente: FUENTES.barrantes.corta, hayTrigona: sinAguijon.some((e) => /trigona/i.test(e.nombre)),
