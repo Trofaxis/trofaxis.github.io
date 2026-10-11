@@ -8,11 +8,10 @@ import { configEfectiva, normalizarAjustes } from '../core/storage.js';
 import { gauge, gaugeSinDatos, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
 import { panelVecinosDashboard, panelRelaciones } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
-import { ESTADOS } from '../core/rubrica.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
-import { pastillaPuntaje } from './components.js';
+import { pastillaPuntaje, estadoFuente } from './components.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 
@@ -25,7 +24,7 @@ export function extraRiego(){
 // Tabla de la rúbrica de un módulo: qué variable, con qué valor, qué puntaje, cuánto pesa y de dónde sale.
 function tablaRubrica(m,cfg){
   return `<div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th></tr></thead><tbody>
-    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div class="estado ${v.estado.replace(' ','-')}" title="${esc(v.fuente)}">${ESTADOS[v.estado]}${v.fuente?' ⓘ':''}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
+    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div>${estadoFuente(v.estado,v.fuente,`fuente-${m.id}-${v.id}`,S.abiertos[`fuente-${m.id}-${v.id}`])}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
   </tbody></table></div>
   <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar.</p>`;
 }
@@ -51,7 +50,7 @@ export function viewDashboard(){
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
     ['suelo','Cubrir el suelo en lluvias','Cobertura y labranza mínima',!(f.sueloDesnudoMeses.length||f.labranza==='convencional')]];
   return `
-  ${S.msg?`<div class="notice" role="status"><span>${esc(S.msg)}</span></div>`:''}
+  ${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
   ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis y especies sirven para mostrar cómo funciona la app, no son mediciones.</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
   <section class="panel">
     <div class="row between">
@@ -65,7 +64,7 @@ export function viewDashboard(){
         <div><div class="k">Mes más cargado</div><div class="v">${hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno'}</div></div>
         <div><div class="k">Meses con coincidencias</div><div class="v">${hotM.length} de 12</div></div>
         <div><div class="k">Datos completos</div><div class="v">${Math.round(R.conf*100)} %</div></div>
-        <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Certificado':f.gg==='quiero'?'En camino':'No aplica'}</div></div>
+        <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica'}</div></div>
       </div>
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
@@ -97,7 +96,7 @@ export function viewDashboard(){
       ${calRow('Floración de especies de riesgo',R.riesgoFlor,'on-riesgo')}
       ${calRow('Aplicación de plaguicidas',R.aplic,'on-apl',R.ov1)}
       ${calRow('Siembra',R.siembraM,'on-cult')}
-      ${calRow('Cosecha',R.cosechaM,'on-cult',inter(R.aplic,R.cosechaM))}
+      ${calRow('Cosecha',R.cosechaM,'on-cult',R.aplicCosecha)}
       ${calRow('Fertilización',f.fertMeses,'on-gen',inter(f.fertMeses,f.lluviaMeses))}
       ${calRow('Lluvia fuerte',f.lluviaMeses,'on-gen')}
       ${calRow('Suelo desnudo',f.sueloDesnudoMeses,'on-gen',inter(f.sueloDesnudoMeses,f.lluviaMeses))}

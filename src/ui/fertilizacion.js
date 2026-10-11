@@ -19,7 +19,7 @@ export function viewFertilizacion() {
   const lluvia = new Set(f.lluviaMeses);
   const maxMes = Math.max(...r.nMes, 1);
   return `
-  ${S.msg ? `<div class="notice" role="status"><span>${esc(S.msg)}</span></div>` : ''}
+  ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
     <div><h2>Plan de fertilización</h2>
     <p class="muted">Registra cada aplicación: producto, dosis, mes y método. La app calcula cuánto N, P₂O₅ y K₂O aplicas, lo compara con tu objetivo y revisa cuándo y cómo cae frente a la lluvia, el suelo desnudo y el agua: <b>qué tan sostenible es tu fertilización con el ecosistema</b>. ${f.fertPlan.length ? 'El dashboard usa este plan en lugar del N total del cuestionario.' : ''}</p></div>

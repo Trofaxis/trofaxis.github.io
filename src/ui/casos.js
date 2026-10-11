@@ -124,7 +124,7 @@ export function viewCasos() {
   const todos = [...CASOS_EJEMPLO, ...S.casos];
   const propios = S.casos.length;
   return `
-  ${S.msg ? `<div class="notice" role="status"><span>${esc(S.msg)}</span></div>` : ''}
+  ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
     <div><p class="label">Memoria de casos · Etapa 2</p><h1>Cada finca es un caso</h1>
     <p class="muted">Cada finca evaluada guarda su situación, lo que hizo y cómo le fue. La app busca las más parecidas a la tuya con k vecinos más cercanos (k-NN), en tu navegador y sin servicios de pago. Mientras más casos reales se acumulan, mejores son las comparaciones: <b>un competidor puede copiar las fórmulas, pero no los casos acumulados.</b></p></div>

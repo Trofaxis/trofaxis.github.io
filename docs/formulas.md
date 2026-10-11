@@ -67,6 +67,13 @@ Basado en Kuniyoshi (2025) y Osorio (2025), PEG de Zamorano. Kuniyoshi encontró
 | Fracción de especies silvestres nativas | 25 | ≥ 0.6 → 0 · ≥ 0.3 → 50 · menor → 100 |
 | Meses con aplicación en cosecha | 15 | ≤ 0 → 0 · ≤ 0 → 50 · mayor → 100 |
 
+**Meses con aplicación en cosecha** (criterio propio, sin fuente). La finca guarda meses, no días, así que la regla compara meses: cuenta cada mes de cosecha en el que hay una aplicación que cuenta para las abejas (todo lo no biológico; lo biológico solo si su HQ supera el umbral o la etiqueta advierte). Un mes se descarta únicamente si todos los productos de ese mes tienen intervalo de seguridad de 0 días (campo «Días a cosecha» o el valor del cuadro SAG); la pantalla lo dice («Ninguna (Mar: intervalo de 0 días)»). Límites:
+
+1. Con 1 día o más, o sin dato, no se sabe si la aplicación fue antes o después de la cosecha y el mes cuenta igual: una aplicación a principio de mes con intervalo corto sigue dando 100.
+2. Un intervalo largo (30 días o más) también afecta a la cosecha del mes siguiente; la regla no lo revisa.
+3. El cuadro SAG trae el intervalo como número en 93 de sus 132 productos, como rango según el cultivo (por ejemplo «0 a 7») en 38 y vacío en 1. Al elegir un producto solo se copia el número; los rangos no se copian y el mes cuenta hasta que se anote el valor de la etiqueta. Siempre manda la etiqueta.
+4. Graduar el puntaje por la longitud del intervalo exige el día de cada aplicación y de la cosecha, o una regla validada. No se inventó una.
+
 ## Plaguicidas (pestaña Plaguicidas)
 
 Cada aplicación guarda el producto y los meses (obligatorios) y, si el usuario los tiene, el ingrediente activo, la concentración, la dosis, el agua por hectárea, cómo y hacia dónde se aplica, lo que dice la etiqueta y las condiciones del día. Con menos datos la app no inventa: el peligro queda "sin dato" y el módulo Polinizadores usa la clase que eligió el usuario. Código en `src/plag/`; pruebas en `tests/plaguicidas.test.js` (casos 1 a 13 del documento de diseño).

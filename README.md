@@ -38,6 +38,7 @@ Eso es la **memoria de casos**, y es el valor que crece con el uso. Desde la v0.
 - Sin conexión o sin sesión, la app funciona igual que antes. Detalles y decisiones en [docs/nube.md](docs/nube.md).
 - **El clima:** para descargarlo se envían a Open-Meteo las coordenadas redondeadas (~1 km). La finca guarda el clima por mes, no las coordenadas.
 - **El mapa satelital:** las coordenadas se guardan aparte, solo en este navegador, y **no** van en el archivo exportado, en la nube ni en la memoria de casos. Tienen su propio respaldo en archivo («Guardar mapa y censo»), aparte del de la finca, porque lleva coordenadas exactas. El navegador sí descarga las imágenes del servicio de EOX según la zona que se mira.
+- **Licencias de los servicios externos:** el mapa (EOX) y el clima (Open-Meteo) son gratis solo para uso no comercial, y la nube (Supabase) está en el plan gratis. Qué pasa si la app se cobra, el costo y qué hay que decidir: [docs/licencias.md](docs/licencias.md).
 
 ## Cómo verla
 

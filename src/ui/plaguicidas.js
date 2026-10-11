@@ -107,7 +107,7 @@ export function viewPlaguicidas() {
   const gruposEnf = [...new Set(ENFERMEDADES.map((e) => e.grupo))];
 
   return `
-  ${S.msg ? `<div class="notice" role="status"><span>${esc(S.msg)}</span></div>` : ''}
+  ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
     <div><p class="label">Plaguicidas</p><h1>Aplicaciones y peligro para polinizadores</h1>
     <p class="muted">Registra cada aplicación: producto, ingrediente activo, dosis y meses. La app calcula el peligro para abejas y otros himenópteros polinizadores, revisa lo que dice la etiqueta y las condiciones de aplicación, y lo cruza con la floración, la cosecha, el riego y la fertilización de tu finca. Solo el producto y los meses son obligatorios: con más datos, la app calcula más.</p></div>

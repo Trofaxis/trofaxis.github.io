@@ -106,7 +106,7 @@ export function viewWizard(){
     <div class="f"><span class="label">Meses con suelo desnudo</span>${months('farm.sueloDesnudoMeses',f.sueloDesnudoMeses)}</div>
     <p class="muted small">Las plagas ahora se registran en el paso 3, Especies.</p>`;
   if(s===5)body=`<h2>¿Eres o quieres ser certificado por GLOBALG.A.P.?</h2>
-    <p class="muted">Tu respuesta no cambia el cálculo de riesgo. Solo agrega la guía de requisitos de IFA v6 en el dashboard.</p>
+    <p class="muted">Tu respuesta no cambia el cálculo de riesgo. Solo agrega la guía de requisitos de IFA v6 en el dashboard. La app no verifica ninguna certificación: muestra lo que tú declaras.</p>
     <div class="choice">
       <button data-act="gg" data-v="si" aria-pressed="${f.gg==='si'}">Sí, ya estoy certificado</button>
       <button data-act="gg" data-v="quiero" aria-pressed="${f.gg==='quiero'}">Quiero certificarme</button>
