@@ -7,6 +7,7 @@ import { CONFIG } from './config.js';
 import { MODULOS } from '../modules/index.js';
 import { normalizarPlag } from '../plag/modelo.js';
 import { normalizarClima } from '../clima/normales.js';
+import { marcarGuardado } from './aviso-guardado.js';
 import { riegoAGuardar, normalizarRiego } from '../riego/guardado.js';
 
 export const FORMATO = 'biogap-finca';
@@ -92,7 +93,7 @@ export function cargarCasos() {
   try { const o = JSON.parse(localStorage.getItem(CLAVE_CASOS) || '[]'); return Array.isArray(o) ? o.slice(0, 500).map(normalizarCaso).filter(Boolean) : []; } catch { return []; }
 }
 export function guardarCasos(casos) {
-  try { localStorage.setItem(CLAVE_CASOS, JSON.stringify(casos)); return true; } catch { return false; }
+  try { localStorage.setItem(CLAVE_CASOS, JSON.stringify(casos)); return marcarGuardado(true); } catch { return marcarGuardado(false); }
 }
 
 // Solo la parte personalizable de la configuración viaja con la finca.
@@ -141,9 +142,12 @@ export function importarTexto(texto) {
   return { farm: normalizarFinca(o.finca), ajustes: normalizarAjustes(o.ajustes), tpl: o.plantillas ? normalizarTpl(o.plantillas, { tipo: 'mec', objetivo: 0, rows: [], paste: '' }) : null };
 }
 
-// Autoguardado en el navegador. Falla en silencio si el navegador lo bloquea.
+// Autoguardado en el navegador. Devuelve si pudo guardar; si no, la app muestra el aviso (src/core/aviso-guardado.js).
 export function guardarLocal(S) {
-  try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, riego: riegoAGuardar(S.riego) })); } catch { /* sin almacenamiento */ }
+  try {
+    localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, riego: riegoAGuardar(S.riego) }));
+    return marcarGuardado(true);
+  } catch { return marcarGuardado(false); }
 }
 
 export function cargarLocal(tplBase) {

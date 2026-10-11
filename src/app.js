@@ -2,6 +2,7 @@
 import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
 import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes } from './core/storage.js';
+import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
 import { viewDashboard } from './ui/dashboard.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
@@ -48,6 +49,9 @@ function sesionLista() {
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
+// Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
+function avisoGuardado(){const app=document.getElementById('app');if(!app)return;app.querySelector('#aviso-guardado')?.remove();
+  if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 function render(){
   // Conserva el foco y el cursor del campo que se estaba editando.
@@ -57,7 +61,7 @@ function render(){
   app.innerHTML=(views[S.view]||viewDashboard)();
   S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();guardarLocal(S);
+  montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
   if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
@@ -76,6 +80,7 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,f=S.farm;
   S.ioMsg='';S.plagMsg=null;
   if(act==='theme'){S.theme={system:'light',light:'dark',dark:'system'}[S.theme];}
+  else if(act==='guardado-ok'){guardado.descartado=true;}
   else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
   else if(act==='prev'){S.step=Math.max(0,S.step-1);}
   else if(act==='finish'){S.view='dashboard';}
@@ -167,7 +172,7 @@ function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);avisoGuardado();}});
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);

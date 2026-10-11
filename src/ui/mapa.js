@@ -7,6 +7,7 @@ import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
 import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear, leerCenso, leerLineaCenso, puntoDe, sitiosFuera } from '../mapa/geo.js';
 import { clasificarArboles, evaluarSitios, nombreSitio, censoEjemplo, VEREDICTO } from '../apiradar/censo.js';
+import { marcarGuardado } from '../core/aviso-guardado.js';
 import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia, exportarUbicacion, importarUbicacion, hayDatosPropios } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
 import { mapaRiesgoDe } from './mapariesgo.js';
@@ -150,7 +151,7 @@ function actualizarInfo() {
   const i = document.getElementById('mapa-info');
   if (i) i.innerHTML = infoHtml();
 }
-function guardar() { guardarUbicacion(U); }
+function guardar() { marcarGuardado(guardarUbicacion(U)); }
 
 function mover(el, dx, dy) {
   const { lat, lon, zoom } = U.vista;
