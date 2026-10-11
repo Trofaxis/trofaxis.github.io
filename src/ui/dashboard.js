@@ -5,7 +5,7 @@ import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
 import { evaluar, simular, nivel } from '../core/engine.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
-import { gauge, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
+import { gauge, gaugeSinDatos, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
 import { panelVecinosDashboard, panelRelaciones } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
 import { ESTADOS } from '../core/rubrica.js';
@@ -34,9 +34,10 @@ export function viewDashboard(){
   const cfg=configEfectiva(normalizarAjustes(S.ajustes));
   const f=conPlan(S.farm),X=extraRiego(),R=evaluar(f,cfg,X),mods=R.mods;
   if(!mods.length)return `<section class="panel"><h2>No hay módulos activos</h2><p class="muted">Activa al menos uno en Ajustes.</p></section>`;
-  const top=[...mods].sort((a,b)=>b.score-a.score)[0];
+  const conDatos=mods.filter(m=>m.suficiente);
+  const top=[...conDatos].sort((a,b)=>b.score-a.score)[0];
   const hotM=R.mh.map((a,i)=>[i,a.length]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
-  const recs=mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.level,r}))).sort((a,b)=>({Alto:0,Medio:1,Bajo:2}[a.lv]-{Alto:0,Medio:1,Bajo:2}[b.lv]));
+  const recs=mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',r}))).sort((a,b)=>({Alto:0,Medio:1,Bajo:2,'Sin datos':3}[a.lv]-{Alto:0,Medio:1,Bajo:2,'Sin datos':3}[b.lv]));
   const doneN=recs.filter(x=>S.done[x.k]).length;
   const gg=f.gg!=='no';
   const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
@@ -59,25 +60,25 @@ export function viewDashboard(){
     </div>
     <div class="hero">
       <div class="stats">
-        <div><div class="k">Mayor riesgo</div><div class="v">${top.nombre} · ${top.score}</div></div>
-        <div><div class="k">Módulos en alto</div><div class="v">${mods.filter(m=>m.level==='Alto').length} de ${mods.length}</div></div>
+        <div><div class="k">Mayor riesgo</div><div class="v">${top?`${top.nombre} · ${top.score}`:'Sin datos suficientes'}</div></div>
+        <div><div class="k">Módulos en alto</div><div class="v">${conDatos.filter(m=>m.level==='Alto').length} de ${conDatos.length}</div></div>
         <div><div class="k">Mes más cargado</div><div class="v">${hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno'}</div></div>
         <div><div class="k">Meses con coincidencias</div><div class="v">${hotM.length} de 12</div></div>
         <div><div class="k">Datos completos</div><div class="v">${Math.round(R.conf*100)} %</div></div>
         <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Certificado':f.gg==='quiero'?'En camino':'No aplica'}</div></div>
       </div>
-      <div><p class="label" style="text-align:center">Índice ambiental global</p>${gauge(R.overall,lvO)}</div>
+      <div><p class="label" style="text-align:center">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
-    <p class="muted small">El índice promedia los módulos activos; cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.</p>
+    <p class="muted small">El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}</p>
   </section>
   <div class="grid2">
-    <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${radar(mods)}${panelMapa()}${panelClima()}</section>
+    <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${conDatos.length>=3?radar(conDatos):'<p class="muted small">El perfil se dibuja cuando al menos 3 módulos tienen datos suficientes.</p>'}${panelMapa()}${panelClima()}</section>
     <section class="panel"><h2>Riesgo por módulo</h2><div class="cards">
       ${mods.map(m=>`<article class="card">
-        <div class="top"><h3>${m.nombre}</h3><span class="pill ${m.level}">${m.level}</span></div>
-        <div class="score">${m.score}</div>
-        <div class="bar-track" aria-hidden="true"><span class="fill-${m.level}" style="width:${m.score}%"></span></div>
-        <p class="muted small">Causa principal: ${m.driver}</p>
+        <div class="top"><h3>${m.nombre}</h3>${m.suficiente?`<span class="pill ${m.level}">${m.level}</span>`:'<span class="pill sin-datos" title="Sin datos suficientes">Sin datos</span>'}</div>
+        <div class="score">${m.suficiente?m.score:'—'}</div>
+        <div class="bar-track" aria-hidden="true">${m.suficiente?`<span class="fill-${m.level}" style="width:${m.score}%"></span>`:''}</div>
+        <p class="muted small">${m.suficiente?`Causa principal: ${m.driver}`:'Faltan datos para calificar este módulo; no entra al índice global.'}</p>
         <div><div class="row between small muted"><span>Confianza de datos</span><span>${Math.round(m.conf*100)} %</span></div><div class="conf"><span style="width:${m.conf*100}%"></span></div></div>
         <details><summary>Ver rúbrica (${m.variables.filter(v=>v.aplica!==false).length} variables)</summary>${tablaRubrica(m,cfg)}</details>
       </article>`).join('')}
@@ -109,7 +110,7 @@ export function viewDashboard(){
     <div class="sim">${simOpts.map(o=>`<button type="button" data-sim="${o[0]}" aria-pressed="${S.sim[o[0]]}" ${o[4]?'disabled':''}>${o[1]}<span>${o[2]}</span></button>`).join('')}</div>
     <div class="scroll"><table class="data"><thead><tr><th>Módulo</th><th class="num">Ahora</th><th class="num">Con cambios</th><th class="num">Diferencia</th></tr></thead><tbody>
       ${mods.map((m,i)=>`<tr><td>${m.nombre}</td><td class="num">${m.score}</td><td class="num">${RS.mods[i].score}</td><td class="num">${dlt(m.score,RS.mods[i].score)}</td></tr>`).join('')}
-      <tr><td><b>Índice global</b></td><td class="num"><b>${R.overall}</b></td><td class="num"><b>${RS.overall}</b></td><td class="num">${dlt(R.overall,RS.overall)}</td></tr>
+      <tr><td><b>Índice global</b></td><td class="num"><b>${R.sinDatos?'—':R.overall}</b></td><td class="num"><b>${RS.sinDatos?'—':RS.overall}</b></td><td class="num">${R.sinDatos||RS.sinDatos?'':dlt(R.overall,RS.overall)}</td></tr>
     </tbody></table></div>
     ${anySim?`<div><button class="btn sm" data-act="sim-reset">Quitar todos los cambios</button></div>`:''}
   </section>
@@ -145,7 +146,7 @@ export function viewDashboard(){
       </div>
     </div>
     <div class="scroll"><table class="data"><thead><tr><th>Módulo</th><th>Secciones de IFA v6 frutas y verduras (Smart)</th><th class="num">Riesgo</th></tr></thead><tbody>
-      ${mods.map(m=>`<tr><td>${m.nombre}</td><td>${m.ifa}</td><td class="num"><span class="pill ${m.level}">${m.score}</span></td></tr>`).join('')}
+      ${mods.map(m=>`<tr><td>${m.nombre}</td><td>${m.ifa}</td><td class="num">${m.suficiente?`<span class="pill ${m.level}">${m.score}</span>`:'<span class="pill sin-datos">sin datos</span>'}</td></tr>`).join('')}
     </tbody></table></div>
     <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>
   </section>`:''}
