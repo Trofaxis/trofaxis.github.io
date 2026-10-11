@@ -228,7 +228,7 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .mr-arboles circle.bajo,.mr-sitios path.lejos{fill:var(--good)} .mr-arboles circle.sin{fill:var(--muted)}
 .mr-arboles text,.mr-sitios text,.mr-norte text,.mr-escala{fill:var(--ink)}
 .mr-escala{fill:var(--muted)}
-.mr-leyenda{margin-top:8px}
+.mr-leyenda{margin:8px 0 12px}
 .mr-leyenda span{display:inline-flex;align-items:center;gap:6px}
 .legend .sw.alto{background:var(--crit)} .legend .sw.medio{background:var(--warn)} .legend .sw.bajo{background:var(--good)} .legend .sw.sin{background:var(--muted)}
 .arboles{border:1px solid var(--line);border-radius:10px;padding:8px 12px}

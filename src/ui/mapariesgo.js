@@ -2,8 +2,8 @@
 // Dibuja el contorno de la finca, cada árbol del censo (color por riesgo, ID), su radio de exclusión y los sitios candidatos
 // (rombo con el color de su veredicto). Norte arriba. Todo se calcula en un plano local alrededor del primer árbol.
 import { esc } from '../core/utils.js';
-import { planoDe } from '../mapa/geo.js';
-import { nombreSitio, VEREDICTO } from '../apiradar/censo.js';
+import { planoDe, sitiosFuera } from '../mapa/geo.js';
+import { nombreSitio, VEREDICTO, clasificarArboles, evaluarSitios, resumenCenso } from '../apiradar/censo.js';
 
 const PASOS = [10, 20, 50, 100, 200, 500, 1000, 2000];
 const fm = (n) => Math.round(n * 10) / 10;
@@ -35,7 +35,7 @@ export function mapaRiesgo({ arboles, sitios }, contorno, radios, mejor) {
   for (let x = Math.ceil(vx / paso) * paso; x <= vx + w; x += paso) lineas.push(`<line x1="${X(x)}" y1="${fm(vy)}" x2="${X(x)}" y2="${fm(vy + h)}"/>`);
   for (let y = Math.ceil(vy / paso) * paso; y <= vy + h; y += paso) lineas.push(`<line x1="${fm(vx)}" y1="${Y(y)}" x2="${fm(vx + w)}" y2="${Y(y)}"/>`);
   const volMax = Math.max(1, ...pa.map((a) => a.vol ?? 0));
-  const rad = (a) => (4 + 6 * Math.sqrt((a.vol ?? 0) / volMax)) * u;
+  const rad = (a) => (5 + 5 * Math.sqrt((a.vol ?? 0) / volMax)) * u;
   const luz = (c) => (c === 'alto' ? 'alto' : c === 'medio' ? 'medio' : c === 'bajo' ? 'bajo' : 'sin');
   return `<svg class="mapa-riesgo" viewBox="${fm(vx)} ${fm(vy)} ${fm(w)} ${fm(h)}" role="img" aria-label="Mapa de riesgo: ${arboles.length} árbol(es) del censo con su radio de exclusión y ${sitios.length} sitio(s) candidato(s)">
     <g class="mr-rejilla" stroke-width="${fm(u)}">${lineas.join('')}</g>
@@ -54,3 +54,14 @@ export const leyendaRiesgo = (radios) => `<div class="legend mr-leyenda">
   <span>Rombo: sitio candidato, con el color de su veredicto</span>
   <span>Anillo continuo: radio mínimo (${radios[0]} m) · punteado: radio conservador (${radios[1]} m)</span>
   <span>Tamaño del punto: volumen de copa</span></div>`;
+
+// Mapa de riesgo con su leyenda y un resumen, a partir de la ubicación guardada (censo, sitios, contorno). Es el mismo que muestra el
+// ApiRadar; se usa también bajo el formulario del censo para ver el resultado al cargar los datos. Sin árboles, explica qué falta.
+export function mapaRiesgoDe(ubic, radios) {
+  if (!ubic.arboles.length) return '<p class="muted small">Aquí aparecerá el mapa de riesgo cuando cargues al menos un árbol.</p>';
+  const arboles = clasificarArboles(ubic.arboles), r = resumenCenso(arboles);
+  const sitios = evaluarSitios(arboles, ubic.sitios, radios);
+  const f = sitiosFuera(ubic.arboles.map((a) => [a.lat, a.lon]), ubic.contorno, radios);
+  const aviso = r.sinMedidas ? `<p class="mapa-aviso">${r.sinMedidas === r.n ? 'Ningún árbol tiene' : `${r.sinMedidas} árbol(es) no tienen`} diámetro y altura de copa: sin esas medidas la app no puede decir cuál tiene más riesgo (los marca en gris). Agrégalas en el formulario o en la tabla.</p>` : '';
+  return `${aviso}<div class="mapa-riesgo-caja">${mapaRiesgo({ arboles, sitios }, ubic.contorno, radios, f?.fraccionMin > 0 ? f.mejor : null)}</div>${leyendaRiesgo(radios)}`;
+}
