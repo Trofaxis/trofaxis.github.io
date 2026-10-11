@@ -7,26 +7,20 @@ import { viewDashboard } from './ui/dashboard.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
-import { viewRiego } from './ui/riego.js';
 import { viewCasos } from './ui/casos.js';
-import { viewFertilizacion } from './ui/fertilizacion.js';
-import { viewPlaguicidas } from './ui/plaguicidas.js';
 import { montarMapa, reiniciarMapa } from './ui/mapa.js';
 import { marcarManual } from './ui/clima.js';
 import { llenarRiego } from './clima/normales.js';
 import { producto, UNIDADES } from './fert/catalogo.js';
-import { extraerFert, PLANTILLA_CSV } from './fert/extraer.js';
 import { nombreCultivoPrincipal } from './casos/perfil.js';
 import { casoAnonimo } from './casos/anonimo.js';
 import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
 import { riegoVacio } from './riego/calculo.js';
 import { riegoInicial } from './riego/guardado.js';
-import { leerXlsx, ErrorLectura } from './riego/xlsx.js';
-import { leerCsv } from './riego/csv.js';
-import { extraerRiego } from './riego/extraer.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
 import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
+import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
@@ -64,12 +58,23 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   if(visible)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);
   const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
+// Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
+const VISTAS={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
+const cargador=crearCargador({
+  riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
+  fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),
+  plaguicidas:(i)=>import(conIntento('./ui/plaguicidas.js',i)).then(m=>m.viewPlaguicidas),
+},{alCambiar:(nombre)=>{if(S.view===nombre)render();}});
+const htmlCargando=(fallo)=>fallo
+  ?'<div class="notice" role="alert"><span>No se pudo descargar esta pestaña. Revisa la conexión.</span><button class="btn sm" data-act="reintentar-vista">Reintentar</button></div>'
+  :'<p class="muted" aria-busy="true">Cargando…</p>';
 function render(){
   // Conserva el foco y el cursor del control que se estaba usando (campo, botón de mes, simulador o acción de fila).
   const app=document.getElementById('app');
   const ae=document.activeElement;const sel=app&&app.contains(ae)?selectorDeFoco(ae):null;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
-  const views={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,riego:viewRiego,fertilizacion:viewFertilizacion,plaguicidas:viewPlaguicidas,casos:viewCasos,ajustes:viewSettings};
-  app.innerHTML=(views[S.view]||viewDashboard)();
+  const vista=cargador.incluye(S.view)?cargador.vista(S.view):(VISTAS[S.view]||viewDashboard);
+  if(!vista)cargador.pedir(S.view);
+  app.innerHTML=vista?vista():htmlCargando(cargador.fallo(S.view));
   const msg=S.msg;S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
@@ -92,6 +97,7 @@ document.addEventListener('click',e=>{
   S.ioMsg='';S.plagMsg=null;
   if(act==='theme'){S.theme={system:'light',light:'dark',dark:'system'}[S.theme];}
   else if(act==='guardado-ok'){guardado.descartado=true;}
+  else if(act==='reintentar-vista'){cargador.reintentar(S.view);}
   else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
   else if(act==='prev'){S.step=Math.max(0,S.step-1);}
   else if(act==='finish'){S.view='dashboard';}
@@ -149,7 +155,7 @@ document.addEventListener('click',e=>{
   else if(act==='toggle-mod'){const id=a.dataset.id,on=S.ajustes.modulosActivos;S.ajustes.modulosActivos=on.includes(id)?on.filter(x=>x!==id):[...on,id];}
   else if(act==='reset-ajustes'){S.ajustes=configBase();}
   else if(act==='fert-import'){importarFert();return;}
-  else if(act==='fert-plantilla'){bajar(PLANTILLA_CSV,'plantilla-fertilizacion.csv','text/csv;charset=utf-8');return;}
+  else if(act==='fert-plantilla'){import(conIntento('./fert/extraer.js',intentoPlantilla)).then((m)=>bajar(m.PLANTILLA_CSV,'plantilla-fertilizacion.csv','text/csv;charset=utf-8'),()=>{intentoPlantilla++;S.msg='No se pudo descargar la plantilla. Revisa la conexión.';render();});return;}
   else if(act==='fert-unidad'){S.fertUnidad=UNIDADES[a.dataset.u]?a.dataset.u:'kgha';}
   else if(act==='add-fert'){const d=S.draftFert,dos=Number(d.dosis);if(!(dos>0)){S.msg='Escribe una dosis mayor que cero.';render();return;}
     const g=producto(d.producto),otro=g.id==='otro',pct=x=>Math.min(100,Math.max(0,Number(x)||0));
@@ -238,12 +244,24 @@ function abrirArchivo(){
 // Descarga un texto como archivo.
 function bajar(texto,nombre,tipo){const url=URL.createObjectURL(new Blob(['\ufeff'+texto],{type:tipo}));const l=document.createElement('a');l.href=url;l.download=nombre;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
+// Lectores de .xlsx y .csv y el extractor de cada área: se descargan al elegir un archivo.
+class ErrorCarga extends Error{}
+let intentoLectores=0,intentoPlantilla=0;
+async function lectores(extractor){
+  const i=intentoLectores;
+  try{const[x,c,e]=await Promise.all([import(conIntento('./riego/xlsx.js',i)),import(conIntento('./riego/csv.js',i)),extractor(i)]);
+    return{leerXlsx:x.leerXlsx,ErrorLectura:x.ErrorLectura,leerCsv:c.leerCsv,...e};}
+  catch(err){intentoLectores++;throw new ErrorCarga('no se pudo descargar el lector de archivos. Revisa la conexión y vuelve a intentarlo.');}
+}
+const mensajeLectura=(err,L)=>err instanceof ErrorCarga||(L&&err instanceof L.ErrorLectura)?err.message:'el archivo está dañado o no es compatible.';
+
 // Importar el plan de fertilización desde Excel (.xlsx) o CSV. Nada sale del navegador.
 function importarFert(){
   const input=document.createElement('input');input.type='file';input.accept='.xlsx,.csv,.txt';
   input.addEventListener('change',async()=>{
-    const file=input.files&&input.files[0];if(!file)return;const nombre=file.name.toLowerCase();
+    const file=input.files&&input.files[0];if(!file)return;const nombre=file.name.toLowerCase();let L=null;
     try{
+      L=await lectores((i)=>import(conIntento('./fert/extraer.js',i)));const{ErrorLectura,leerXlsx,leerCsv,extraerFert}=L;
       if(file.size>LIMITE_ARCHIVO)throw new ErrorLectura('El archivo pesa más de 100 MB.');
       let libro;
       if(nombre.endsWith('.xlsx'))libro=await leerXlsx(await file.arrayBuffer());
@@ -255,7 +273,7 @@ function importarFert(){
       if(!x.plan.length)throw new ErrorLectura(`Encontré los encabezados en "${x.hoja}", pero ninguna fila se pudo leer.${x.omitidas[0]?' Fila '+x.omitidas[0].fila+': '+x.omitidas[0].motivo:''}`);
       S.farm.fertPlan=x.plan;S.demo=false;S.fertImport={archivo:file.name,hoja:x.hoja,omitidas:x.omitidas,avisos:x.avisos};S.view='fertilizacion';
       S.msg=`Se leyeron ${x.plan.length} aplicaciones de ${file.name}${x.omitidas.length?`; ${x.omitidas.length} fila(s) no se pudieron leer`:''}.`;
-    }catch(err){S.msg=`No se pudo leer ${file.name}: ${err instanceof ErrorLectura?err.message:'el archivo está dañado o no es compatible.'}`;}
+    }catch(err){S.msg=`No se pudo leer ${file.name}: ${mensajeLectura(err,L)}`;}
     render();
   });
   input.click();
@@ -267,8 +285,9 @@ function importarRiego(){
   const input=document.createElement('input');input.type='file';input.accept='.xlsx,.xlsm,.csv,.txt';
   input.addEventListener('change',async()=>{
     const file=input.files&&input.files[0];if(!file)return;
-    const nombre=file.name.toLowerCase();
+    const nombre=file.name.toLowerCase();let L=null;
     try{
+      L=await lectores((i)=>import(conIntento('./riego/extraer.js',i)));const{ErrorLectura,leerXlsx,leerCsv,extraerRiego}=L;
       if(file.size>LIMITE_ARCHIVO)throw new ErrorLectura('El archivo pesa más de 100 MB.');
       let libro;
       if(nombre.endsWith('.xlsx')||nombre.endsWith('.xlsm'))libro=await leerXlsx(await file.arrayBuffer());
@@ -282,7 +301,7 @@ function importarRiego(){
       S.riego={datos:x.datos,fuente:'archivo',archivo:file.name,origen:x.origen,declarados:x.declarados,faltan:x.faltan,omitidas:libro.omitidas||[]};climaARiego();
       S.view='riego';
       S.msg=`Se leyeron ${encontrados} datos de ${file.name}.`;
-    }catch(err){S.msg=`No se pudo leer ${file.name}: ${err instanceof ErrorLectura?err.message:'el archivo está dañado o no es compatible.'}`;}
+    }catch(err){S.msg=`No se pudo leer ${file.name}: ${mensajeLectura(err,L)}`;}
     render();
   });
   input.click();
