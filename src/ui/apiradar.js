@@ -54,7 +54,7 @@ export function panelApiRadar(f, cfg, X) {
   const sugerido = R.aplica;
   const cabecera = `<div class="row between"><div><h2>Resolver un problema</h2>
     <p class="muted">Elige el problema que quieres atender. La app cruza los datos que ya cargaste y te da el ApiRadar: nivel de riesgo, por qué, qué hacer y qué falta.</p></div></div>
-    <div class="row"><div class="f" style="min-width:260px"><label for="problema">Problema</label>
+    <div class="row"><div class="f minw-260"><label for="problema">Problema</label>
       <select id="problema" data-bind="problema" data-rerender><option value="">Elige un problema…</option>
         ${Object.values(PROBLEMAS).map((p) => `<option value="${p.id}" ${S.problema === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
       ${abierto ? '' : `<button class="btn primary" data-act="apiradar" data-p="spathodea">Generar ApiRadar</button>`}</div>
@@ -64,9 +64,9 @@ export function panelApiRadar(f, cfg, X) {
   const nivelC = R.nivel === 'Alto' ? 'crit' : R.nivel === 'Medio' ? 'warn' : 'good';
   return `<section class="panel" id="apiradar">${cabecera}
     <div class="hero ar">
-      <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="stack gap-8">
         <p class="label">ApiRadar · ${esc(R.problema.nombre)}</p>
-        <h3 style="color:var(--${nivelC})">Riesgo ${R.nivel.toLowerCase()} para las abejas: ${R.score} de 100</h3>
+        <h3 class="txt-${nivelC}">Riesgo ${R.nivel.toLowerCase()} para las abejas: ${R.score} de 100</h3>
         <p>${esc(R.resumen)}</p>
         <p class="muted small">Confianza de los datos: ${Math.round(R.conf * 100)} %. Es el riesgo del módulo Polinizadores; el ApiRadar solo lo ordena como diagnóstico y no agrega pesos nuevos.</p>
       </div>
@@ -85,7 +85,7 @@ export function panelApiRadar(f, cfg, X) {
     ${seccionMapa(R, ubic, cfg)}
     <h3>4. Qué hacer</h3>
     <p class="muted small">Los cambios se aplican en este orden y se recalcula tu finca después de cada uno: lo que baja es acumulado, y el orden importa.</p>
-    <ol class="plan apiradar-acciones">${R.acciones.map((a) => `<li style="flex-direction:column;align-items:stretch;gap:6px">
+    <ol class="plan apiradar-acciones">${R.acciones.map((a) => `<li>
       <div class="row between"><b>${esc(a.titulo)}</b><span>${delta(a)}</span></div>
       <p class="small"><span class="tag">Cuándo: ${esc(a.cuando)}</span> ${esc(a.detalle)}</p>
       <div class="small">${estado(a.estado)}${a.nota ? ` <span class="muted">${esc(a.nota)}</span>` : ''}</div></li>`).join('')}</ol>

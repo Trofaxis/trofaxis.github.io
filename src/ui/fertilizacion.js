@@ -26,7 +26,7 @@ export function viewFertilizacion() {
     <div class="row">
       <span class="label">Unidad de dosis</span>
       ${UNIDADES_UI.map((k) => [k, UNIDADES[k]]).map(([k, u]) => `<button class="btn sm ${S.fertUnidad === k ? 'primary' : ''}" data-act="fert-unidad" data-u="${k}">${u.nombre}</button>`).join('')}
-      <span class="muted small" style="flex-basis:100%">1 qq/mz ≈ ${fmt(UNIDADES.qqmz.aKgHa)} kg/ha (quintal de 100 lb; manzana de 10 000 varas²)</span>
+      <span class="muted small basis-100">1 qq/mz ≈ ${fmt(UNIDADES.qqmz.aKgHa)} kg/ha (quintal de 100 lb; manzana de 10 000 varas²)</span>
     </div>
     <div class="row"><button class="btn primary" data-act="fert-import">Cargar Excel o CSV</button><button class="btn" data-act="fert-plantilla">Descargar plantilla</button>
       <span class="muted small">Columnas: Mes (o fecha), Producto (nombre o fórmula 15-15-15), Dosis, Unidad (kg/ha, qq/mz, qq/ha, kg/mz, lb/acre) y Método. El archivo no sale de tu navegador.</span></div>
@@ -47,7 +47,7 @@ export function viewFertilizacion() {
     <h2>Aplicaciones</h2>
     <div class="scroll"><table class="data"><thead><tr><th>Mes</th><th>Producto</th><th class="num">Dosis (${U.nombre})</th><th>Método</th><th class="num">N</th><th class="num">P₂O₅</th><th class="num">K₂O</th><th></th></tr></thead><tbody>
       ${r.filas.map((a, i) => `<tr><td>${M[a.mes]}${lluvia.has(a.mes) ? ' <span title="Mes de lluvia fuerte">🌧</span>' : ''}</td><td>${esc(a.nombre)}<div class="muted small">${a.n}-${a.p}-${a.k}</div></td><td class="num">${fmt(a.dosis / U.aKgHa)}</td><td class="small">${esc(METODOS[a.metodo])}</td><td class="num">${fmt(a.kgN)}</td><td class="num">${fmt(a.kgP)}</td><td class="num">${fmt(a.kgK)}</td>
-        <td class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="edit-fert" data-i="${i}">Editar</button><button class="btn sm" data-act="rm-fert" data-i="${i}">Quitar</button></td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin aplicaciones. Agrégalas abajo o carga tu plantilla.</td></tr>'}
+        <td class="row gap-4 nowrap"><button class="btn sm" data-act="edit-fert" data-i="${i}">Editar</button><button class="btn sm" data-act="rm-fert" data-i="${i}">Quitar</button></td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin aplicaciones. Agrégalas abajo o carga tu plantilla.</td></tr>'}
       ${r.filas.length ? `<tr><td colspan="4"><b>Total por hectárea</b></td><td class="num"><b>${fmt(r.tot.n)}</b></td><td class="num"><b>${fmt(r.tot.p)}</b></td><td class="num"><b>${fmt(r.tot.k)}</b></td><td></td></tr>` : ''}
     </tbody></table></div>
     <div class="subform"><h3>Agregar aplicación</h3>
@@ -66,19 +66,19 @@ export function viewFertilizacion() {
     <section class="panel">
       <div><h2>Hallazgos</h2><p class="muted">Qué está bien, qué revisar y por qué.</p></div>
       <ul class="alertas">${r.hallazgos.map((a) => `<li class="alerta ${a.nivel}">
-        <div class="row" style="gap:8px"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
-        <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted" style="font-size:12.5px">Fuente: ${esc(a.fuente.cita)}</p>` : ''}
+        <div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
+        <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted fs-125">Fuente: ${esc(a.fuente.cita)}</p>` : ''}
       </li>`).join('')}</ul>
     </section>
     <section class="panel">
       <h2>Nutrientes frente al objetivo</h2>
       ${NUT.map(([x, nom, key]) => { const q = r.ratio[x]; const w = q == null ? 0 : Math.min(q, 1.5) / 1.5 * 100; const lv = q == null ? '' : q > 1.2 ? 'Alto' : q > 1 || q < 0.8 ? 'Medio' : 'Bajo';
         return `<div><div class="row between small"><b>${nom}</b><span>${fmt(r.tot[x])} de ${f[key] || '—'} kg/ha${q == null ? '' : ` · ${Math.round(q * 100)} %`}</span></div>
-        <div class="bar-track" style="position:relative"><span class="fill-${lv || 'Bajo'}" style="width:${w}%;${q == null ? 'opacity:.25' : ''}"></span><i style="position:absolute;left:${100 / 1.5}%;top:-3px;bottom:-3px;border-left:2px solid var(--ink)" title="Objetivo"></i></div></div>`; }).join('')}
+        <div class="bar-track rel"><span class="fill-${lv || 'Bajo'}${q == null ? ' tenue' : ''}" style="width:${w}%"></span><i class="meta-objetivo" title="Objetivo"></i></div></div>`; }).join('')}
       <p class="muted small">La línea vertical marca el 100 % del objetivo.</p>
       <h3>Nitrógeno por mes</h3>
       <div class="scroll"><table class="cal"><thead><tr>${M.map((m, i) => `<th scope="col">${m}${lluvia.has(i) ? ' 🌧' : ''}</th>`).join('')}</tr></thead><tbody><tr>
-        ${r.nMes.map((x, i) => `<td class="${x ? (lluvia.has(i) ? 'hit' : 'on-gen') : ''}" title="${fmt(x)} kg N/ha" style="${x ? `opacity:${0.45 + 0.55 * x / maxMes}` : ''}">${x ? fmt(x, 0) : ''}</td>`).join('')}
+        ${r.nMes.map((x, i) => `<td class="${x ? (lluvia.has(i) ? 'hit' : 'on-gen') : ''}" title="${fmt(x)} kg N/ha"${x ? ` style="opacity:${0.45 + 0.55 * x / maxMes}"` : ''}>${x ? fmt(x, 0) : ''}</td>`).join('')}
       </tr></tbody></table></div>
       <p class="muted small">kg N/ha por mes. En rojo: N aplicado en un mes de lluvia fuerte.</p>
     </section>

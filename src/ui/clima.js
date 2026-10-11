@@ -80,7 +80,7 @@ export function bloqueUbicacion() {
   return `<div class="subform"><h3>Ubicación y clima</h3>
     <p class="muted small">Con la ubicación, la app trae sola el clima de tu finca (temperatura, humedad, lluvia, viento, radiación y ETo de cada mes) y llena lo que dejes vacío. No tienes que escribirlo.</p>
     <div class="row">
-      <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" style="flex:1;min-width:200px">
+      <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" class="campo-coord">
       <button type="button" class="btn sm" data-mapa="ir">Usar estas coordenadas</button>
       <button type="button" class="btn sm" data-mapa="gps">Mi ubicación (GPS)</button>
     </div>
@@ -109,7 +109,7 @@ export function panelClima() {
     ${estadoClima()}
     ${c ? `<p class="muted small">${esc(fuenteTxt(c))}${manual.size ? ` ${manual.size} dato(s) corregido(s) a mano (en negrita).` : ''}</p>
     <div class="scroll"><table class="data small clima-tabla"><thead><tr><th></th>${M.map((m) => `<th class="num">${m}</th>`).join('')}</tr></thead><tbody>
-      ${CLAVES.map((k) => `<tr><td>${VARIABLES[k].nombre} <span class="muted">(${VARIABLES[k].unidad})</span></td>${c.meses.map((m, i) => `<td><input aria-label="${VARIABLES[k].nombre} de ${M[i]}" type="number" step="any" inputmode="decimal" style="width:66px;text-align:right${manual.has(`${i}.${k}`) ? ';font-weight:700' : ''}" data-bind="farm.clima.meses.${i}.${k}" data-nullable data-rerender value="${m[k] ?? ''}"></td>`).join('')}</tr>`).join('')}
+      ${CLAVES.map((k) => `<tr><td>${VARIABLES[k].nombre} <span class="muted">(${VARIABLES[k].unidad})</span></td>${c.meses.map((m, i) => `<td><input aria-label="${VARIABLES[k].nombre} de ${M[i]}" type="number" step="any" inputmode="decimal" class="w-66 t-der${manual.has(`${i}.${k}`) ? ' fw-700' : ''}" data-bind="farm.clima.meses.${i}.${k}" data-nullable data-rerender value="${m[k] ?? ''}"></td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
     ${sug.length && !igual(sug, f.lluviaMeses) ? `<p class="notice small"><span>Según el clima, los meses de lluvia fuerte (${C.lluviaFuerteMm} mm o más, criterio propio) son <b>${mlist(sug)}</b>; en el cuestionario tienes ${mlist(f.lluviaMeses)}.</span>${b('lluvia', 'Usar los del clima')}</p>` : ''}
     <p class="muted small">Es el clima de una celda de ~11 km, no el de una estación en tu finca: en montaña puede diferir. Si tienes estación, corrige los valores. El viento se pasa de 10 m a 2 m con FAO-56 (ec. 47). La ETo es FAO-56 Penman-Monteith calculada por Open-Meteo. <a href="${C.enlace}" target="_blank" rel="noopener">${esc(C.atribucion)}</a>.</p>` : ''}

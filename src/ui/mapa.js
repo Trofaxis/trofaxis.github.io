@@ -43,7 +43,7 @@ export function panelMapa() {
       ${U.punto || U.contorno.length ? b('borrar', 'Borrar del mapa', '', ' danger') : ''}
     </div>
     <div class="row">
-      <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" style="flex:1;min-width:200px">
+      <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" class="campo-coord">
       ${b('ir', 'Ir')}
     </div>
     <details class="arboles" id="censo" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
@@ -52,7 +52,7 @@ export function panelMapa() {
       <h4>Mapa de riesgo</h4>
       ${mapaRiesgoDe(U, C_AR.radioExclusionM)}
       ${U.ejemplo ? '<p class="mapa-aviso">Estás viendo datos de ejemplo (ficticios). Al agregar un árbol o un sitio, el ejemplo se borra.</p>' : ''}
-      <div class="row"><div class="f" style="width:150px"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div></div>
+      <div class="row"><div class="f w-150"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div></div>
       <h4>Agregar un árbol</h4>
       <div class="censo-form">
         <div class="f"><label for="censo-id">ID</label><input id="censo-id" maxlength="20" placeholder="27"></div>

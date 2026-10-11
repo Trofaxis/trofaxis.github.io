@@ -31,7 +31,7 @@ export function radar(mods){
   g+=`<polygon points="${poly}" fill="var(--accent)" fill-opacity=".22" stroke="var(--accent)" stroke-width="2"/>`;
   mods.forEach((m,i)=>{const[x,y]=pt(i,R*m.score/100);const c=m.level==='Alto'?'var(--crit)':m.level==='Medio'?'var(--warn)':'var(--good)';
     g+=`<circle cx="${x}" cy="${y}" r="5" fill="${c}" stroke="var(--surface)" stroke-width="1.5"><title>${m.nombre}: ${m.score} (${m.level})</title></circle>`;});
-  return `<svg viewBox="0 0 480 320" role="img" aria-label="Perfil de riesgo ambiental por módulo" style="width:100%;max-width:480px;height:auto;display:block;margin:0 auto">${g}</svg>`;
+  return `<svg viewBox="0 0 480 320" role="img" aria-label="Perfil de riesgo ambiental por módulo" class="grafico grafico-centrado grafico-480">${g}</svg>`;
 }
 export function pressureChart(mh){
   const W=640,H=190,L=30,T=22,B=30,iw=W-L-8,ih=H-T-B;const mx=Math.max(3,...mh.map(a=>a.length));
@@ -41,7 +41,7 @@ export function pressureChart(mh){
     if(n)g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${T+ih-y(n)}" rx="3" fill="${col}"><title>${MFULL[i]}: ${a.join('; ')}</title></rect><text x="${cx}" y="${y(n)-5}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">${n}</text>`;
     else g+=`<rect x="${cx-bw/2}" y="${T+ih-3}" width="${bw}" height="3" rx="1.5" fill="var(--good)"><title>${MFULL[i]}: sin coincidencias</title></rect>`;
     g+=`<text x="${cx}" y="${H-10}" text-anchor="middle" font-size="12" fill="var(--muted)">${M[i]}</text>`;});
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coincidencias de riesgo por mes" style="width:100%;min-width:480px;height:auto">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coincidencias de riesgo por mes" class="grafico grafico-min480">${g}</svg>`;
 }
 export function calRow(name,months,cls,hits){
   return `<tr><th class="rowh" scope="row">${name}</th>${M.map((m,i)=>{const h=hits&&hits.includes(i);return `<td class="${months.includes(i)?cls:''}${h?' hit':''}" title="${name}: ${m}">${h?'!':''}</td>`}).join('')}</tr>`;
@@ -78,7 +78,7 @@ export function tplChart(t){
     <text x="${cx}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(String(r.fecha).slice(5))}</text>
     <text x="${cx}" y="${y(v)-6}" text-anchor="middle" font-size="11" fill="var(--ink)">${Math.round(v)}</text>`;});
   if(t.objetivo>0)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(t.objetivo)}" y2="${y(t.objetivo)}" stroke="var(--pollen)" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-Rr}" y="${y(t.objetivo)-6}" text-anchor="end" font-size="11" fill="var(--pollen)">Objetivo ${t.objetivo}</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Registros frente al objetivo" style="width:100%;min-width:480px;height:auto">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Registros frente al objetivo" class="grafico grafico-min480">${g}</svg>`;
 }
 // Dispersión de un par de módulos: cada punto es una finca (x = riesgo de A, y = riesgo de B, de 0 a 100).
 // Ejemplo: círculo hueco gris; tu caso: verde; comunidad: ámbar; tu finca actual: rombo rojo.
@@ -94,10 +94,10 @@ export function dispersion(par,puntos){
   ord.forEach(p=>{const cx=x(p.v[par.a]),cy=y(p.v[par.b]);const tip=`<title>${esc(p.etiqueta)}: ${par.nombreA} ${p.v[par.a]}, ${par.nombreB} ${p.v[par.b]}</title>`;
     if(p.origen==='actual')g+=`<path d="M${cx} ${cy-7}L${cx+7} ${cy}L${cx} ${cy+7}L${cx-7} ${cy}Z" fill="var(--crit)" stroke="var(--surface)" stroke-width="1.5">${tip}</path>`;
     else{const[f,s]=ESTILO_PUNTO[p.origen]??ESTILO_PUNTO.ejemplo;g+=`<circle cx="${cx}" cy="${cy}" r="5" fill="${f}" fill-opacity="${f==='none'?0:.75}" stroke="${s}" stroke-width="1.6">${tip}</circle>`;}});
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dispersión: riesgo de ${esc(par.nombreA)} frente a ${esc(par.nombreB)}, ${puntos.length} fincas" style="width:100%;max-width:340px;height:auto;display:block;margin:0 auto">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dispersión: riesgo de ${esc(par.nombreA)} frente a ${esc(par.nombreB)}, ${puntos.length} fincas" class="grafico grafico-centrado grafico-340">${g}</svg>`;
 }
 export function leyendaDispersion(){
-  return `<div class="leyenda small muted" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+  return `<div class="leyenda small muted">
     <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="var(--muted)" stroke-width="1.6"/></svg> Ejemplo (ficticio)</span>
     <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--accent)"/></svg> Tus casos guardados</span>
     <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--pollen)"/></svg> Comunidad</span>

@@ -47,7 +47,7 @@ export function viewRiego() {
   return `
   ${S.msg ? `<div class="notice" role="status"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
-    <div class="row" style="justify-content:space-between">
+    <div class="row between">
       <div><p class="label">Riego por goteo</p><h1>${esc(d.cultivo || 'Diseño sin cultivo')}${d.areaLote ? ` · ${fmt(d.areaLote, 2)} ha` : ''}</h1>
       <p class="muted">Sube tu Excel o CSV, o escribe tus datos. La app recalcula el diseño y revisa cada valor contra referencias con fuente.</p></div>
       <div class="row">
@@ -70,9 +70,9 @@ export function viewRiego() {
     <section class="panel">
       <div><h2>Alertas</h2><p class="muted">${cuenta('error')} errores · ${cuenta('advertencia')} por revisar · ${cuenta('criterio')} criterios · ${cuenta('ok')} bien</p></div>
       <ul class="alertas">${alertas.map((a) => `<li class="alerta ${a.nivel}">
-        <div class="row" style="gap:8px"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
+        <div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
         <p>${esc(a.detalle)}</p>
-        ${a.fuente ? `<p class="muted" style="font-size:12.5px">Fuente: ${a.fuente.url ? `<a href="${esc(a.fuente.url)}" target="_blank" rel="noopener">${esc(a.fuente.cita)}</a>` : esc(a.fuente.cita)}</p>` : ''}
+        ${a.fuente ? `<p class="muted fs-125">Fuente: ${a.fuente.url ? `<a href="${esc(a.fuente.url)}" target="_blank" rel="noopener">${esc(a.fuente.cita)}</a>` : esc(a.fuente.cita)}</p>` : ''}
       </li>`).join('') || '<li class="muted">Ingresa datos para ver alertas.</li>'}</ul>
     </section>
 
@@ -116,17 +116,17 @@ export function viewRiego() {
     </tr></thead><tbody>
       ${d.suelo.map((s, i) => {
         const c = r.suelo[i] || {};
-        const inp = (k, w = 72) => `<input aria-label="${k} de ${esc(s.nombre)}" type="number" step="any" inputmode="decimal" style="width:${w}px;text-align:right" data-bind="riego.datos.suelo.${i}.${k}" data-nullable data-rerender value="${s[k] ?? ''}" placeholder="${r.datos.suelo[i]?.[k] ?? ''}">`;
-        return `<tr><td><input aria-label="Nombre de la sección" style="width:110px" data-bind="riego.datos.suelo.${i}.nombre" data-rerender value="${esc(s.nombre)}"></td>
+        const inp = (k, w = 72) => `<input aria-label="${k} de ${esc(s.nombre)}" type="number" step="any" inputmode="decimal" class="w-${w} t-der" data-bind="riego.datos.suelo.${i}.${k}" data-nullable data-rerender value="${s[k] ?? ''}" placeholder="${r.datos.suelo[i]?.[k] ?? ''}">`;
+        return `<tr><td><input aria-label="Nombre de la sección" class="w-110" data-bind="riego.datos.suelo.${i}.nombre" data-rerender value="${esc(s.nombre)}"></td>
           <td class="num">${inp('area')}</td>
-          <td><input aria-label="Textura de ${esc(s.nombre)}" style="width:64px" data-bind="riego.datos.suelo.${i}.textura" data-rerender value="${esc(s.textura)}" placeholder="F, FA…"></td>
+          <td><input aria-label="Textura de ${esc(s.nombre)}" class="w-64" data-bind="riego.datos.suelo.${i}.textura" data-rerender value="${esc(s.textura)}" placeholder="F, FA…"></td>
           <td class="num">${inp('da')}</td><td class="num">${inp('cc')}</td><td class="num">${inp('pmp')}</td><td class="num">${inp('pedregosidad')}</td><td class="num">${inp('infiltracion')}</td>
           <td class="num"><b>${fmt(c.laa)}</b></td>
           <td><button class="btn small" data-act="riego-rm-suelo" data-i="${i}">Quitar</button></td></tr>`;
       }).join('') || '<tr><td colspan="10" class="muted">Sin secciones de suelo: no se puede revisar la frecuencia de riego.</td></tr>'}
     </tbody></table></div>
     <div><button class="btn small" data-act="riego-add-suelo">Agregar sección</button></div>
-    <p class="muted" style="font-size:13px">Texturas: A arenoso · FA franco arenoso · F franco · Far franco arcilloso · ArA arcillo arenoso · Ar arcilloso (tabla CIMMYT 2012 del Lab de Riego).</p>
+    <p class="muted small">Texturas: A arenoso · FA franco arenoso · F franco · Far franco arcilloso · ArA arcillo arenoso · Ar arcilloso (tabla CIMMYT 2012 del Lab de Riego).</p>
     ${r.suelo.some((x) => x.laaPorMetro !== undefined) ? `<h3>Por qué hay tres láminas</h3>
     <p class="muted">Las tres usan agua disponible × p × (1 − piedras) × 10. Cambia la profundidad y la p:</p>
     <div class="scroll"><table class="data"><thead><tr><th>Sección</th>
@@ -136,7 +136,7 @@ export function viewRiego() {
     </tr></thead><tbody>
       ${r.suelo.map((x) => `<tr><td>${esc(x.nombre)}</td><td class="num">${fmt(x.laaPorMetro)} mm</td><td class="num">${fmt(x.laaSinAjuste)} mm</td><td class="num"><b>${fmt(x.laa)} mm</b></td></tr>`).join('')}
     </tbody></table></div>
-    <p class="muted" style="font-size:13px">La primera ignora que las raíces solo llegan a ${fmt(d.profRaiz, 2)} m. La segunda es la fórmula de la clase. La tercera además baja p porque con ETc alta la planta se estresa antes (FAO-56, Tabla 22); la app la usa para el intervalo entre riegos porque es la más segura.</p>` : ''}
+    <p class="muted small">La primera ignora que las raíces solo llegan a ${fmt(d.profRaiz, 2)} m. La segunda es la fórmula de la clase. La tercera además baja p porque con ETc alta la planta se estresa antes (FAO-56, Tabla 22); la app la usa para el intervalo entre riegos porque es la más segura.</p>` : ''}
   </section>
 
   <section class="panel">
@@ -144,10 +144,10 @@ export function viewRiego() {
     ${lineaClima}
     <div class="fields">
       <div class="f"><label for="rg-siembra">Fecha de siembra</label><input id="rg-siembra" type="date" data-bind="riego.datos.siembra" data-rerender value="${esc(d.siembra)}"></div>
-      <div class="f"><label class="check"><input type="checkbox" style="width:auto" data-bind="riego.datos.mes30" data-rerender ${d.mes30 ? 'checked' : ''}> Meses de 30 días (como en la clase)</label></div>
+      <div class="f"><label class="check"><input type="checkbox" class="w-auto" data-bind="riego.datos.mes30" data-rerender ${d.mes30 ? 'checked' : ''}> Meses de 30 días (como en la clase)</label></div>
     </div>
     <div class="fields">
-      ${NOMBRES_MES.map((m, i) => `<div class="f" style="max-width:110px"><label for="rg-eto-${i}">${m[0].toUpperCase() + m.slice(1, 3)}</label><input id="rg-eto-${i}" type="number" step="any" inputmode="decimal" data-bind="riego.datos.etoMensual.${i}" data-nullable data-rerender value="${d.etoMensual[i] ?? ''}"><span class="hint">mm/día</span></div>`).join('')}
+      ${NOMBRES_MES.map((m, i) => `<div class="f maxw-110"><label for="rg-eto-${i}">${m[0].toUpperCase() + m.slice(1, 3)}</label><input id="rg-eto-${i}" type="number" step="any" inputmode="decimal" data-bind="riego.datos.etoMensual.${i}" data-nullable data-rerender value="${d.etoMensual[i] ?? ''}"><span class="hint">mm/día</span></div>`).join('')}
     </div>
     ${c ? `<div class="scroll"><table class="data"><thead><tr><th>Etapa</th><th class="num">Días</th><th>Meses</th><th class="num">Kc promedio</th><th class="num">Σ ETo (mm)</th><th class="num">ETc (mm)</th></tr></thead><tbody>
       ${c.etapas.map((e) => `<tr><td>${e.nombre}</td><td class="num">${e.dias}</td><td>${c.fuenteEto === 'mensual' ? esc(e.meses.join(', ')) : 'ETo pico'}</td><td class="num">${fmt(e.kc, 3)}</td><td class="num">${fmt(e.etoSum)}</td><td class="num">${fmt(e.etc)}</td></tr>`).join('')}
@@ -158,7 +158,7 @@ export function viewRiego() {
       <div><div class="k">Volumen neto</div><div class="v">${fmt(c.volumenNeto, 0)} m³</div></div>
       <div><div class="k">Volumen bruto (÷ eficiencia)</div><div class="v">${fmt(c.volumenBruto, 0)} m³</div></div>
     </div>
-    <p class="muted" style="font-size:13px">1 mm en 1 ha = 10 m³. El bruto es el agua que hay que tener disponible. No descuenta lluvia efectiva.</p>`
+    <p class="muted small">1 mm en 1 ha = 10 m³. El bruto es el agua que hay que tener disponible. No descuenta lluvia efectiva.</p>`
     : '<p class="muted">Faltan Kc, duración de etapas o ETo para calcular el ciclo.</p>'}
   </section>
 
@@ -185,8 +185,8 @@ export function viewRiego() {
     <div class="scroll"><table class="data"><thead><tr><th>Tramo</th><th class="num">Caudal (m³/h)</th><th class="num">Largo (m)</th><th class="num">Di (mm)</th><th class="num">C</th><th class="num">Velocidad (m/s)</th><th class="num">Pérdida (m)</th><th></th></tr></thead><tbody>
       ${hd.principal.map((t, i) => {
         const o = h?.principal[i] || {};
-        const inp = (k, w = 80, ph = '') => `<input aria-label="${k} del tramo ${esc(t.nombre)}" type="number" step="any" inputmode="decimal" style="width:${w}px;text-align:right" data-bind="riego.datos.hidraulica.principal.${i}.${k}" data-nullable data-rerender value="${t[k] ?? ''}" placeholder="${ph}">`;
-        return `<tr><td><input aria-label="Nombre del tramo" style="width:70px" data-bind="riego.datos.hidraulica.principal.${i}.nombre" data-rerender value="${esc(t.nombre)}"></td>
+        const inp = (k, w = 80, ph = '') => `<input aria-label="${k} del tramo ${esc(t.nombre)}" type="number" step="any" inputmode="decimal" class="w-${w} t-der" data-bind="riego.datos.hidraulica.principal.${i}.${k}" data-nullable data-rerender value="${t[k] ?? ''}" placeholder="${ph}">`;
+        return `<tr><td><input aria-label="Nombre del tramo" class="w-70" data-bind="riego.datos.hidraulica.principal.${i}.nombre" data-rerender value="${esc(t.nombre)}"></td>
           <td class="num">${inp('caudal', 110, r.caudalSector ? fmt(r.caudalSector) : '')}</td><td class="num">${inp('largo')}</td><td class="num">${inp('di')}</td><td class="num">${inp('c', 70, '140')}</td>
           <td class="num">${fmt(o.v, 2)}</td><td class="num">${fmt(o.hf, 2)}</td>
           <td><button class="btn small" data-act="riego-rm-tramo" data-i="${i}">Quitar</button></td></tr>`;
@@ -219,11 +219,11 @@ export function viewRiego() {
       ${campo('rg-rb', 'Borde libre', 'riego.datos.reservorio.bordeLibre', rv.bordeLibre, 'fracción de la profundidad', null, CONFIG.riego.bordeLibre)}
     </div>
     <div class="scroll"><table class="data"><thead><tr><th></th>${NOMBRES_MES.map((m) => `<th class="num">${mes3(m)}</th>`).join('')}</tr></thead><tbody>
-      <tr><td>Radiación (MJ/m²/día)</td>${NOMBRES_MES.map((m, i) => `<td><input aria-label="Radiación de ${m}" type="number" step="any" inputmode="decimal" style="width:80px;text-align:right" data-bind="riego.datos.reservorio.radiacion.${i}" data-nullable data-rerender value="${rv.radiacion[i] ?? ''}"></td>`).join('')}</tr>
-      <tr><td>Temperatura (°C)</td>${NOMBRES_MES.map((m, i) => `<td><input aria-label="Temperatura de ${m}" type="number" step="any" inputmode="decimal" style="width:64px;text-align:right" data-bind="riego.datos.reservorio.temperatura.${i}" data-nullable data-rerender value="${rv.temperatura[i] ?? ''}" placeholder="20"></td>`).join('')}</tr>
+      <tr><td>Radiación (MJ/m²/día)</td>${NOMBRES_MES.map((m, i) => `<td><input aria-label="Radiación de ${m}" type="number" step="any" inputmode="decimal" class="w-80 t-der" data-bind="riego.datos.reservorio.radiacion.${i}" data-nullable data-rerender value="${rv.radiacion[i] ?? ''}"></td>`).join('')}</tr>
+      <tr><td>Temperatura (°C)</td>${NOMBRES_MES.map((m, i) => `<td><input aria-label="Temperatura de ${m}" type="number" step="any" inputmode="decimal" class="w-64 t-der" data-bind="riego.datos.reservorio.temperatura.${i}" data-nullable data-rerender value="${rv.temperatura[i] ?? ''}" placeholder="20"></td>`).join('')}</tr>
       ${c?.conFecha ? `<tr><td class="muted">Días del ciclo</td>${c.diasPorMes.map((x) => `<td class="num muted">${x || ''}</td>`).join('')}</tr>` : ''}
     </tbody></table></div>
-    <p class="muted" style="font-size:13px">W/m² medio del día × 0.0864 = MJ/m²/día.</p>
+    <p class="muted small">W/m² medio del día × 0.0864 = MJ/m²/día.</p>
     ${res ? `<div class="summary">
       <div><div class="k">Demanda del ciclo</div><div class="v">${fmt(res.demanda, 0)} m³</div></div>
       <div><div class="k">Evaporación</div><div class="v">${fmt(res.evaporacionMm)} mm · ${fmt(res.evaporacion, 0)} m³</div></div>
