@@ -43,8 +43,12 @@ export function pressureChart(mh){
     g+=`<text x="${cx}" y="${H-10}" text-anchor="middle" font-size="12" fill="var(--muted)">${M[i]}</text>`;});
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coincidencias de riesgo por mes" style="width:100%;min-width:480px;height:auto">${g}</svg>`;
 }
+// Símbolo de cada tipo de fila: el calendario no depende solo del color (issue 41). La coincidencia de riesgo es «!».
+export const SIMBOLO_CAL={'on-flor':'●','on-riesgo':'○','on-apl':'▲','on-cult':'■','on-gen':'◆'};
 export function calRow(name,months,cls,hits){
-  return `<tr><th class="rowh" scope="row">${name}</th>${M.map((m,i)=>{const h=hits&&hits.includes(i);return `<td class="${months.includes(i)?cls:''}${h?' hit':''}" title="${name}: ${m}">${h?'!':''}</td>`}).join('')}</tr>`;
+  return `<tr><th class="rowh" scope="row">${name}</th>${M.map((m,i)=>{const on=months.includes(i),h=hits&&hits.includes(i);
+    const marca=on||h?`<span aria-hidden="true">${h?'!':SIMBOLO_CAL[cls]||'●'}</span><span class="sr-only">${name} en ${MFULL[i]}${h?' (coincidencia de riesgo)':''}</span>`:'';
+    return `<td class="${on?cls:''}${h?' hit':''}" title="${name}: ${m}">${marca}</td>`}).join('')}</tr>`;
 }
 // Módulo dueño de cada coincidencia de riesgo (según el módulo que la puntúa: polinizadores.js, fertilizacion.js, suelo.js, troficas.js).
 const MOD_COINC={'Aplicación durante floración visitada':'Polinizadores','Fertilización con lluvia fuerte':'Fertilización','Suelo desnudo con lluvia':'Suelo','Amplio espectro con plaga presente':'Cadenas tróficas','Aplicación en mes de cosecha':'Cadenas tróficas'};
@@ -59,11 +63,11 @@ export function filaIntensidad(mh){
   return `<tr class="inten"><th class="rowh" scope="row">Intensidad <span class="muted small">(coincidencias)</span></th>${intensidadMeses(mh).map(x=>`<td class="i${Math.min(x.n,3)}" title="${MFULL[x.mes]}: ${x.n?x.items.join('; '):'sin coincidencias'}"><b>${x.n}</b>${Object.entries(x.mods).map(([k,v])=>`<span>${ABREV[k]||k}${v>1?'×'+v:''}</span>`).join('')}</td>`).join('')}</tr>`;
 }
 export function leyendaCal(){
-  const sw=(c,t)=>`<span class="lg"><i class="sw ${c}"></i>${t}</span>`;
+  const sw=(c,t,g=SIMBOLO_CAL[c])=>`<span class="lg"><i class="sw ${c}" aria-hidden="true">${g}</i>${t}</span>`;
   return `<div class="legend" role="list" aria-label="Leyenda del calendario">
-    ${sw('on-flor','Floración visitada por polinizadores')}${sw('on-riesgo','Floración de especies de riesgo')}${sw('on-apl','Aplicación de plaguicidas')}${sw('on-cult','Siembra / cosecha')}${sw('on-gen','Fertilización, lluvia, suelo desnudo, plagas')}${sw('hit','! Coincidencia de riesgo')}
+    ${sw('on-flor','Floración visitada por polinizadores')}${sw('on-riesgo','Floración de especies de riesgo')}${sw('on-apl','Aplicación de plaguicidas')}${sw('on-cult','Siembra / cosecha')}${sw('on-gen','Fertilización, lluvia, suelo desnudo, plagas')}${sw('hit','Coincidencia de riesgo','!')}
   </div>
-  <p class="muted small">Intensidad: número de coincidencias del mes y módulo que las puntúa (Pol = Polinizadores, Fer = Fertilización, Sue = Suelo, Tró = Cadenas tróficas).</p>`;
+  <p class="muted small">Cada tipo de fila tiene su símbolo además de su color. Intensidad: número de coincidencias del mes y módulo que las puntúa (Pol = Polinizadores, Fer = Fertilización, Sue = Suelo, Tró = Cadenas tróficas).</p>`;
 }
 export function dlt(a,b){const d=b-a;return `<span class="delta ${d<0?'down':d>0?'up':'zero'}">${d>0?'+':''}${d}</span>`;}
 export function tplChart(t){
