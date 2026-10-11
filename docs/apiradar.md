@@ -2,15 +2,27 @@
 
 El ApiRadar no es una sección aparte. Está en el dashboard, en el panel **Resolver un problema**. El usuario carga su finca como siempre, elige el problema (hoy: *Spathodea campanulata y las abejas nativas*) y la app cruza sus datos y devuelve un diagnóstico que se puede leer y comprobar.
 
-Código: `src/apiradar/diagnostico.js` (lógica) y `src/ui/apiradar.js` (panel). Valores propios en `CONFIG.apiradar`.
+Código: `src/apiradar/diagnostico.js` (lógica), `src/apiradar/censo.js` (censo de árboles y sitios), `src/ui/apiradar.js` (panel) y `src/ui/mapariesgo.js` (mapa de riesgo). Valores propios en `CONFIG.apiradar`.
 
 ## Qué devuelve
 
 1. **Qué datos usó**: especies de riesgo, árboles y volumen de copa, meses de floración, aplicaciones de plaguicidas, abejas registradas y lluvia. Cada dato dice de dónde sale.
 2. **Por qué sale ese riesgo**: las variables del módulo Polinizadores, con valor, puntaje, peso, estado de la evidencia y los puntos que aporta cada una al total.
-3. **Qué hacer, cuándo y dónde**: cada cambio con sus meses y cuánto baja el riesgo.
-4. **Qué falta** para afinar el diagnóstico.
-5. **Cómo saber si funcionó**.
+3. **Dónde están los árboles de riesgo**: censo de árboles con su volumen de copa y riesgo, mapa de riesgo (contorno, árboles, radios de exclusión) y veredicto de cada sitio candidato para colonias o refugios.
+4. **Qué hacer, cuándo y dónde**: cada cambio con sus meses y cuánto baja el riesgo.
+5. **Qué falta** para afinar el diagnóstico.
+6. **Cómo saber si funcionó**.
+
+## Censo, mapa de riesgo y sitios
+
+En el mapa de la finca, el bloque «Censo de árboles y sitios (ApiRadar)» recibe, por árbol: ID, coordenadas (UTM «este norte», zona 16 N o 17 N, o «latitud, longitud»), DAP, diámetro de copa y altura de copa (los tres últimos opcionales). Se puede agregar de uno en uno o pegar una tabla desde Excel. También hay sitios candidatos (por coordenadas o marcados sobre el mapa).
+
+- **Volumen de copa** de cada árbol: V = 4/3·π·(D/2)²·(H/2), Osorio (2025), Ec. 3; es la misma fórmula del módulo Polinizadores. H es la altura de la copa. El DAP se muestra pero no entra al cálculo.
+- **Riesgo por árbol** (alto, medio, bajo): percentil del volumen de copa dentro del propio censo, por tercios (`CONFIG.apiradar.percentilesRiesgo`). **Criterio propio, por validar.** Es relativo: en cualquier censo habrá árboles «altos», aunque todos sean pequeños, y con menos de 6 árboles medidos la clasificación es muy gruesa. Sirve para priorizar qué árbol atender primero; no es una medida absoluta de daño.
+- **Veredicto de cada sitio**: distancia al árbol censado más cercano. *Cerca*: menos de 300 m. *Revisar*: entre 300 y 500 m. *Lejos*: 500 m o más. El radio se aplica a **todos** los árboles del censo, no solo a los de mayor volumen (Osorio censó 23 árboles en la franja; los medianos cercanos entre sí suman exposición).
+- **Mapa de riesgo**: SVG propio en metros (sin imagen satelital, funciona sin internet). Árboles con color por riesgo y tamaño por volumen, anillo continuo = radio mínimo, punteado = radio conservador, rombo = sitio con el color de su veredicto, verde = punto más alejado de todos los árboles. La imagen satelital del mapa de la finca muestra las mismas marcas.
+- **Ejemplo**: «Ver con datos de ejemplo» carga 14 árboles y 3 sitios **ficticios** (marcados «Ejemplo»); no son de ninguna finca. Al agregar datos propios, el ejemplo se borra.
+- **No cambia el puntaje.** El censo no entra en la rúbrica de Polinizadores (esa usa el volumen declarado en Especies); solo ordena y ubica. Si el número de árboles de Especies no coincide con el del censo, la acción de refugio lo avisa.
 
 ## Cómo calcula
 
@@ -36,8 +48,10 @@ Código: `src/apiradar/diagnostico.js` (lógica) y `src/ui/apiradar.js` (panel).
 
 ## Límites conocidos
 
-- **Dónde ubicar el refugio.** En el mapa del dashboard, «Árboles de riesgo con coordenadas»: una línea por árbol, en grados («14.0108, -87.0044») o UTM («501177 1547784», zona 16 N o 17 N). Con el contorno de la finca dibujado, el ApiRadar calcula qué parte de la finca queda a 300 m y a 500 m o más de todos los árboles y marca en verde el punto más alejado. Sin contorno, solo dibuja los radios.
+- **Dónde ubicar el refugio.** Con el censo cargado (ver arriba). Con el contorno de la finca dibujado, el ApiRadar calcula qué parte de la finca queda a 300 m y a 500 m o más de todos los árboles y marca en verde el punto más alejado. Sin contorno, solo dibuja los radios.
 - Esas coordenadas **viven solo en el navegador** (junto con el punto y el contorno): no van en el archivo exportado, en la nube ni en la memoria de casos.
 - El punto más alejado es una referencia, no una ubicación final: la app no sabe dónde hay floración alternativa, agua ni acceso. El criterio doble (lejos del árbol y cerca de flores seguras) lo decide el usuario.
-- Un árbol de riesgo cuenta igual sin importar su tamaño; el radio no cambia con el volumen de copa.
+- Un árbol de riesgo cuenta igual sin importar su tamaño para el radio; el radio no cambia con el volumen de copa.
+- **No hay hábitat natural ni otras capas** en el mapa de riesgo: solo contorno, árboles y sitios. Los datos reales del censo de Zamorano (Osorio) no están en el repositorio: se cargan a mano o pegando la tabla, y se quedan en el navegador.
+- Las coordenadas del censo se muestran en grados, aunque se hayan escrito en UTM.
 - Un solo problema por ahora. Agregar otro es sumar una entrada en `PROBLEMAS` y su función de diagnóstico.

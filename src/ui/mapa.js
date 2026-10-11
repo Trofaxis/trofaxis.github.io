@@ -5,13 +5,14 @@
 import { esc } from '../core/utils.js';
 import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
-import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear, leerArboles, sitiosFuera } from '../mapa/geo.js';
+import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear, leerCenso, leerLineaCenso, puntoDe, sitiosFuera } from '../mapa/geo.js';
+import { clasificarArboles, evaluarSitios, nombreSitio, censoEjemplo, VEREDICTO } from '../apiradar/censo.js';
 import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
 
 const C = CONFIG.mapa;
 let U = cargarUbicacion();
-let modo = 'ver'; // ver | punto | contorno
+let modo = 'ver'; // ver | punto | contorno | sitio
 let msg = '';
 let fallas = 0;
 let zonaUtm = 16; // zona UTM con la que se leen las coordenadas de los árboles (16 N: oeste de Honduras; 17 N: este)
@@ -34,6 +35,7 @@ export function panelMapa() {
     <div class="row mapa-ctrl">
       ${b('modo-punto', 'Marcar ubicación', `aria-pressed="${modo === 'punto'}"`)}
       ${b('modo-contorno', 'Dibujar contorno', `aria-pressed="${modo === 'contorno'}"`)}
+      ${b('modo-sitio', 'Marcar sitio candidato', `aria-pressed="${modo === 'sitio'}"`)}
       ${modo === 'contorno' ? b('deshacer', 'Deshacer punto') + b('terminar', 'Terminar') : ''}
       ${b('gps', 'Mi ubicación')}
       ${U.punto || U.contorno.length ? b('borrar', 'Borrar del mapa', '', ' danger') : ''}
@@ -42,19 +44,36 @@ export function panelMapa() {
       <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" style="flex:1;min-width:200px">
       ${b('ir', 'Ir')}
     </div>
-    <details class="arboles" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
-      <summary>Árboles de riesgo con coordenadas (ApiRadar)${U.arboles.length ? ` · ${U.arboles.length} cargado(s)` : ''}</summary>
-      <p class="muted small">Una línea por árbol: «latitud, longitud» en grados (14.0108, -87.0044) o «este norte» en UTM (501177 1547784). Con el contorno dibujado, el ApiRadar calcula qué parte de la finca queda fuera del radio de exclusión y el punto más alejado. Se guardan solo en este navegador.</p>
-      <div class="f"><label for="mapa-arboles">Coordenadas de los árboles</label><textarea id="mapa-arboles" rows="4" placeholder="14.0108, -87.0044&#10;501177 1547784">${esc(textoArboles)}</textarea></div>
-      <div class="row"><div class="f" style="width:150px"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div>
-        ${b('arboles-cargar', 'Cargar árboles')}${U.arboles.length ? b('arboles-quitar', 'Quitar árboles', '', ' danger') : ''}</div>
+    <details class="arboles" id="censo" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
+      <summary>Censo de árboles y sitios (ApiRadar)${U.arboles.length ? ` · ${U.arboles.length} árbol(es)` : ''}${U.sitios.length ? ` · ${U.sitios.length} sitio(s)` : ''}</summary>
+      <p class="muted small">Coordenadas en UTM («este norte», 501177 1547784) o en grados («latitud, longitud», 14.0108, -87.0044), con punto decimal. DAP, diámetro y altura de copa son opcionales, pero sin diámetro y altura el árbol no se clasifica por riesgo. La altura es la de la copa (H de la Ec. 3 de Osorio 2025). Todo se guarda solo en este navegador.</p>
+      ${U.ejemplo ? '<p class="mapa-aviso">Estás viendo datos de ejemplo (ficticios). Al agregar un árbol o un sitio, el ejemplo se borra.</p>' : ''}
+      <div class="row"><div class="f" style="width:150px"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div></div>
+      <h4>Agregar un árbol</h4>
+      <div class="censo-form">
+        <div class="f"><label for="censo-id">ID</label><input id="censo-id" maxlength="20" placeholder="27"></div>
+        <div class="f cx"><label for="censo-xy">Coordenadas</label><input id="censo-xy" placeholder="501227 1547802" inputmode="decimal"></div>
+        <div class="f"><label for="censo-dap">DAP (cm)</label><input id="censo-dap" inputmode="decimal"></div>
+        <div class="f"><label for="censo-d">Copa Ø (m)</label><input id="censo-d" inputmode="decimal"></div>
+        <div class="f"><label for="censo-h">Alto copa (m)</label><input id="censo-h" inputmode="decimal"></div>
+        ${b('arbol-agregar', 'Agregar árbol', '', ' primary')}
+      </div>
+      <div class="f"><label for="mapa-arboles">O pega una tabla (ID, este, norte, DAP, diámetro de copa, altura de copa; una línea por árbol)</label><textarea id="mapa-arboles" rows="4" placeholder="27&#9;501227&#9;1547802&#9;89.4&#9;18.7&#9;19.2&#10;23, 501178, 1547785, 83, 18.35, 14.4">${esc(textoArboles)}</textarea></div>
+      <div class="row">${b('arboles-cargar', 'Cargar tabla (reemplaza el censo)')}${U.arboles.length ? b('arboles-quitar', 'Quitar censo y sitios', '', ' danger') : b('ejemplo', 'Cargar datos de ejemplo')}</div>
+      <h4>Sitios candidatos para colonias o refugios</h4>
+      <div class="censo-form sitios">
+        <div class="f"><label for="sitio-id">Nombre</label><input id="sitio-id" maxlength="20" placeholder="A"></div>
+        <div class="f cx"><label for="sitio-xy">Coordenadas</label><input id="sitio-xy" placeholder="501700 1547900" inputmode="decimal"></div>
+        ${b('sitio-agregar', 'Agregar sitio', '', ' primary')}
+      </div>
+      <p class="muted small">También puedes marcar el sitio sobre el mapa con «Marcar sitio candidato». El veredicto de cada uno está en el ApiRadar.</p>
     </details>
     <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
   </div>`;
 }
 
 function infoHtml() {
-  const ayuda = { punto: 'Toca el mapa donde está la finca.', contorno: 'Toca cada esquina de la finca en orden. Pulsa Terminar al acabar.', ver: 'Arrastra para moverte. Ctrl + rueda o los botones + y − para acercar.' }[modo];
+  const ayuda = { punto: 'Toca el mapa donde está la finca.', sitio: 'Toca el mapa donde estaría el sitio candidato.', contorno: 'Toca cada esquina de la finca en orden. Pulsa Terminar al acabar.', ver: 'Arrastra para moverte. Ctrl + rueda o los botones + y − para acercar.' }[modo];
   const a = areaHa(U.contorno);
   const avisos = avisosMapa(U, S.farm.area);
   return `<p class="muted">${ayuda}</p>
@@ -63,7 +82,7 @@ function infoHtml() {
       <div><dt>Ubicación</dt><dd>${U.punto ? `${fmt(U.punto[0])}, ${fmt(U.punto[1])}` : 'sin marcar'}</dd></div>
       <div><dt>Área dibujada</dt><dd>${a > 0 ? `${redondear(a)} ha` : U.contorno.length ? `${U.contorno.length} punto(s), faltan ${Math.max(0, 3 - U.contorno.length)}` : 'sin contorno'}</dd></div>
       <div><dt>Área declarada</dt><dd>${S.farm.area || 0} ha</dd></div>
-      <div><dt>Árboles de riesgo</dt><dd>${U.arboles.length ? `${U.arboles.length} con coordenadas` : 'sin cargar'}</dd></div>
+      <div><dt>Censo de árboles</dt><dd>${U.arboles.length ? `${U.arboles.length} árbol(es)${U.sitios.length ? `, ${U.sitios.length} sitio(s)` : ''}` : 'sin cargar'}</dd></div>
     </dl>
     ${avisos.map((t) => `<p class="mapa-aviso">⚠ ${esc(t)}</p>`).join('')}
     ${fallas ? '<p class="mapa-aviso">No se pudo cargar parte de la imagen satelital (sin internet o el servicio no responde). Puedes seguir marcando el punto y el contorno.</p>' : ''}`;
@@ -100,15 +119,23 @@ function dibujar(el) {
     ${U.punto ? (() => { const [x, y] = xy(U.punto); return `<g class="mapa-punto" transform="translate(${x},${y})"><circle r="9"/><circle r="3.5" class="centro"/></g>`; })() : ''}`;
 }
 
-// Árboles de riesgo con su radio de exclusión (mínimo punteado, máximo continuo) y el punto más alejado de todos.
+// Árboles del censo (color por riesgo) con su radio de exclusión (mínimo continuo, conservador punteado), los sitios candidatos
+// (rombo con el color de su veredicto) y el punto más alejado de todos los árboles.
 function arbolesSvg(xy, lat, zoom) {
   if (!U.arboles.length) return '';
   const [rMin, rMax] = CONFIG.apiradar.radioExclusionM;
   const mPorPx = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
-  const s = sitiosFuera(U.arboles, U.contorno, [rMin, rMax]);
-  return U.arboles.map((p) => { const [x, y] = xy(p);
-    return `<circle class="mapa-radio max" cx="${x}" cy="${y}" r="${rMax / mPorPx}"/><circle class="mapa-radio min" cx="${x}" cy="${y}" r="${rMin / mPorPx}"/><circle class="mapa-arbol" cx="${x}" cy="${y}" r="4"><title>Árbol de riesgo</title></circle>`; }).join('')
-    + (s ? (() => { const [x, y] = xy(s.mejor.punto); return `<g class="mapa-sitio" transform="translate(${x},${y})"><circle r="8"/><title>Punto más alejado de los árboles de riesgo: ${s.mejor.distanciaM} m</title></g>`; })() : '');
+  const arb = clasificarArboles(U.arboles);
+  const s = sitiosFuera(U.arboles.map((a) => [a.lat, a.lon]), U.contorno, [rMin, rMax]);
+  const ver = evaluarSitios(arb, U.sitios);
+  const rombo = 9;
+  return arb.map((a) => { const [x, y] = xy([a.lat, a.lon]);
+    return `<circle class="mapa-radio max" cx="${x}" cy="${y}" r="${rMax / mPorPx}"/><circle class="mapa-radio min" cx="${x}" cy="${y}" r="${rMin / mPorPx}"/>`; }).join('')
+    + (s ? (() => { const [x, y] = xy(s.mejor.punto); return `<g class="mapa-sitio" transform="translate(${x},${y})"><circle r="8"/><title>Punto más alejado de los árboles del censo: ${s.mejor.distanciaM} m</title></g>`; })() : '')
+    + arb.map((a) => { const [x, y] = xy([a.lat, a.lon]);
+      return `<circle class="mapa-arbol ${a.clase ?? 'sin'}" cx="${x}" cy="${y}" r="4.5"><title>Árbol ${esc(a.id)}${a.clase ? `: riesgo ${a.clase}` : ': sin medidas de copa'}</title></circle>`; }).join('')
+    + ver.map((v) => { const [x, y] = xy([v.lat, v.lon]); const t = VEREDICTO[v.veredicto];
+      return `<g class="mapa-candidato ${v.veredicto ?? 'sin'}" transform="translate(${x},${y})"><path d="M0 ${-rombo}L${rombo} 0L0 ${rombo}L${-rombo} 0Z"/><text x="${rombo + 4}" y="4">${esc(nombreSitio(v))}${t ? ` (${t.texto.toLowerCase()})` : ''}</text><title>${esc(nombreSitio(v))}${t ? `: ${t.texto.toLowerCase()}, a ${v.distanciaM} m del árbol ${esc(v.arbol.id)}` : ''}</title></g>`; }).join('');
 }
 
 function actualizarInfo() {
@@ -143,9 +170,21 @@ function tocar(el, ox, oy) {
   const p = [+g.lat.toFixed(6), +g.lon.toFixed(6)];
   msg = '';
   if (modo === 'punto') { U.punto = p; modo = 'ver'; guardar(); rerender(); pedirClima(p[0], p[1]); }
+  else if (modo === 'sitio') { quitarEjemplo(); U.sitios.push({ id: siguienteSitio(), lat: p[0], lon: p[1] }); modo = 'ver'; guardar(); document.dispatchEvent(new Event('biogap:render')); return; }
   else { U.contorno.push(p); dibujar(el); actualizarInfo(); }
   guardar();
 }
+
+// Al agregar datos propios, el ejemplo ficticio (árboles, sitios y contorno) se borra para no mezclarlo.
+function quitarEjemplo() { if (U.ejemplo) { U.arboles = []; U.sitios = []; if (U.ejemploContorno) U.contorno = []; U.ejemplo = false; U.ejemploContorno = false; } }
+// Nombres automáticos: A, B, C… y, pasada la Z, S27, S28…
+function siguienteSitio() {
+  const usados = new Set(U.sitios.map((x) => x.id));
+  for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usados.has(l)) return l; }
+  let n = U.sitios.length + 1; while (usados.has(`S${n}`)) n++; return `S${n}`;
+}
+const valor = (id) => (document.getElementById(id)?.value ?? '').trim();
+const limpiar = (xy) => xy.split(/[;, \t]+/).filter(Boolean);
 
 // Re-dibuja solo el bloque del mapa (botones incluidos) sin tocar el resto del dashboard.
 function rerender() {
@@ -215,6 +254,7 @@ document.addEventListener('click', (e) => {
   const a = b.dataset.mapa;
   msg = '';
   if (a === 'modo-punto') modo = modo === 'punto' ? 'ver' : 'punto';
+  else if (a === 'modo-sitio') modo = modo === 'sitio' ? 'ver' : 'sitio';
   else if (a === 'modo-contorno') { if (modo !== 'contorno') U.contorno = []; modo = modo === 'contorno' ? 'ver' : 'contorno'; }
   else if (a === 'deshacer') U.contorno.pop();
   else if (a === 'terminar') {
@@ -222,19 +262,62 @@ document.addEventListener('click', (e) => {
     else { modo = 'ver'; if (U.arboles.length) document.dispatchEvent(new Event('biogap:render')); }
   } else if (a === 'borrar') { U.punto = null; U.contorno = []; modo = 'ver'; }
   else if (a === 'arboles-cargar') {
-    textoArboles = document.getElementById('mapa-arboles')?.value ?? textoArboles;
-    zonaUtm = +(document.getElementById('mapa-zona')?.value ?? zonaUtm) === 17 ? 17 : 16;
-    const r = leerArboles(textoArboles, zonaUtm);
-    if (!r.arboles.length) msg = r.errores[0] ?? 'Escribe al menos un árbol.';
-    else {
-      U.arboles = r.arboles;
-      const c = r.arboles[0];
-      if (!U.contorno.length) U.vista = { lat: c[0], lon: c[1], zoom: Math.max(U.vista.zoom, 14) };
-      msg = `${r.arboles.length} árbol(es) cargado(s)${r.errores.length ? `. ${r.errores.join(' ')}` : ''}${U.contorno.length >= 3 ? '' : ' Dibuja el contorno de la finca para calcular qué parte queda fuera del radio.'}`;
-      S.abiertos['mapa-arboles'] = true;
-    }
-    guardar(); rerender(); document.dispatchEvent(new Event('biogap:render')); return;
-  } else if (a === 'arboles-quitar') { U.arboles = []; textoArboles = ''; document.dispatchEvent(new Event('biogap:render')); }
+    textoArboles = valor('mapa-arboles') || textoArboles;
+    zonaUtm = +valor('mapa-zona') === 17 ? 17 : 16;
+    const r = leerCenso(textoArboles, zonaUtm);
+    if (!r.arboles.length) { msg = r.errores[0] ?? 'Escribe al menos un árbol.'; actualizarInfo(); return; }
+    quitarEjemplo();
+    U.arboles = r.arboles;
+    if (!U.contorno.length) U.vista = { lat: r.arboles[0].lat, lon: r.arboles[0].lon, zoom: Math.max(U.vista.zoom, 14) };
+    msg = `${r.arboles.length} árbol(es) cargado(s)${r.errores.length ? `. ${r.errores.slice(0, 3).join(' ')}` : ''}`;
+    S.abiertos['mapa-arboles'] = true;
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'arbol-agregar') {
+    zonaUtm = +valor('mapa-zona') === 17 ? 17 : 16;
+    const xy = limpiar(valor('censo-xy'));
+    const usados = new Set(U.arboles.map((x) => x.id));
+    let id = valor('censo-id');
+    if (!id) { let n = U.arboles.length + 1; while (usados.has(String(n))) n++; id = String(n); }
+    if (xy.length !== 2) { msg = 'Escribe las coordenadas del árbol: dos números, «este norte» o «latitud, longitud».'; actualizarInfo(); return; }
+    const r = leerLineaCenso([id, xy[0], xy[1], valor('censo-dap'), valor('censo-d'), valor('censo-h')].join('\t'), zonaUtm);
+    if (r.error) { msg = r.error; actualizarInfo(); return; }
+    if (!U.ejemplo && usados.has(id)) { msg = `Ya hay un árbol con el ID ${id}.`; actualizarInfo(); return; }
+    quitarEjemplo();
+    U.arboles.push(r.arbol);
+    if (!U.contorno.length && U.arboles.length === 1) U.vista = { lat: r.arbol.lat, lon: r.arbol.lon, zoom: Math.max(U.vista.zoom, 15) };
+    msg = `Árbol ${id} agregado.`; S.abiertos['mapa-arboles'] = true;
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'arbol-quitar') {
+    U.arboles = U.arboles.filter((x) => x.id !== b.dataset.id);
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'sitio-agregar') {
+    zonaUtm = +valor('mapa-zona') === 17 ? 17 : 16;
+    const xy = limpiar(valor('sitio-xy'));
+    const p = xy.length === 2 ? puntoDe(Number(xy[0]), Number(xy[1]), zonaUtm) : null;
+    if (!p) { msg = 'Escribe las coordenadas del sitio: dos números, «este norte» (UTM) o «latitud, longitud».'; actualizarInfo(); return; }
+    const id = valor('sitio-id') || siguienteSitio();
+    if (!U.ejemplo && U.sitios.some((x) => x.id === id)) { msg = `Ya hay un sitio con el nombre ${id}.`; actualizarInfo(); return; }
+    quitarEjemplo();
+    U.sitios.push({ id, lat: p[0], lon: p[1] });
+    msg = `${nombreSitio({ id })} agregado.`; S.abiertos['mapa-arboles'] = true;
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'sitio-quitar') {
+    U.sitios.splice(+b.dataset.i, 1);
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'arboles-quitar') {
+    if (U.ejemplo) quitarEjemplo(); else { U.arboles = []; U.sitios = []; }
+    textoArboles = '';
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  } else if (a === 'ejemplo') {
+    if (U.arboles.length) return; // no pisa datos propios
+    const e = censoEjemplo();
+    U.arboles = e.arboles; U.sitios = e.sitios; U.ejemplo = true;
+    U.ejemploContorno = !U.contorno.length;
+    if (U.ejemploContorno) U.contorno = e.contorno;
+    U.vista = { lat: e.arboles[0].lat, lon: e.arboles[0].lon, zoom: 14 };
+    S.abiertos['mapa-arboles'] = true;
+    guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  }
   else if (a === 'ir') {
     const r = leerCoordenadas(document.getElementById('mapa-coord')?.value);
     if (r.error) msg = r.error;

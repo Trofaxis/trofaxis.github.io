@@ -80,6 +80,7 @@ document.addEventListener('click',e=>{
   else if(act==='finish'){S.view='dashboard';}
   else if(act==='apiradar'){S.problema=a.dataset.p;}
   else if(act==='apiradar-cerrar'){S.problema='';}
+  else if(act==='apiradar-censo'){S.abiertos['mapa-arboles']=true;queueMicrotask(()=>{const c=document.getElementById('censo');c?.scrollIntoView({block:'start'});document.getElementById('censo-id')?.focus({preventScroll:true});});}
   else if(act==='start-empty'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.view='wizard';S.step=0;}
   else if(act==='load-demo'){reiniciarMapa();S.farm=demoFarm();S.demo=true;S.done={};S.view='dashboard';S.msg='Se cargó la finca de ejemplo.';}
   else if(act==='cult-yes'){f.tieneCultivos=true;}

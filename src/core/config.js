@@ -32,6 +32,10 @@ export const CONFIG = {
     // et al. (2018) dan 300-500 m como rango de vuelo de Trigona fulviventris (resumen del artículo, Guanacaste, Costa Rica).
     // Para Plebeia melanica no hay cifra en los documentos del proyecto: se usa el mismo radio como referencia (criterio propio).
     radioExclusionM: [300, 500],
+    // Riesgo de cada árbol del censo por volumen de copa, RELATIVO al propio censo: los de más volumen (tercio superior) son
+    // «alto», los del medio «medio» y el resto «bajo». Los cortes son CRITERIO PROPIO (percentiles), no un valor de la literatura.
+    // Sirve para priorizar qué árbol atender primero; el radio de exclusión se aplica igual a todos los árboles censados.
+    percentilesRiesgo: [1 / 3, 2 / 3],
     // Meses de floración de riesgo desde los que se pide registrar la fecha de las abejas muertas (solo texto de ayuda).
     topeAcciones: 6,
   },
