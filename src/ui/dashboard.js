@@ -65,7 +65,7 @@ export function viewDashboard(){
         <div><div class="k">Mes más cargado</div><div class="v">${hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno'}</div></div>
         <div><div class="k">Meses con coincidencias</div><div class="v">${hotM.length} de 12</div></div>
         <div><div class="k">Datos completos</div><div class="v">${Math.round(R.conf*100)} %</div></div>
-        <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Certificado':f.gg==='quiero'?'En camino':'No aplica'}</div></div>
+        <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica'}</div></div>
       </div>
       <div><p class="label" style="text-align:center">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
