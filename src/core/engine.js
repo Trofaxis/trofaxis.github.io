@@ -26,14 +26,20 @@ export function modulosDe(f, cfg = CONFIG) {
 export function contexto(f, extra = {}, cfg = CONFIG) {
   const atraeFlor = uniq(f.especies.filter((e) => e.atrae).flatMap((e) => e.floracion));
   const riesgoFlor = uniq(f.especies.filter((e) => e.riesgo).flatMap((e) => e.floracion));
-  const aplic = uniq(f.plaguicidas.filter((p) => cuentaParaAbejas(p, f, cfg)).flatMap((p) => p.meses));
+  const contadas = f.plaguicidas.filter((p) => cuentaParaAbejas(p, f, cfg));
+  const aplic = uniq(contadas.flatMap((p) => p.meses));
   const amplio = uniq(f.plaguicidas.filter((p) => p.clase === 'amplio').flatMap((p) => p.meses));
   const plagaM = uniq(f.plagas.flatMap((p) => p.meses));
   const nativasFauna = f.especies.some((e) => e.tipo === 'Fauna' && e.origen === 'nativa');
   const cosechaM = uniq(f.cultivos.flatMap((c) => c.cosecha));
   const siembraM = uniq(f.cultivos.flatMap((c) => c.siembra));
   const ov1 = inter(atraeFlor, aplic);
-  return { atraeFlor, riesgoFlor, aplic, amplio, plagaM, cosechaM, siembraM, nativasFauna, ov1, riego: extra.riego ?? null };
+  // Aplicación en mes de cosecha: la finca guarda meses, no días. Un mes solo se descarta si todos sus productos tienen
+  // intervalo de seguridad de 0 días (etiqueta o cuadro SAG); con 1 día o más, o sin dato, sigue contando (criterio propio).
+  const enCosecha = inter(aplic, cosechaM);
+  const aplicCosecha = enCosecha.filter((m) => contadas.some((p) => p.meses.includes(m) && p.diasCosecha !== 0));
+  const cosechaSinEspera = enCosecha.filter((m) => !aplicCosecha.includes(m));
+  return { atraeFlor, riesgoFlor, aplic, amplio, plagaM, cosechaM, siembraM, nativasFauna, ov1, aplicCosecha, cosechaSinEspera, riego: extra.riego ?? null };
 }
 
 export function evaluar(f0, cfg = CONFIG, extra = {}) {
@@ -62,7 +68,7 @@ export function evaluar(f0, cfg = CONFIG, extra = {}) {
   inter(f.fertMeses, f.lluviaMeses).forEach((m) => mh[m].push('Fertilización con lluvia fuerte'));
   inter(f.sueloDesnudoMeses, f.lluviaMeses).forEach((m) => mh[m].push('Suelo desnudo con lluvia'));
   inter(ctx.amplio, ctx.plagaM).forEach((m) => mh[m].push('Amplio espectro con plaga presente'));
-  inter(ctx.aplic, ctx.cosechaM).forEach((m) => mh[m].push('Aplicación en mes de cosecha'));
+  ctx.aplicCosecha.forEach((m) => mh[m].push('Aplicación en mes de cosecha'));
 
   return { mods, overall, sinDatos: !conDatos.length, parcial: conDatos.length > 0 && conDatos.length < mods.length, conf, mh, ...ctx };
 }
