@@ -37,7 +37,7 @@ Eso es la **memoria de casos**, y es el valor que crece con el uso. Desde la v0.
 - Los casos compartidos los puede leer cualquiera, sin sesión y sin saber de quién son.
 - Sin conexión o sin sesión, la app funciona igual que antes. Detalles y decisiones en [docs/nube.md](docs/nube.md).
 - **El clima:** para descargarlo se envían a Open-Meteo las coordenadas redondeadas (~1 km). La finca guarda el clima por mes, no las coordenadas.
-- **El mapa satelital:** las coordenadas se guardan aparte, solo en este navegador, y **no** van en el archivo exportado, en la nube ni en la memoria de casos. El navegador sí descarga las imágenes del servicio de EOX según la zona que se mira.
+- **El mapa satelital:** las coordenadas se guardan aparte, solo en este navegador, y **no** van en el archivo exportado, en la nube ni en la memoria de casos. Tienen su propio respaldo en archivo («Guardar mapa y censo»), aparte del de la finca, porque lleva coordenadas exactas. El navegador sí descarga las imágenes del servicio de EOX según la zona que se mira.
 
 ## Cómo verla
 
@@ -117,7 +117,8 @@ Este repositorio es la **única versión oficial**. Cualquier asistente (Claude 
 - [x] Mapa satelital con contorno y área (Issue #10)
 - [x] Pestaña Plaguicidas: peligro para himenópteros por ingrediente activo y dosis, etiqueta, condiciones y cuadro SAG
 - [x] Clima por ubicación: Open-Meteo por coordenadas, con respaldo manual (Issue #8)
-- [ ] Guardar los datos de riego con la finca (hoy se pierden al recargar la página)
+- [x] Guardar los datos de riego en el navegador (sobreviven a recargar la página)
+- [ ] Llevar los datos de riego también en el archivo exportado de la finca
 - [ ] Diseño hidráulico y cubicación de reservorio
 - [ ] Más cultivos en `src/riego/referencias.js` (hoy solo maíz)
 - [ ] Perfiles de configuración por cultivo o exportador

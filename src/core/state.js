@@ -1,6 +1,6 @@
 // Estado de la app: finca de ejemplo, finca vacía y borradores de formularios.
 import { CONFIG } from './config.js';
-import { casoEjemplo, declaradosEjemplo } from '../riego/calculo.js';
+import { riegoInicial } from '../riego/guardado.js';
 import { plagVacio, plagBorrador } from '../plag/modelo.js';
 
 // Resultado de un caso: cómo le fue a la finca después de sus acciones (memoria de casos).
@@ -108,7 +108,7 @@ export const S = {
   climaUI: { estado: '', msg: '', llenos: [] }, // descarga del clima: '' | cargando | ok | error, y qué se llenó solo
   abiertos: {}, // secciones plegables que el usuario abrió o cerró (se conservan al volver a dibujar la vista)
   // Módulo de riego: datos de entrada, de dónde salieron y lo que el archivo traía calculado.
-  riego: { datos: casoEjemplo(), fuente: 'ejemplo', archivo: '', origen: {}, declarados: declaradosEjemplo(), faltan: [], omitidas: [] },
+  riego: riegoInicial(),
   ...blankDrafts(),
   tpl: {
     tipo: 'mec', objetivo: 0, paste: '',

@@ -20,7 +20,6 @@ const CORTO = {
   coincidencia: 'Aplicaciones', claseEnFloracion: 'Peligro producto', especiesRiesgo: 'Meses riesgo', abundanciaRiesgo: 'Abundancia',
   alternativas: 'Sin otras flores', aguaSeca: 'Meses secos', foliarEnFloracion: 'Foliares', abejasNativas: 'Abejas nativas',
 };
-const nivelDe = (p) => (p >= 67 ? 'Alto' : p >= 34 ? 'Medio' : 'Bajo');
 
 // Primer mes de la floración de riesgo, contando el cambio de año (sep-ene empieza en septiembre).
 const inicio = (meses) => meses.find((m) => !meses.includes((m + 11) % 12)) ?? meses[0];
@@ -186,6 +185,6 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     datos, evidencia, causas, acciones, total, faltan, comprobar, radio,
     censo: { arboles: censoArb, resumen: rc, sitios, prioritarios, ejemplo: !!ubic?.ejemplo },
     resumen: `Riesgo ${nivel(mod.score, cfg).toLowerCase()} para las abejas (${mod.score} de 100)${causas.length ? `, sobre todo por: ${causas.slice(0, 2).map((c) => c.nombre.toLowerCase()).join(' y ')}` : ''}.`,
-    radar: evidencia.filter((v) => v.puntaje != null).map((v) => ({ nombre: v.corto, score: v.puntaje, level: nivelDe(v.puntaje) })),
+    radar: evidencia.filter((v) => v.puntaje != null).map((v) => ({ nombre: v.corto, score: v.puntaje, level: nivel(v.puntaje, cfg) })),
   };
 }
