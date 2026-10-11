@@ -118,6 +118,19 @@ test('la fila de intensidad tiene una celda por mes, igual que el calendario (is
   assert.match(html, /<b>2<\/b><span>Pol<\/span><span>Sue<\/span>/);
 });
 
+test('el simulador de nitrógeno baja el N al objetivo y no toca el fósforo ni el potasio de un NPK', () => {
+  const f = demoFarm(); // incluye un 15-15-15 de 300 kg/ha y N aplicado por encima del objetivo
+  const antes = evaluar(f), despues = simular(f, { n: true });
+  const v = (r, mod, id) => r.mods.find((m) => m.id === mod).variables.find((x) => x.id === id);
+  assert.equal(v(despues, 'fert', 'fosforo').valor, v(antes, 'fert', 'fosforo').valor);
+  assert.equal(v(despues, 'fert', 'fosforo').puntaje, v(antes, 'fert', 'fosforo').puntaje);
+  assert.match(v(despues, 'fert', 'dosis').valor, /^150 de 150 /);
+  assert.ok(v(antes, 'fert', 'dosis').valor.startsWith('180.2 de 150') || v(antes, 'fert', 'dosis').valor.startsWith('180'));
+  // La finca original no cambia.
+  assert.equal(f.fertPlan[0].n, 15);
+  assert.equal(f.fertPlan[0].dosis, 300);
+});
+
 // ---- Los niveles salen de los umbrales de Ajustes en todas partes (pastillas y ApiRadar) ----
 import { pastillaPuntaje } from '../src/ui/components.js';
 import { apiRadar } from '../src/apiradar/diagnostico.js';

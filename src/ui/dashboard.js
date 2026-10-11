@@ -44,7 +44,7 @@ export function viewDashboard(){
   const lvO=nivel(R.overall,cfg);
   const pesoTotal=mods.reduce((s,m)=>s+(cfg.pesos[m.id]??0),0);
   const pesosTxt=mods.map(m=>`${m.nombre.toLowerCase()} ${Math.round((cfg.pesos[m.id]??0)/pesoTotal*100)} %`).join(', ');
-  const simOpts=[['n','Ajustar el nitrógeno al objetivo',f.nObjetivo>0&&f.nAplicado>f.nObjetivo?`De ${f.nAplicado} a ${f.nObjetivo} kg N/ha`:'La dosis ya está en el objetivo',!(f.nObjetivo>0&&f.nAplicado>f.nObjetivo)],
+  const simOpts=[['n','Ajustar el nitrógeno al objetivo',f.nObjetivo>0&&f.nAplicado>f.nObjetivo?`De ${f.nAplicado} a ${f.nObjetivo} kg N/ha; el fósforo y el potasio no cambian`:'La dosis ya está en el objetivo',!(f.nObjetivo>0&&f.nAplicado>f.nObjetivo)],
     ['pol','Aplicar fuera de la floración','Quita las aplicaciones de los meses con polinizadores',!R.ov1.length],
     ['selec','Cambiar amplio espectro por selectivo','Reduce la presión sobre enemigos naturales',!f.plaguicidas.some(p=>p.clase==='amplio')],
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
