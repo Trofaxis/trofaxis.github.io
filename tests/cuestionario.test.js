@@ -40,3 +40,40 @@ test('campos nuevos se validan al cargar una finca', () => {
   assert.equal(f.plagas[0].cultivo, 'Maíz');
   assert.deepEqual(normalizarFinca(demoFarm()).cultivosAledanos, demoFarm().cultivosAledanos);
 });
+
+import { grupoPresencia, nivelPresencia, textoUmbrales } from '../src/especies/presencia.js';
+import { filasValidacion, csvValidacion, ESTADO_TABLA_PLAGAS } from '../src/especies/plagas.js';
+import { readFileSync } from 'node:fs';
+
+test('umbrales de presencia por grupo (issue #13): bordes de cada corte', () => {
+  for (const g of ['polinizadores', 'arboles', 'malezas', 'plagas']) {
+    const [a, b] = CONFIG.presencia[g].cortes;
+    assert.ok(a < b, g);
+    assert.equal(nivelPresencia(g, 0), 'baja');
+    assert.equal(nivelPresencia(g, a), 'media');
+    assert.equal(nivelPresencia(g, b - 0.01), 'media');
+    assert.equal(nivelPresencia(g, b), 'alta');
+  }
+  assert.equal(nivelPresencia('plagas', ''), null);
+  assert.equal(nivelPresencia('plagas', -1), null);
+  assert.equal(nivelPresencia('cultivos', 3), null);
+  assert.equal(grupoPresencia('Arbusto'), 'arboles');
+  assert.equal(grupoPresencia('Cultivo'), null);
+  assert.match(textoUmbrales('malezas'), /por validar/);
+});
+
+test('tabla de plagas (issue #11): columnas pedidas y nada inventado', () => {
+  assert.equal(ESTADO_TABLA_PLAGAS, 'no validado');
+  const filas = filasValidacion();
+  assert.ok(filas.length > 30);
+  for (const f of filas) {
+    for (const c of ['cultivo', 'plaga', 'cientifico', 'tipo', 'zona', 'mesesPresion', 'factores', 'fuente', 'estado']) assert.ok(c in f, c);
+    assert.equal(f.estado, 'por validar');
+    assert.equal(f.zona, null); assert.equal(f.mesesPresion, null); assert.equal(f.factores, null);
+  }
+  assert.ok(filas.filter((f) => f.cultivo === 'Chile').every((f) => /Protección Vegetal/.test(f.fuente)));
+});
+
+test('docs/validacion-plagas.csv está al día con src/especies/plagas.js', () => {
+  assert.equal(readFileSync(new URL('../docs/validacion-plagas.csv', import.meta.url), 'utf8'), csvValidacion());
+});

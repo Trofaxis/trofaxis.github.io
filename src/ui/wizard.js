@@ -7,6 +7,7 @@ import { bloqueUbicacion } from './clima.js';
 import { mesesLluviosos, tieneClima } from '../clima/normales.js';
 import { CONFIG } from '../core/config.js';
 import { plagasDe } from '../especies/plagas.js';
+import { grupoPresencia, textoUmbrales } from '../especies/presencia.js';
 
 // Secciones de especies: obligan a pensar en cada grupo por separado.
 export const SECCIONES = {
@@ -54,7 +55,7 @@ export function viewWizard(){
       ${SECCIONES[sec].tipos.length>1?select('e-tipo','Tipo','draftEsp.tipo',S.draftEsp.tipo,SECCIONES[sec].tipos.map(t=>[t,t])):''}
       ${select('e-orig','Origen','draftEsp.origen',S.draftEsp.origen,[['nativa','Nativa'],['exótica','Exótica'],['desconocido','No sé']])}
       ${select('e-pres','Nivel de presencia (opcional)','draftEsp.presencia',S.draftEsp.presencia,PRES)}
-    </div><p class="muted small">Los umbrales de cada nivel de presencia están por definir.</p>
+    </div>${grupoPresencia(S.draftEsp.tipo)?`<p class="muted small">Nivel de presencia: ${esc(textoUmbrales(grupoPresencia(S.draftEsp.tipo)))}</p>`:''}
     ${sec==='fauna'?'':`<div class="f"><span class="label">Calendario de floración</span>${months('draftEsp.floracion',S.draftEsp.floracion)}</div>
     <div class="row"><label class="check"><input id="e-atrae" type="checkbox" data-bind="draftEsp.atrae" ${S.draftEsp.atrae?'checked':''}> Atrae polinizadores</label>
     <label class="check"><input id="e-riesgo" type="checkbox" data-bind="draftEsp.riesgo" data-rerender ${S.draftEsp.riesgo?'checked':''}> Es un riesgo para polinizadores</label></div>
@@ -80,6 +81,7 @@ export function viewWizard(){
         ${f.cultivos.length?select('g-cult','Cultivo','draftPlaga.cultivo',S.draftPlaga.cultivo,[['','General'],...f.cultivos.map(c=>[c.nombre,c.nombre])]):''}
         ${select('g-sev','Severidad','draftPlaga.severidad',S.draftPlaga.severidad,[['baja','Baja'],['media','Media'],['alta','Alta']])}
         ${select('g-pres','Nivel de presencia (opcional)','draftPlaga.presencia',S.draftPlaga.presencia,PRES)}</div>
+      <p class="muted small">Nivel de presencia: ${esc(textoUmbrales('plagas'))}</p>
       <div class="f"><span class="label">Meses en que aparece</span>${months('draftPlaga.meses',S.draftPlaga.meses)}</div><div><button class="btn" data-act="add-plaga">Agregar plaga</button></div></div></div>
     ${Object.keys(SECCIONES).filter(k=>k!=='cultivos'||f.tieneCultivos).map(seccion).join('')}`;
   }
