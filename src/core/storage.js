@@ -8,6 +8,7 @@ import { MODULOS } from '../modules/index.js';
 import { normalizarPlag } from '../plag/modelo.js';
 import { normalizarClima } from '../clima/normales.js';
 import { marcarGuardado } from './aviso-guardado.js';
+import { riegoAGuardar, normalizarRiego } from '../riego/guardado.js';
 
 export const FORMATO = 'biogap-finca';
 export const VERSION = 1;
@@ -144,7 +145,7 @@ export function importarTexto(texto) {
 // Autoguardado en el navegador. Devuelve si pudo guardar; si no, la app muestra el aviso (src/core/aviso-guardado.js).
 export function guardarLocal(S) {
   try {
-    localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme }));
+    localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, riego: riegoAGuardar(S.riego) }));
     return marcarGuardado(true);
   } catch { return marcarGuardado(false); }
 }
@@ -154,9 +155,11 @@ export function cargarLocal(tplBase) {
     const raw = localStorage.getItem(CLAVE_LOCAL);
     if (!raw) return null;
     const o = JSON.parse(raw);
+    const riego = normalizarRiego(o.riego); // sin datos propios guardados, S.riego se queda con el ejemplo
     return {
       farm: normalizarFinca(o.farm), ajustes: normalizarAjustes(o.ajustes), demo: o.demo === true,
       tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'system'),
+      ...(riego ? { riego } : {}),
     };
   } catch { return null; }
 }

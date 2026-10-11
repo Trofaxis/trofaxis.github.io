@@ -8,7 +8,7 @@ import { CONFIG } from '../core/config.js';
 import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, avisosMapa, redondear, leerCenso, leerLineaCenso, puntoDe, sitiosFuera } from '../mapa/geo.js';
 import { clasificarArboles, evaluarSitios, nombreSitio, censoEjemplo, VEREDICTO } from '../apiradar/censo.js';
 import { marcarGuardado } from '../core/aviso-guardado.js';
-import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia } from '../mapa/ubicacion.js';
+import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia, exportarUbicacion, importarUbicacion, hayDatosPropios } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
 import { mapaRiesgoDe } from './mapariesgo.js';
 
@@ -72,6 +72,11 @@ export function panelMapa() {
       </div>
       <p class="muted small">También puedes marcar el sitio sobre el mapa con «Marcar sitio candidato». El veredicto de cada uno está en el ApiRadar.</p>
     </details>
+    <div class="respaldo-mapa">
+      <h4>Respaldo del mapa y del censo</h4>
+      <p class="muted small">El mapa, el contorno y el censo solo están en este navegador: si borras los datos del sitio o cambias de equipo, se pierden. El archivo lleva las coordenadas exactas de tu finca y de sus árboles: guárdalo en un lugar privado y no lo compartas. No viaja con el archivo de la finca ni a la nube.</p>
+      <div class="row">${b('respaldo-bajar', 'Guardar mapa y censo (archivo)', hayDatosPropios(U) ? '' : 'disabled')}${b('respaldo-subir', 'Cargar mapa y censo')}</div>
+    </div>
     <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
   </div>`;
 }
@@ -257,6 +262,8 @@ document.addEventListener('click', (e) => {
   const el = document.getElementById('mapa-finca');
   const a = b.dataset.mapa;
   msg = '';
+  if (a === 'respaldo-bajar') { bajarRespaldo(); return; }
+  if (a === 'respaldo-subir') { subirRespaldo(); return; }
   if (a === 'modo-punto') modo = modo === 'punto' ? 'ver' : 'punto';
   else if (a === 'modo-sitio') modo = modo === 'sitio' ? 'ver' : 'sitio';
   else if (a === 'modo-contorno') { if (modo !== 'contorno') U.contorno = []; modo = modo === 'contorno' ? 'ver' : 'contorno'; }
@@ -341,6 +348,36 @@ document.addEventListener('click', (e) => {
   avisarFuera();
   if (a === 'ir' && el) document.getElementById('mapa-finca')?.focus({ preventScroll: true });
 });
+
+// Respaldo en archivo del mapa y el censo (aparte del archivo de la finca; ver src/mapa/ubicacion.js).
+function bajarRespaldo() {
+  const url = URL.createObjectURL(new Blob([exportarUbicacion(U)], { type: 'application/json' }));
+  const l = document.createElement('a');
+  l.href = url; l.download = `biogap-mapa-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(l); l.click(); l.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  msg = 'Se descargó el respaldo del mapa y del censo. Guárdalo en un lugar privado: lleva coordenadas exactas.';
+  rerender();
+}
+function subirRespaldo() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json,application/json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 2_000_000) throw new Error('El archivo es demasiado grande.');
+      const u = importarUbicacion(await file.text());
+      if (hayDatosPropios(U) && !window.confirm('Esto reemplaza el mapa, el contorno y el censo que tienes ahora. ¿Continuar?')) return;
+      U = u; modo = 'ver'; textoArboles = '';
+      msg = `Se cargó el respaldo: ${u.arboles.length} árbol(es), ${u.sitios.length} sitio(s)${u.contorno.length >= 3 ? ' y el contorno' : ''}.`;
+      S.abiertos['mapa-arboles'] = true;
+      guardar();
+    } catch (err) { msg = `No se pudo cargar: ${err.message}`; }
+    document.dispatchEvent(new Event('biogap:render'));
+  });
+  input.click();
+}
 
 // Fuera del dashboard (p. ej. el paso Finca del cuestionario) no hay bloque del mapa: el mensaje se muestra
 // en el estado del clima. Solo los errores y la espera del GPS; el éxito lo informa la descarga del clima.
