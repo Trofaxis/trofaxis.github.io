@@ -101,7 +101,7 @@ function panelNube() {
     : `<div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
        <div class="row"><button class="btn primary" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div>`;
   const compartir = n.sesion ? `
-    <div class="f"><label class="item" style="cursor:pointer"><input type="checkbox" style="width:auto" data-bind="nube.consentimiento" data-rerender ${n.consentimiento ? 'checked' : ''}>
+    <div class="f"><label class="item pointer"><input type="checkbox" class="w-auto" data-bind="nube.consentimiento" data-rerender ${n.consentimiento ? 'checked' : ''}>
       <span class="grow">Acepto compartir de forma anónima el caso de abajo con la comunidad de BioG.A.P.</span></label>
       <span class="hint">Se comparte: cultivo principal, tipo de riego, pendiente, distancia al agua, proporción de especies nativas, meses de coincidencia, riesgo por módulo, las acciones que escribiste y el resultado. <b>No se comparte</b>: nombre de la finca ni de personas, departamento, fuente de agua, especies, ubicación ni coordenadas. Las acciones son texto libre: <b>no escribas nombres ni lugares en ellas</b> (se quitan coordenadas, correos, teléfonos y enlaces, pero revisa el texto).</span></div>
     <details><summary>Ver exactamente qué se enviaría</summary><pre class="formula">${esc(vistaPreviaCaso())}</pre></details>

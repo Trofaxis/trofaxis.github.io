@@ -315,3 +315,41 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
   .side .btn.theme{min-height:44px}
   .mapa-zoom button{width:44px;height:44px}
 }
+
+/* Utilidades (issue 52): antes eran estilos en línea dentro de src/ui/*.js. Van al final para ganar a las reglas base
+   con la misma especificidad. Quedan en línea solo los valores que dependen de un dato (ancho de barra, opacidad). */
+.stack{display:flex;flex-direction:column}
+.gap-4{gap:4px} .gap-8{gap:8px} .gap-10{gap:10px} .gap-12{gap:12px}
+.nowrap{flex-wrap:nowrap}
+.basis-100{flex-basis:100%}
+.minw-0{min-width:0} .minw-120{min-width:120px} .minw-260{min-width:260px}
+.maxw-110{max-width:110px}
+.w-auto{width:auto} .w-64{width:64px} .w-66{width:66px} .w-70{width:70px} .w-72{width:72px} .w-80{width:80px} .w-110{width:110px} .w-150{width:150px}
+.mt-8{margin-top:8px}
+.pl-18{padding-left:18px}
+.block{display:block} .inline{display:inline}
+.rel{position:relative}
+.pointer{cursor:pointer}
+.t-der{text-align:right} .t-centro{text-align:center}
+.fw-400{font-weight:400} .fw-700{font-weight:700}
+.fs-125{font-size:12.5px}
+.txt-crit{color:var(--crit)} .txt-warn{color:var(--warn)} .txt-good{color:var(--good)} .txt-ink,.pill.txt-ink{color:var(--ink)}
+.tenue{opacity:.25}
+.sprite{position:absolute}
+
+/* Piezas con nombre propio */
+.grafico{width:100%;height:auto}
+.grafico-centrado{display:block;margin:0 auto}
+.grafico-480{max-width:480px} .grafico-340{max-width:340px}
+.grafico-min480{min-width:480px}
+.leyenda{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.apiradar-acciones li{flex-direction:column;align-items:stretch;gap:6px}
+.plan-compacto{gap:4px}
+.plan-compacto li{border:none;padding:0}
+.notice-col{flex-direction:column;align-items:flex-start;gap:4px}
+.item.editando{outline:2px solid var(--pollen)}
+.lista-nota{margin:0;padding-left:18px}
+.campo-coord{flex:1;min-width:200px}
+.nc-criterio{flex:2;min-width:160px}
+.nc-dias{flex:1;min-width:80px}
+.meta-objetivo{position:absolute;left:66.66666666666667%;top:-3px;bottom:-3px;border-left:2px solid var(--ink)}

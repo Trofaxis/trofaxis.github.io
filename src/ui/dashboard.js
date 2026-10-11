@@ -54,7 +54,7 @@ export function viewDashboard(){
   ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis y especies sirven para mostrar cómo funciona la app, no son mediciones.</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
   <section class="panel">
     <div class="row between">
-      <div style="min-width:0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
+      <div class="minw-0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
       <div class="row"><button class="btn" data-view="wizard">Editar respuestas</button><button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button></div>
     </div>
     <div class="hero">
@@ -66,7 +66,7 @@ export function viewDashboard(){
         <div><div class="k">Datos completos</div><div class="v">${Math.round(R.conf*100)} %</div></div>
         <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica'}</div></div>
       </div>
-      <div><p class="label" style="text-align:center">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
+      <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
     <p class="muted small">El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}</p>
   </section>
@@ -87,7 +87,7 @@ export function viewDashboard(){
   <section class="panel">
     <div><h2>Presión por mes</h2><p class="muted">Cuántas coincidencias de riesgo caen en cada mes. Pasa el cursor sobre una barra para ver cuáles son.</p></div>
     <div class="scroll">${pressureChart(R.mh)}</div>
-    ${hotM.length?`<ul class="plan" style="gap:4px">${hotM.slice(0,3).map(([i])=>`<li style="border:none;padding:0"><span class="tag">${M[i]}</span><span class="txt small">${R.mh[i].join(' · ')}</span></li>`).join('')}</ul>`:'<p class="muted small">No hay coincidencias de riesgo en ningún mes.</p>'}
+    ${hotM.length?`<ul class="plan plan-compacto">${hotM.slice(0,3).map(([i])=>`<li><span class="tag">${M[i]}</span><span class="txt small">${R.mh[i].join(' · ')}</span></li>`).join('')}</ul>`:'<p class="muted small">No hay coincidencias de riesgo en ningún mes.</p>'}
   </section>
   <section class="panel">
     <div><h2>Cruce de calendarios</h2><p class="muted">Los meses marcados con ! son coincidencias de riesgo.</p></div>
@@ -113,7 +113,7 @@ export function viewDashboard(){
     </tbody></table></div>
     ${anySim?`<div><button class="btn sm" data-act="sim-reset">Quitar todos los cambios</button></div>`:''}
   </section>
-  <section class="panel"><div class="row between"><div><h2>Plan de acción</h2><p class="muted">Ordenado por riesgo del módulo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo" style="color:var(--ink)">${doneN} de ${recs.length} hechas</span>`:''}</div>
+  <section class="panel"><div class="row between"><div><h2>Plan de acción</h2><p class="muted">Ordenado por riesgo del módulo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${doneN} de ${recs.length} hechas</span>`:''}</div>
     ${recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>'}
   </section>
   ${panelVecinosDashboard()}
@@ -121,24 +121,24 @@ export function viewDashboard(){
   ${gg?`<section class="panel">
     <div><h2>Panel GLOBALG.A.P. IFA v6</h2><p class="muted">Guía de referencia. No reemplaza la auditoría ni garantiza el resultado.</p></div>
     <div class="grid2">
-      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="stack gap-12 minw-0">
         <h3>Margen de Minor Musts</h3>
         <div class="row">
-          <div class="f" style="width:150px"><label for="mm-apl">Aplicables</label><input id="mm-apl" type="number" min="0" data-bind="farm.minorAplicables" data-rerender value="${f.minorAplicables}"></div>
-          <div class="f" style="width:150px"><label for="mm-fal">Incumplidos</label><input id="mm-fal" type="number" min="0" data-bind="farm.minorFallas" data-rerender value="${f.minorFallas}"></div>
+          <div class="f w-150"><label for="mm-apl">Aplicables</label><input id="mm-apl" type="number" min="0" data-bind="farm.minorAplicables" data-rerender value="${f.minorAplicables}"></div>
+          <div class="f w-150"><label for="mm-fal">Incumplidos</label><input id="mm-fal" type="number" min="0" data-bind="farm.minorFallas" data-rerender value="${f.minorFallas}"></div>
         </div>
-        <p>Se permiten <b>${allowed}</b> incumplimientos (${Math.round(CONFIG.globalgap.margenMinorMusts*100)} % redondeado hacia abajo). ${remaining>=0?`Quedan <b>${remaining}</b>.`:`<b style="color:var(--crit)">Se superó el margen por ${-remaining}: no se cumple la regla del 95 %.</b>`}</p>
+        <p>Se permiten <b>${allowed}</b> incumplimientos (${Math.round(CONFIG.globalgap.margenMinorMusts*100)} % redondeado hacia abajo). ${remaining>=0?`Quedan <b>${remaining}</b>.`:`<b class="txt-crit">Se superó el margen por ${-remaining}: no se cumple la regla del 95 %.</b>`}</p>
         <div class="meter" aria-label="Margen de Minor Musts">${Array.from({length:Math.max(allowed,f.minorFallas)},(_,i)=>`<i class="${i<f.minorFallas?'used':'free'}" title="${i<f.minorFallas?'Usado':'Disponible'}"></i>`).join('')||'<span class="muted">Sin margen con este número de criterios.</span>'}</div>
         <p class="muted small">Los Major Musts deben cumplirse al 100 %; uno solo incumplido impide la certificación.</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="stack gap-12 minw-0">
         <h3>No conformidades abiertas</h3>
         <div class="scroll"><table class="data"><thead><tr><th>Criterio</th><th class="num">Días abiertos</th><th class="num">Quedan</th><th></th></tr></thead><tbody>
-          ${f.nc.map((n,i)=>{const q=CONFIG.globalgap.diasCierreNC-n.dias;return`<tr><td>${esc(n.criterio)}</td><td class="num">${n.dias}</td><td class="num" style="color:${q<=7?'var(--crit)':'var(--ink)'}">${q>0?q+' días':'Vencida'}</td><td><button class="btn sm" data-act="rm-nc" data-i="${i}">Cerrar</button></td></tr>`}).join('')||'<tr><td colspan="4" class="muted">Ninguna.</td></tr>'}
+          ${f.nc.map((n,i)=>{const q=CONFIG.globalgap.diasCierreNC-n.dias;return`<tr><td>${esc(n.criterio)}</td><td class="num">${n.dias}</td><td class="num ${q<=7?'txt-crit':'txt-ink'}">${q>0?q+' días':'Vencida'}</td><td><button class="btn sm" data-act="rm-nc" data-i="${i}">Cerrar</button></td></tr>`}).join('')||'<tr><td colspan="4" class="muted">Ninguna.</td></tr>'}
         </tbody></table></div>
         <div class="row">
-          <input id="nc-crit" aria-label="Criterio o hallazgo" placeholder="Criterio o hallazgo" data-bind="draftNC.criterio" value="${esc(S.draftNC.criterio)}" style="flex:2;min-width:160px">
-          <input id="nc-dias" aria-label="Días abiertos" type="number" min="0" placeholder="Días" data-bind="draftNC.dias" value="${S.draftNC.dias||''}" style="flex:1;min-width:80px">
+          <input id="nc-crit" aria-label="Criterio o hallazgo" placeholder="Criterio o hallazgo" data-bind="draftNC.criterio" value="${esc(S.draftNC.criterio)}" class="nc-criterio">
+          <input id="nc-dias" aria-label="Días abiertos" type="number" min="0" placeholder="Días" data-bind="draftNC.dias" value="${S.draftNC.dias||''}" class="nc-dias">
           <button class="btn sm" data-act="add-nc">Agregar</button>
         </div>
         <p class="muted small">Plazo máximo de ${CONFIG.globalgap.diasCierreNC} días para cerrar una no conformidad antes de la suspensión.</p>

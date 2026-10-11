@@ -47,7 +47,7 @@ export function viewWizard(){
     <div class="list">${f.cultivosAledanos.map((c,i)=>`<div class="item"><span class="grow"><b>${esc(c.nombre)}</b>${c.distancia!=null?` · a ${c.distancia} m`:''}</span>${ed('cultivosAledanos',i)}</div>`).join('')||'<p class="muted">Sin cultivos aledaños registrados.</p>'}</div>
     <div class="subform"><div class="fields">${field('v-nom','Cultivo vecino','draftVecino.nombre',S.draftVecino.nombre)}${numOpc('v-dist','Distancia aproximada','draftVecino.distancia',S.draftVecino.distancia,'Metros, opcional')}</div><div><button class="btn" data-act="add-vecino">Agregar cultivo aledaño</button></div></div>`
     :`<h3>¿Para qué quieres usar la app en esta finca?</h3><p class="muted">Elige uno o varios propósitos. El dashboard se enfocará en los módulos de cada uno.</p>
-    <div class="choice">${CONFIG.propositos.map(p=>`<button data-act="proposito" data-id="${p.id}" aria-pressed="${f.proposito.includes(p.id)}">${esc(p.nombre)}<span class="muted small" style="display:block;font-weight:400">${esc(p.detalle)}</span></button>`).join('')}</div>
+    <div class="choice">${CONFIG.propositos.map(p=>`<button data-act="proposito" data-id="${p.id}" aria-pressed="${f.proposito.includes(p.id)}">${esc(p.nombre)}<span class="muted small block fw-400">${esc(p.detalle)}</span></button>`).join('')}</div>
     <p class="muted small">Esta lista crecerá con nuevos módulos.</p>`}`;
   if(s===2){
     const formEsp=(sec)=>`<div class="subform"><h3>Agregar en ${SECCIONES[sec].titulo.toLowerCase()}</h3><div class="fields">
@@ -76,7 +76,7 @@ export function viewWizard(){
     body=`<h2>¿Qué especies hay en tu finca?</h2><p class="muted">Recorre cada grupo por separado: así es más difícil olvidar alguna.</p>
     <div class="f"><h3>Plagas y enfermedades${f.tieneCultivos?' de tus cultivos':''}</h3>${sug}
       ${sug?'<p class="muted small">Lista sugerida, por validar con un especialista. Toca una para agregarla y luego edita sus meses y severidad.</p>':''}
-      <div class="list">${f.plagas.map((p,i)=>`<div class="item"><span class="grow"><b>${esc(p.nombre)}</b>${p.cultivo?` · en ${esc(p.cultivo)}`:''} · severidad ${p.severidad} · ${p.meses.length?mlist(p.meses):'<span class="warnmsg" style="display:inline">sin meses</span>'}${presTxt(p.presencia)}</span>${ed('plagas',i)}</div>`).join('')||'<p class="muted">Sin plagas registradas.</p>'}</div>
+      <div class="list">${f.plagas.map((p,i)=>`<div class="item"><span class="grow"><b>${esc(p.nombre)}</b>${p.cultivo?` · en ${esc(p.cultivo)}`:''} · severidad ${p.severidad} · ${p.meses.length?mlist(p.meses):'<span class="warnmsg inline">sin meses</span>'}${presTxt(p.presencia)}</span>${ed('plagas',i)}</div>`).join('')||'<p class="muted">Sin plagas registradas.</p>'}</div>
       <div class="subform"><div class="fields">${field('g-nom','Plaga o enfermedad','draftPlaga.nombre',S.draftPlaga.nombre)}
         ${f.cultivos.length?select('g-cult','Cultivo','draftPlaga.cultivo',S.draftPlaga.cultivo,[['','General'],...f.cultivos.map(c=>[c.nombre,c.nombre])]):''}
         ${select('g-sev','Severidad','draftPlaga.severidad',S.draftPlaga.severidad,[['baja','Baja'],['media','Media'],['alta','Alta']])}

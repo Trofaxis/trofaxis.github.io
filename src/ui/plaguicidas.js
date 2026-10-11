@@ -24,8 +24,8 @@ const numero = (id, label, bind, val, hint = '', extra = '') => `<div class="f">
 const texto = (id, label, bind, val, hint = '', extra = '') => `<div class="f"><label for="${id}">${label}</label><input id="${id}" type="text" data-bind="${bind}" value="${esc(val)}" ${extra}>${hint ? `<span class="hint">${hint}</span>` : ''}</div>`;
 const casilla = (id, bind, val, label) => `<label class="check"><input id="${id}" type="checkbox" data-bind="${bind}" data-rerender ${val ? 'checked' : ''}> ${label}</label>`;
 const fuenteTxt = (f) => (!f ? '' : f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.cita)}</a>` : esc(f.cita));
-const alerta = (a) => `<li class="alerta ${a.nivel}"><div class="row" style="gap:8px"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
-  <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted" style="font-size:12.5px">Fuente: ${fuenteTxt(a.fuente)}</p>` : ''}</li>`;
+const alerta = (a) => `<li class="alerta ${a.nivel}"><div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
+  <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted fs-125">Fuente: ${fuenteTxt(a.fuente)}</p>` : ''}</li>`;
 
 // Píldora del peligro para abejas de una aplicación.
 function pildora(r) {
@@ -48,7 +48,7 @@ function filaIngrediente(c, i, d, n) {
   const cat = ingrediente(c.ia);
   const unidad = d.concUnidad === 'pct' ? '%' : 'g/L o g/kg';
   const clase = cat ? claseEPA(cat.dl50, cat.mayor) : null;
-  return `<div class="subform" style="gap:10px">
+  return `<div class="subform gap-10">
     <div class="fields">
       <div class="f"><label for="pq-ia-${i}">Ingrediente activo${n > 1 ? ` ${i + 1}` : ''}</label><select id="pq-ia-${i}" data-bind="draftPlag.componentes.${i}.ia">${opcionesIngrediente(c.ia)}</select></div>
       ${c.ia === 'otro' ? texto(`pq-ian-${i}`, 'Nombre del ingrediente', `draftPlag.componentes.${i}.nombre`, c.nombre, 'Como aparece en la etiqueta') : ''}
@@ -74,10 +74,10 @@ function vistaPrevia(d, f, cfg) {
   const tocado = d.producto || d.componentes.some((c) => c.ia) || d.dosis != null;
   const veredicto = !r.calculable && !tocado ? '<span class="muted">Elige el ingrediente activo y escribe su concentración y la dosis: aquí verás los gramos por hectárea y el peligro para abejas.</span>'
     : !r.calculable ? `<span class="warnmsg">${esc(r.motivo)}</span>`
-    : r.supera === true ? `<b style="color:var(--crit)">Supera el umbral de ${r.umbral}: peligro alto para abejas.</b>`
-      : r.supera === false ? `<b style="color:var(--good)">Bajo el umbral de ${r.umbral}.</b>`
-        : `<b style="color:var(--warn)">Sin resolver: ${esc(r.motivo || 'la DL50 es un mínimo y el HQ máximo queda sobre el umbral')}.</b>`;
-  return `<div class="notice" style="flex-direction:column;align-items:flex-start;gap:4px" aria-live="polite"><span class="label">Cálculo de esta aplicación</span>
+    : r.supera === true ? `<b class="txt-crit">Supera el umbral de ${r.umbral}: peligro alto para abejas.</b>`
+      : r.supera === false ? `<b class="txt-good">Bajo el umbral de ${r.umbral}.</b>`
+        : `<b class="txt-warn">Sin resolver: ${esc(r.motivo || 'la DL50 es un mínimo y el HQ máximo queda sobre el umbral')}.</b>`;
+  return `<div class="notice notice-col" aria-live="polite"><span class="label">Cálculo de esta aplicación</span>
     ${lineas.map((l) => `<span class="small">${l}</span>`).join('')}<span>${veredicto}</span>
     <span class="muted small">HQ = g de ingrediente activo por ha ÷ DL50 por contacto. Umbral de la UE: 42 hacia abajo, 85 hacia arriba o de lado (FAO).${r.factor > 1 ? ` Con abejas sin aguijón en la finca se multiplica por ${r.factor}.` : ''}</span></div>`;
 }
@@ -126,13 +126,13 @@ export function viewPlaguicidas() {
       ${R.filas.map(({ a, i, peligro: r, avisos }) => {
         const n = (x) => avisos.filter((v) => v.nivel === x).length;
         const dosis = r.comps.filter((c) => c.gHa != null).map((c) => `${fmt(c.gHa, 1)} g`).join(' + ');
-        return `<div class="item" ${S.plagEdit === i ? 'style="outline:2px solid var(--pollen)"' : ''}>
+        return `<div class="item${S.plagEdit === i ? ' editando' : ''}">
           <span class="grow"><b>${esc(a.producto || 'Sin nombre')}</b>
-            <span class="muted small" style="display:block">${a.componentes.length ? esc(a.componentes.map(nombreComp).join(' + ')) : 'Sin ingrediente'}${a.grupo ? ` · grupo ${esc(a.grupo)}` : ''}${a.uso ? ` · ${esc(a.uso)}` : ''}</span>
-            <span class="small" style="display:block">${mlist(a.meses)}${dosis ? ` · ${dosis} de i.a. por ha` : ''}</span></span>
-          <span style="min-width:120px">${pildora(r)}</span>
+            <span class="muted small block">${a.componentes.length ? esc(a.componentes.map(nombreComp).join(' + ')) : 'Sin ingrediente'}${a.grupo ? ` · grupo ${esc(a.grupo)}` : ''}${a.uso ? ` · ${esc(a.uso)}` : ''}</span>
+            <span class="small block">${mlist(a.meses)}${dosis ? ` · ${dosis} de i.a. por ha` : ''}</span></span>
+          <span class="minw-120">${pildora(r)}</span>
           <span class="small">${n('error') ? `<span class="pill error">${plural(n('error'), 'rojo', 'rojos')}</span> ` : ''}${n('advertencia') ? `<span class="pill advertencia">${n('advertencia')} por revisar</span>` : ''}${!n('error') && !n('advertencia') ? '<span class="muted">Sin avisos rojos</span>' : ''}</span>
-          <span class="row" style="gap:4px"><button class="btn sm" data-act="plag-edit" data-i="${i}">Editar</button><button class="btn sm" data-act="plag-dup" data-i="${i}" title="Copiar para registrar otra aplicación parecida">Duplicar</button><button class="btn sm" data-act="plag-rm" data-i="${i}">Quitar</button></span>
+          <span class="row gap-4"><button class="btn sm" data-act="plag-edit" data-i="${i}">Editar</button><button class="btn sm" data-act="plag-dup" data-i="${i}" title="Copiar para registrar otra aplicación parecida">Duplicar</button><button class="btn sm" data-act="plag-rm" data-i="${i}">Quitar</button></span>
         </div>`;
       }).join('') || '<p class="muted">Sin aplicaciones. Agrégalas en el formulario de abajo.</p>'}
     </div>
@@ -143,7 +143,7 @@ export function viewPlaguicidas() {
     <div class="f"><label for="pq-sag">¿Es un fungicida del cuadro de la SAG? Elígelo y la app llena lo que trae la tabla</label>
       <select id="pq-sag" data-bind="draftPlag.sag"><option value="">No, lo escribo yo</option>${sagOrden.map((p) => `<option value="${p.id}" ${prodSag && prodSag.id === p.id ? 'selected' : ''}>${esc(p.nombre)} · ${esc(p.ia)}</option>`).join('')}</select>
       <span class="hint">Cuadro de referencia de fungicidas de la SAG (2021). Siempre manda la etiqueta.</span></div>
-    ${S.plagNotas.length ? `<ul class="small" style="margin:0;padding-left:18px">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${S.plagNotas.length ? `<ul class="small lista-nota">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <div class="fields">
       ${texto('pq-prod', 'Producto comercial *', 'draftPlag.producto', d.producto, 'El nombre de la etiqueta')}
       ${sel('pq-uso', 'Uso', 'draftPlag.uso', d.uso, USOS)}
@@ -174,7 +174,7 @@ export function viewPlaguicidas() {
     ${vistaPrevia(d, f, cfg)}
 
     <details ${plegable('pq-etiqueta', d.etiquetaAbejas || d.noFloracion || d.diasCosecha != null || d.reingreso != null || d.aplicMax != null || d.franja != null)}><summary>Lo que dice la etiqueta</summary>
-      <div class="subform" style="margin-top:8px">
+      <div class="subform mt-8">
         <div class="row">${casilla('pq-abejas', 'draftPlag.etiquetaAbejas', d.etiquetaAbejas, 'Trae el pictograma "tóxico para abejas"')}${casilla('pq-noflor', 'draftPlag.noFloracion', d.noFloracion, 'Dice "no aplicar en floración"')}</div>
         <div class="fields">
           ${numero('pq-cos', 'Días a cosecha', 'draftPlag.diasCosecha', d.diasCosecha, 'Intervalo de seguridad para tu cultivo')}
@@ -186,7 +186,7 @@ export function viewPlaguicidas() {
         </div>
       </div></details>
     <details ${plegable('pq-plaga', d.objetivo || d.enfermedad != null || d.monitoreo)}><summary>Plaga o enfermedad y monitoreo</summary>
-      <div class="subform" style="margin-top:8px">
+      <div class="subform mt-8">
         <div class="fields">
           ${texto('pq-obj', 'Plaga o enfermedad que controlas', 'draftPlag.objetivo', d.objetivo, 'Por ejemplo: mosca blanca, mildiu lanoso')}
           <div class="f"><label for="pq-enf">Enfermedad del cuadro SAG</label><select id="pq-enf" data-bind="draftPlag.enfermedad"><option value="">Ninguna o no está</option>
@@ -197,7 +197,7 @@ export function viewPlaguicidas() {
       </div></details>
     ${climaMeses(d.meses)}
     <details ${plegable('pq-condiciones', d.hora || d.viento != null || d.temp != null || d.hr != null || d.lluviaH != null || d.ph != null)}><summary>Condiciones el día de la aplicación</summary>
-      <div class="subform" style="margin-top:8px">
+      <div class="subform mt-8">
         <div class="fields">
           <div class="f"><label for="pq-hora">Hora</label><input id="pq-hora" type="time" data-bind="draftPlag.hora" data-rerender value="${esc(d.hora)}"><span class="hint">La clase indica 5:00-9:30 o 15:30-18:00</span></div>
           ${numero('pq-vien', 'Viento (km/h)', 'draftPlag.viento', d.viento, `Máximo ${cfg.plag.vientoMax} km/h`)}
@@ -216,7 +216,7 @@ export function viewPlaguicidas() {
     <div><h2>Avisos</h2><p class="muted">Qué está bien, qué revisar y por qué. Cada aviso trae su fuente.</p></div>
     ${R.generales.length ? `<h3>Para toda la finca</h3><ul class="alertas">${R.generales.map(alerta).join('')}</ul>` : ''}
     ${R.filas.map(({ a, i, avisos }) => `<details ${plegable(`pq-avisos-${i}`, avisos.some((x) => x.nivel === 'error' || x.nivel === 'advertencia'))}><summary><b>${esc(a.producto || 'Sin nombre')}</b> · ${mlist(a.meses)} · ${avisos.length} aviso(s)</summary>
-      <ul class="alertas" style="margin-top:8px">${avisos.map(alerta).join('') || '<li class="muted small">Sin avisos.</li>'}</ul></details>`).join('')}
+      <ul class="alertas mt-8">${avisos.map(alerta).join('') || '<li class="muted small">Sin avisos.</li>'}</ul></details>`).join('')}
   </section>` : ''}
 
   <section class="panel">
@@ -231,7 +231,7 @@ export function viewPlaguicidas() {
       ${calRow('Lluvia fuerte', f.lluviaMeses, 'on-gen')}
       ${calRow('Fertilización foliar', foliar, 'on-gen', inter(foliar, R.mesesAplic))}
     </tbody></table></div>
-    <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+    <ul class="small lista-nota stack gap-4">
       <li><b>Polinizadores:</b> el peligro de lo que aplicas en floración entra al módulo Polinizadores del dashboard (variable "Peligro del producto aplicado en floración"). Sin ingrediente ni dosis, usa el espectro que elegiste.</li>
       <li><b>Abejas sin aguijón:</b> ${R.sinAguijon.length ? `registraste ${esc(R.sinAguijon.map((e) => e.nombre).join(', '))}; el HQ se multiplica por ${cfg.plag.factorSinAguijon}.` : `no registraste ninguna. Si las hay en tu finca, agrégalas en el paso Especies del cuestionario (tipo Fauna, con su nombre científico) y la app aplicará un margen ×${cfg.plag.factorSinAguijon}.`}</li>
       <li><b>Riego:</b> ${f.riego === 'aspersion' ? 'riegas por aspersión: no riegues en las 4 horas siguientes a una aplicación foliar.' : f.riego === 'ninguno' ? 'sin riego registrado.' : `riego por ${esc(f.riego)}.`} Si aplicas al suelo o por el riego un producto móvil (GUS alto), revisa la lámina en la pestaña <button class="btn sm" data-view="riego">Riego</button>.</li>
@@ -242,7 +242,7 @@ export function viewPlaguicidas() {
 
   <section class="panel flat">
     <div><h3>Fuentes</h3><p class="muted small">Ninguna dosis de esta pestaña es una recomendación: la que manda es la de la etiqueta del producto.</p></div>
-    <ul class="small" style="margin:0;padding-left:18px">${['fao', 'epa', 'arena', 'ppdb', 'gus', 'sag', 'etiquetas', 'aplicacion', 'muestreo', 'clima'].map((k) => `<li>${fuenteTxt(FUENTES_PLAG[k])}</li>`).join('')}</ul>
+    <ul class="small lista-nota">${['fao', 'epa', 'arena', 'ppdb', 'gus', 'sag', 'etiquetas', 'aplicacion', 'muestreo', 'clima'].map((k) => `<li>${fuenteTxt(FUENTES_PLAG[k])}</li>`).join('')}</ul>
     <details><summary>Catálogo de ingredientes activos (${INGREDIENTES.length}), con su ficha del PPDB</summary>
       <div class="scroll"><table class="data small"><thead><tr><th>Ingrediente</th><th>Uso</th><th>Grupo</th><th class="num">DL50 contacto (µg/abeja)</th><th>Clase EPA</th><th class="num">GUS</th></tr></thead><tbody>
         ${[...INGREDIENTES].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map((x) => `<tr><td><a href="${x.url}" target="_blank" rel="noopener">${esc(x.nombre)}</a></td><td>${x.uso}</td><td>${esc(x.grupo)}</td><td class="num">${x.mayor ? '> ' : ''}${fmt(x.dl50, 4)}</td><td>${esc(CLASE_EPA[claseEPA(x.dl50, x.mayor)] ?? 'Sin resolver')}</td><td class="num">${x.gus == null ? '—' : fmt(x.gus, 2)}</td></tr>`).join('')}
@@ -250,7 +250,7 @@ export function viewPlaguicidas() {
       <p class="muted small">Fichas consultadas el ${CONSULTA_PPDB}. Si tu ingrediente no está, elige "Otro" y escribe la DL50 de la hoja de seguridad.</p>
     </details>
     <details><summary>Notas sobre el cuadro de fungicidas de la SAG</summary>
-      <ul class="small" style="padding-left:18px">
+      <ul class="small pl-18">
         <li>La columna de reingreso trae "S" en ${PRODUCTOS_SAG.filter((p) => p.reingreso === 'S').length} productos y la leyenda no la define. La app no la convierte en horas.</li>
         ${PRODUCTOS_SAG.filter((p) => p.nota).map((p) => `<li><b>${esc(p.nombre)}:</b> ${esc(p.nota)}</li>`).join('')}
       </ul>
