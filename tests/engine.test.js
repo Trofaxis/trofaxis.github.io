@@ -1,7 +1,7 @@
 // Motor con rúbrica aditiva: puntajes de referencia, confianza, pesos y simulador.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluar } from '../src/core/engine.js';
+import { evaluar, nivel } from '../src/core/engine.js';
 import { CONFIG } from '../src/core/config.js';
 import { demoFarm, emptyFarm } from '../src/core/state.js';
 
@@ -172,4 +172,40 @@ test('el umbral de confianza mínima sale de la configuración', () => {
 test('el perfil de la memoria de casos no guarda como riesgo 0 a un módulo sin datos', () => {
   assert.deepEqual(perfil(emptyFarm()).scores, {});
   assert.deepEqual(Object.keys(perfil(demoFarm()).scores).sort(), ['agua', 'fert', 'poli', 'suelo', 'troficas']);
+});
+
+test('el simulador de nitrógeno baja el N al objetivo y no toca el fósforo ni el potasio de un NPK', () => {
+  const f = demoFarm(); // incluye un 15-15-15 de 300 kg/ha y N aplicado por encima del objetivo
+  const antes = evaluar(f), despues = simular(f, { n: true });
+  const v = (r, mod, id) => r.mods.find((m) => m.id === mod).variables.find((x) => x.id === id);
+  assert.equal(v(despues, 'fert', 'fosforo').valor, v(antes, 'fert', 'fosforo').valor);
+  assert.equal(v(despues, 'fert', 'fosforo').puntaje, v(antes, 'fert', 'fosforo').puntaje);
+  assert.match(v(despues, 'fert', 'dosis').valor, /^150 de 150 /);
+  assert.ok(v(antes, 'fert', 'dosis').valor.startsWith('180.2 de 150') || v(antes, 'fert', 'dosis').valor.startsWith('180'));
+  // La finca original no cambia.
+  assert.equal(f.fertPlan[0].n, 15);
+  assert.equal(f.fertPlan[0].dosis, 300);
+});
+
+// ---- Los niveles salen de los umbrales de Ajustes en todas partes (pastillas y ApiRadar) ----
+import { pastillaPuntaje } from '../src/ui/components.js';
+import { apiRadar } from '../src/apiradar/diagnostico.js';
+import { configEfectiva } from '../src/core/storage.js';
+
+test('la pastilla de un puntaje usa los umbrales vigentes, no 67 y 34 fijos', () => {
+  const sobrio = configEfectiva({ niveles: { alto: 50, medio: 20 } });
+  assert.match(pastillaPuntaje(50, sobrio), /pill Alto/);
+  assert.match(pastillaPuntaje(20, sobrio), /pill Medio/);
+  assert.match(pastillaPuntaje(0, sobrio), /pill Bajo/);
+  assert.match(pastillaPuntaje(50), /pill Medio/); // con los umbrales de fábrica (67 y 34)
+  assert.match(pastillaPuntaje(null), /sin dato/);
+});
+
+test('el radar del ApiRadar clasifica cada variable con los mismos umbrales que el módulo', () => {
+  const cfg = configEfectiva({ niveles: { alto: 50, medio: 20 } });
+  const r = apiRadar(demoFarm(), cfg);
+  const con50 = r.radar.filter((x) => x.score === 50);
+  assert.ok(con50.length > 0);
+  con50.forEach((x) => assert.equal(x.level, 'Alto'));
+  assert.equal(r.nivel, nivel(r.score, cfg));
 });

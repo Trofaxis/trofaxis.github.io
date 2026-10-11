@@ -72,9 +72,10 @@ export function simular(f, sim, cfg = CONFIG, extra = {}) {
   const g = structuredClone(f);
   const base = contexto(f, {}, cfg);
   if (sim.n && g.nObjetivo > 0) {
-    // Con plan: reduce en la misma proporción las aplicaciones que llevan N.
+    // Con plan: baja el N de cada aplicación en la misma proporción. Se reduce el grado de N, no la dosis del producto:
+    // bajar la dosis de un 15-15-15 también bajaría su P₂O₅ y su K₂O, y este escenario cambia solo el nitrógeno.
     const nPlan = g.fertPlan?.reduce((s, a) => s + nutrientes(a).n, 0) ?? 0;
-    if (nPlan > g.nObjetivo) g.fertPlan.forEach((a) => { if (a.n > 0) a.dosis *= g.nObjetivo / nPlan; });
+    if (nPlan > g.nObjetivo) g.fertPlan.forEach((a) => { a.n *= g.nObjetivo / nPlan; });
     g.nAplicado = Math.min(g.nAplicado, g.nObjetivo);
   }
   if (sim.pol) g.plaguicidas.forEach((p) => { if (cuentaParaAbejas(p, f, cfg)) p.meses = p.meses.filter((m) => !base.atraeFlor.includes(m)); });

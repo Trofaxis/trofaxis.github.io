@@ -158,3 +158,40 @@ test('el censo y los sitios se guardan en la ubicación del navegador, no en la 
   assert.equal('arboles' in normalizarFinca({ ...demoFarm(), arboles: [{ id: '1', lat: 14.0108, lon: -87.0044 }], sitios: [] }), false);
   assert.equal('sitios' in normalizarFinca({ ...demoFarm(), sitios: [] }), false);
 });
+
+// ---- Respaldo propio del mapa y el censo ----
+import { exportarUbicacion, importarUbicacion, hayDatosPropios } from '../src/mapa/ubicacion.js';
+import { censoEjemplo } from '../src/apiradar/censo.js';
+
+const conDatos = () => ({ ...ubicacionVacia(), punto: [14.0108, -87.0044], contorno: [[14, -87], [14, -86.99], [14.01, -86.99]],
+  arboles: [{ id: '1', lat: 14.001, lon: -87.001, dap: 40, d: 12, h: 9 }], sitios: [{ id: 'A', lat: 14.002, lon: -87.002 }] });
+
+test('el respaldo del mapa y del censo vuelve igual al cargarlo', () => {
+  const u = conDatos();
+  assert.deepEqual(importarUbicacion(exportarUbicacion(u)), normalizarUbicacion(u));
+});
+
+test('el respaldo del mapa rechaza archivos ajenos, vacíos o de una versión nueva', () => {
+  assert.throws(() => importarUbicacion('no es json'), /JSON válido/);
+  assert.throws(() => importarUbicacion('{"formato":"biogap-finca"}'), /respaldo de mapa/);
+  assert.throws(() => importarUbicacion('{"formato":"biogap-mapa","version":9}'), /más nueva/);
+  assert.throws(() => importarUbicacion(exportarUbicacion(ubicacionVacia())), /no trae/);
+});
+
+test('un respaldo de mapa dañado se limpia campo por campo', () => {
+  const t = JSON.stringify({ formato: 'biogap-mapa', version: 1, ubicacion: { punto: [999, 0], contorno: [[1, 2], 'x'], arboles: [{ id: 7, lat: 14, lon: -87, dap: -3 }, null], sitios: 5 } });
+  const u = importarUbicacion(t);
+  assert.equal(u.punto, null);
+  assert.deepEqual(u.contorno, [[1, 2]]);
+  assert.equal(u.arboles.length, 1);
+  assert.equal(u.arboles[0].dap, null);
+});
+
+test('el ejemplo no cuenta como datos propios y las coordenadas no entran al archivo de la finca', () => {
+  const e = censoEjemplo();
+  assert.equal(hayDatosPropios({ ...ubicacionVacia(), arboles: e.arboles, ejemplo: true }), false);
+  assert.equal(hayDatosPropios(conDatos()), true);
+  const texto = exportarTexto(demoFarm(), { modulosActivos: [], niveles: { alto: 67, medio: 34 } });
+  assert.ok(!texto.includes('14.0108'));
+  assert.ok(!texto.includes('"arboles"'));
+});

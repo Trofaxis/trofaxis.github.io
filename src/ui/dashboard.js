@@ -12,6 +12,7 @@ import { ESTADOS } from '../core/rubrica.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
+import { pastillaPuntaje } from './components.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 
@@ -22,10 +23,9 @@ export function extraRiego(){
 }
 
 // Tabla de la rúbrica de un módulo: qué variable, con qué valor, qué puntaje, cuánto pesa y de dónde sale.
-function tablaRubrica(m){
-  const pt=v=>v.puntaje==null?'<span class="muted">sin dato</span>':`<span class="pill ${v.puntaje>=67?'Alto':v.puntaje>=34?'Medio':'Bajo'}">${v.puntaje}</span>`;
+function tablaRubrica(m,cfg){
   return `<div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th></tr></thead><tbody>
-    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div class="estado ${v.estado.replace(' ','-')}" title="${esc(v.fuente)}">${ESTADOS[v.estado]}${v.fuente?' ⓘ':''}</div></td><td>${esc(v.valor)}</td><td class="num">${pt(v)}</td><td class="num">${v.peso}</td></tr>`).join('')}
+    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div class="estado ${v.estado.replace(' ','-')}" title="${esc(v.fuente)}">${ESTADOS[v.estado]}${v.fuente?' ⓘ':''}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
   </tbody></table></div>
   <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar.</p>`;
 }
@@ -45,7 +45,7 @@ export function viewDashboard(){
   const lvO=nivel(R.overall,cfg);
   const pesoTotal=mods.reduce((s,m)=>s+(cfg.pesos[m.id]??0),0);
   const pesosTxt=mods.map(m=>`${m.nombre.toLowerCase()} ${Math.round((cfg.pesos[m.id]??0)/pesoTotal*100)} %`).join(', ');
-  const simOpts=[['n','Ajustar el nitrógeno al objetivo',f.nObjetivo>0&&f.nAplicado>f.nObjetivo?`De ${f.nAplicado} a ${f.nObjetivo} kg N/ha`:'La dosis ya está en el objetivo',!(f.nObjetivo>0&&f.nAplicado>f.nObjetivo)],
+  const simOpts=[['n','Ajustar el nitrógeno al objetivo',f.nObjetivo>0&&f.nAplicado>f.nObjetivo?`De ${f.nAplicado} a ${f.nObjetivo} kg N/ha; el fósforo y el potasio no cambian`:'La dosis ya está en el objetivo',!(f.nObjetivo>0&&f.nAplicado>f.nObjetivo)],
     ['pol','Aplicar fuera de la floración','Quita las aplicaciones de los meses con polinizadores',!R.ov1.length],
     ['selec','Cambiar amplio espectro por selectivo','Reduce la presión sobre enemigos naturales',!f.plaguicidas.some(p=>p.clase==='amplio')],
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
@@ -80,7 +80,7 @@ export function viewDashboard(){
         <div class="bar-track" aria-hidden="true">${m.suficiente?`<span class="fill-${m.level}" style="width:${m.score}%"></span>`:''}</div>
         <p class="muted small">${m.suficiente?`Causa principal: ${m.driver}`:'Faltan datos para calificar este módulo; no entra al índice global.'}</p>
         <div><div class="row between small muted"><span>Confianza de datos</span><span>${Math.round(m.conf*100)} %</span></div><div class="conf"><span style="width:${m.conf*100}%"></span></div></div>
-        <details><summary>Ver rúbrica (${m.variables.filter(v=>v.aplica!==false).length} variables)</summary>${tablaRubrica(m)}</details>
+        <details><summary>Ver rúbrica (${m.variables.filter(v=>v.aplica!==false).length} variables)</summary>${tablaRubrica(m,cfg)}</details>
       </article>`).join('')}
     </div></section>
   </div>
