@@ -97,7 +97,7 @@ export function viewDashboard(){
       ${calRow('Floración de especies de riesgo',R.riesgoFlor,'on-riesgo')}
       ${calRow('Aplicación de plaguicidas',R.aplic,'on-apl',R.ov1)}
       ${calRow('Siembra',R.siembraM,'on-cult')}
-      ${calRow('Cosecha',R.cosechaM,'on-cult',inter(R.aplic,R.cosechaM))}
+      ${calRow('Cosecha',R.cosechaM,'on-cult',R.aplicCosecha)}
       ${calRow('Fertilización',f.fertMeses,'on-gen',inter(f.fertMeses,f.lluviaMeses))}
       ${calRow('Lluvia fuerte',f.lluviaMeses,'on-gen')}
       ${calRow('Suelo desnudo',f.sueloDesnudoMeses,'on-gen',inter(f.sueloDesnudoMeses,f.lluviaMeses))}
