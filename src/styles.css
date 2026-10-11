@@ -289,3 +289,20 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .stats .k,.summary .k{color:var(--side-hi);font-size:11.5px}
 .stats .v{font-size:19px;font-weight:700;margin-top:4px}
 .cards.relaciones{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+/* Pantallas táctiles: objetivos de toque de 44 px con separación entre ellos (WCAG 2.2, criterio 2.5.8 pide 24; 44 es la recomendación). Escritorio sin cambios. */
+@media (max-width:700px){
+  .btn,.btn.sm,.btn.small{min-height:44px}
+  .months{gap:8px}
+  .months button{width:44px;min-height:44px}
+  .steps{gap:8px}
+  .steps button{min-height:44px;padding-inline:14px}
+  .choice{gap:10px}
+  .choice button,.sim button{min-height:44px}
+  .sim{gap:10px}
+  .plan li,.check,label.item{min-height:44px;align-items:center}
+  .plan input,.check input[type=checkbox]{width:24px;height:24px}
+  nav.tabs button{min-height:44px}
+  nav.tabs button:not([aria-current="page"]){padding:7px}
+  .side .btn.theme{min-height:44px}
+  .mapa-zoom button{width:44px;height:44px}
+}
