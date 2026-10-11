@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>BioG.A.P.</title>
   <meta name="description" content="Prototipo de evaluación de riesgo ambiental de la finca, alineado a GLOBALG.A.P. IFA v6.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="preload" href="src/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="src/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="src/fonts/fuentes.css">
   <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
@@ -38,7 +39,8 @@
       </nav>
       <button class="btn sm theme" id="theme-btn" data-act="theme" aria-label="Cambiar tema">Tema: sistema</button>
     </div></aside>
-    <main class="wrap" id="app" aria-live="polite"></main>
+    <main class="wrap" id="app"></main>
+    <div id="avisos" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
   <script type="module" src="src/app.js"></script>
 </body>

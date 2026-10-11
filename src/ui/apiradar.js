@@ -2,15 +2,14 @@
 // El usuario elige el problema; la app cruza sus datos y muestra qué usó, por qué sale ese riesgo y qué hacer.
 import { esc } from '../core/utils.js';
 import { S } from '../core/state.js';
-import { ESTADOS } from '../core/rubrica.js';
 import { apiRadar, PROBLEMAS } from '../apiradar/diagnostico.js';
 import { radar } from './charts.js';
-import { pastillaPuntaje } from './components.js';
+import { pastillaPuntaje, estadoFuente } from './components.js';
 import { ubicacionActual } from './mapa.js';
 import { mapaRiesgo, leyendaRiesgo } from './mapariesgo.js';
 import { VEREDICTO, nombreSitio } from '../apiradar/censo.js';
 
-const estado = (e, fuente) => `<span class="estado ${e.replace(' ', '-')}" ${fuente ? `title="${esc(fuente)}"` : ''}>${ESTADOS[e]}${fuente ? ' ⓘ' : ''}</span>`;
+const estado = (e, fuente, clave) => estadoFuente(e, fuente, `fuente-ar-${clave}`, S.abiertos[`fuente-ar-${clave}`]);
 const delta = (a) => (a.delta == null ? '<span class="muted small">no se cuantifica</span>'
   : `<span class="delta ${a.delta < 0 ? 'down' : a.delta > 0 ? 'up' : 'zero'}">${a.delta > 0 ? '+' : ''}${a.delta}</span> <span class="muted small">(${a.de} → ${a.a})</span>`);
 
@@ -78,7 +77,7 @@ export function panelApiRadar(f, cfg, X) {
     </tbody></table></div>
     <h3>2. Por qué sale este riesgo</h3>
     <div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th><th class="num">Puntos que aporta</th></tr></thead><tbody>
-      ${[...R.evidencia].sort((a, b) => b.puntos - a.puntos).map((v) => `<tr><td>${esc(v.nombre)}<div>${estado(v.estado, v.fuente)}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje, cfg)}</td><td class="num">${v.peso}</td><td class="num">${v.puntos}</td></tr>`).join('')}
+      ${[...R.evidencia].sort((a, b) => b.puntos - a.puntos).map((v) => `<tr><td>${esc(v.nombre)}<div>${estado(v.estado, v.fuente, v.id ?? v.nombre)}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje, cfg)}</td><td class="num">${v.peso}</td><td class="num">${v.puntos}</td></tr>`).join('')}
     </tbody></table></div>
     <p class="muted small">Puntos que aporta = peso × puntaje ÷ suma de pesos con dato; suman el riesgo. Pasa el cursor sobre ⓘ para ver la fuente. Pesos y cortes son criterio propio, por calibrar, salvo donde diga «Verificado».</p>
     <h3>3. Dónde están los árboles de riesgo</h3>

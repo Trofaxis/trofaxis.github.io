@@ -21,6 +21,9 @@ import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js'
 import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
 import { crearCargador, conIntento } from './core/carga-diferida.js';
+import { crearGuardado } from './core/guardado-diferido.js';
+import { anunciar } from './ui/avisos.js';
+import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
 const previo = cargarLocal(S.tpl);
@@ -43,9 +46,17 @@ function sesionLista() {
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
+// Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
+const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());});
+addEventListener('pagehide',()=>guardador.ahora());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')guardador.ahora();});
 // Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
-function avisoGuardado(){const app=document.getElementById('app');if(!app)return;app.querySelector('#aviso-guardado')?.remove();
-  if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
+// Devuelve el texto solo cuando el aviso aparece por primera vez, para anunciarlo una vez y no en cada redibujado.
+let avisoVisible=false;
+function avisoGuardado(){const app=document.getElementById('app');if(!app)return'';app.querySelector('#aviso-guardado')?.remove();
+  const visible=guardado.fallo&&!guardado.descartado;
+  if(visible)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);
+  const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
 const VISTAS={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
@@ -58,16 +69,16 @@ const htmlCargando=(fallo)=>fallo
   ?'<div class="notice" role="alert"><span>No se pudo descargar esta pestaña. Revisa la conexión.</span><button class="btn sm" data-act="reintentar-vista">Reintentar</button></div>'
   :'<p class="muted" aria-busy="true">Cargando…</p>';
 function render(){
-  // Conserva el foco y el cursor del campo que se estaba editando.
-  const ae=document.activeElement;const id=ae&&ae.id;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
+  // Conserva el foco y el cursor del control que se estaba usando (campo, botón de mes, simulador o acción de fila).
   const app=document.getElementById('app');
+  const ae=document.activeElement;const sel=app&&app.contains(ae)?selectorDeFoco(ae):null;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
   const vista=cargador.incluye(S.view)?cargador.vista(S.view):(VISTAS[S.view]||viewDashboard);
   if(!vista)cargador.pedir(S.view);
   app.innerHTML=vista?vista():htmlCargando(cargador.fallo(S.view));
-  S.msg='';
+  const msg=S.msg;S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
-  if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
+  montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
+  const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
@@ -178,7 +189,7 @@ function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else if(el.tagName==='SELECT'&&el.value===''&&'nullable' in el.dataset)o[k]=null;else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);avisoGuardado();}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardador.pedir();}});
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);
