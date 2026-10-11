@@ -75,7 +75,7 @@ export function viewDashboard(){
     <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${conDatos.length>=3?radar(conDatos):'<p class="muted small">El perfil se dibuja cuando al menos 3 módulos tienen datos suficientes.</p>'}${panelMapa()}${panelClima()}</section>
     <section class="panel"><h2>Riesgo por módulo</h2><div class="cards">
       ${mods.map(m=>`<article class="card">
-        <div class="top"><h3>${m.nombre}</h3>${m.suficiente?`<span class="pill ${m.level}">${m.level}</span>`:'<span class="pill sin-datos">Sin datos suficientes</span>'}</div>
+        <div class="top"><h3>${m.nombre}</h3>${m.suficiente?`<span class="pill ${m.level}">${m.level}</span>`:'<span class="pill sin-datos" title="Sin datos suficientes">Sin datos</span>'}</div>
         <div class="score">${m.suficiente?m.score:'—'}</div>
         <div class="bar-track" aria-hidden="true">${m.suficiente?`<span class="fill-${m.level}" style="width:${m.score}%"></span>`:''}</div>
         <p class="muted small">${m.suficiente?`Causa principal: ${m.driver}`:'Faltan datos para calificar este módulo; no entra al índice global.'}</p>
