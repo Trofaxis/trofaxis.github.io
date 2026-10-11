@@ -289,3 +289,8 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .stats .k,.summary .k{color:var(--side-hi);font-size:11.5px}
 .stats .v{font-size:19px;font-weight:700;margin-top:4px}
 .cards.relaciones{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+/* Fuente de cada variable: se abre tocando o con teclado */
+.estado summary{cursor:pointer;display:inline-block;list-style:none;font-size:inherit;color:inherit}
+.estado summary::-webkit-details-marker{display:none}
+.estado .fuente{margin:2px 0 4px;font-weight:400;font-size:12px;color:var(--muted)}
+@media (max-width:700px){.estado summary{padding-block:13px}}

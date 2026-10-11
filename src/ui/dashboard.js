@@ -8,11 +8,10 @@ import { configEfectiva, normalizarAjustes } from '../core/storage.js';
 import { gauge, gaugeSinDatos, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
 import { panelVecinosDashboard, panelRelaciones } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
-import { ESTADOS } from '../core/rubrica.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
-import { pastillaPuntaje } from './components.js';
+import { pastillaPuntaje, estadoFuente } from './components.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 
@@ -25,7 +24,7 @@ export function extraRiego(){
 // Tabla de la rúbrica de un módulo: qué variable, con qué valor, qué puntaje, cuánto pesa y de dónde sale.
 function tablaRubrica(m,cfg){
   return `<div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th></tr></thead><tbody>
-    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div class="estado ${v.estado.replace(' ','-')}" title="${esc(v.fuente)}">${ESTADOS[v.estado]}${v.fuente?' ⓘ':''}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
+    ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div>${estadoFuente(v.estado,v.fuente,`fuente-${m.id}-${v.id}`,S.abiertos[`fuente-${m.id}-${v.id}`])}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
   </tbody></table></div>
   <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar.</p>`;
 }
