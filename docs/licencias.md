@@ -9,7 +9,7 @@ Revisado el 2026-10-11 contra las páginas oficiales de cada proveedor (enlaces 
 | EOxCloudless (mapa satelital) | Imagen de fondo del mapa de la finca (`CONFIG.mapa.capa`) | CC BY-NC-SA 4.0: solo uso no comercial, con atribución | Exige licencia comercial de EOX |
 | Open-Meteo (clima) | Lluvia, temperatura y ETo de la ubicación (`CONFIG.clima`) | API gratis solo para uso no comercial; los datos son CC BY 4.0 | Exige un plan de pago |
 | Supabase (nube) | Casos de la comunidad y finca en la nube (`CONFIG.nube`) | Plan gratis, pensado para proyectos de práctica | El plan Pro cuesta desde 25 USD al mes |
-| Google Fonts (tipografías) | Inter y JetBrains Mono (`index.html`) | Fuentes con licencia libre; el servicio recibe una petición por visita | Sin restricción de uso comercial; ver nota |
+| Tipografías propias (Inter y JetBrains Mono) | Texto e indicadores numéricos; los archivos van en `src/fonts/`, la app ya no pide nada a Google | SIL OFL 1.1 (aviso de derechos en `src/fonts/OFL-*.txt`) | Sin restricción de uso comercial; conservar los avisos |
 | Lucide (íconos) | Íconos de la barra lateral | ISC (y MIT para los derivados de Feather) | Permitido; conservar el aviso de derechos |
 | PPDB y BPDB (Universidad de Hertfordshire) | Valores de DL50, GUS y otros copiados al catálogo de ingredientes activos | **No verificado** (ver abajo) | Hay que pedir permiso a la universidad |
 
@@ -40,11 +40,13 @@ Revisado el 2026-10-11 contra las páginas oficiales de cada proveedor (enlaces 
 - **A decidir.** Si la nube es parte del producto. Si lo es, pasar a Pro (o a otra base) antes de tener clientes reales, y revisar los términos de servicio.
 - **Fuente.** https://supabase.com/pricing
 
-## 4. Google Fonts (Inter y JetBrains Mono)
+## 4. Tipografías (Inter y JetBrains Mono)
 
-- **Licencia.** Las dos familias son de licencia libre (SIL Open Font License), que permite uso comercial y alojarlas en el propio repositorio.
-- **Nota de privacidad.** Mientras `index.html` cargue la hoja de estilos desde `fonts.googleapis.com`, el navegador de cada persona hace una petición a Google al abrir la app. Las condiciones de datos de ese servicio **no se pudieron leer en esta revisión** (no verificado). Autoalojar las fuentes elimina esa petición (issue 51, fuentes de Google bloquean la primera pantalla).
-- **A decidir.** Autoalojar las fuentes (recomendado, sin costo).
+- **Hoy.** Desde la mejora de fuentes propias (issue 51, fuentes de Google bloquean la primera pantalla), los archivos `.woff2` van dentro del repositorio, en `src/fonts/`, y `index.html` los carga desde ahí. La app **ya no hace ninguna petición a Google Fonts** por las tipografías.
+- **Licencia.** Las dos familias son SIL Open Font License 1.1. La licencia pide acompañar las fuentes con su aviso de copyright y el texto de la licencia: por eso `src/fonts/OFL-Inter.txt` y `src/fonts/OFL-JetBrainsMono.txt` viajan con los archivos. `src/fonts/README.md` indica el origen exacto (paquetes npm `@fontsource-variable/inter` y `@fontsource-variable/jetbrains-mono`, versión 5.3.0, subconjunto latino sin modificar) y las huellas SHA-256 de cada archivo.
+- **Qué cuidar.** No renombrar ni modificar los `.woff2` (lo pide `src/fonts/README.md`) y mantener los dos `OFL-*.txt` junto a ellos. Los símbolos que el subconjunto latino no trae (Σ, ≤, ₂, →) los dibuja la fuente del sistema.
+- **A decidir.** Nada.
+- **Alcance de esta sección.** Se actualizó el 2026-10-11 con lo que hay en el repositorio (`src/fonts/README.md` y los `OFL-*.txt`). No se volvió a leer la página de ningún proveedor.
 
 ## 5. Lucide (íconos)
 
@@ -67,4 +69,5 @@ La FAO, el cuadro de la SAG de Honduras, Pesticide Stewardship y los artículos 
 
 1. ¿La app va a cobrarse o a ofrecerse como servicio a exportadores? Todo lo anterior depende de esa respuesta.
 2. Si sí: cotizar EOX y Open-Meteo, pasar Supabase a Pro y escribir a la Universidad de Hertfordshire.
-3. Sin importar la respuesta: autoalojar las fuentes (sin costo, quita una petición a un tercero).
+
+Las fuentes ya no están en la lista: se alojan en el repositorio desde la mejora de fuentes propias (sección 4).
