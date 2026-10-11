@@ -89,6 +89,8 @@ p{margin:0}
 @media (max-width:700px){.hero{grid-template-columns:minmax(0,1fr)}}
 .hero.ar{grid-template-columns:minmax(0,1fr) minmax(0,400px)}
 @media (max-width:700px){.hero.ar{grid-template-columns:minmax(0,1fr)}}
+.primero{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 14px;margin:14px 0}
+.primero h3,.primero p{margin:0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 20px}
 .stats .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .stats .v{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.3}
