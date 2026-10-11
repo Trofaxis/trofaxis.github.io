@@ -9,6 +9,8 @@ import { vecinos, resumenResultado, accionesDe, resultadoDe } from '../casos/mem
 import { casoAnonimo } from '../casos/anonimo.js';
 import { nubeConfigurada } from '../nube/cliente.js';
 import { perfil } from '../casos/perfil.js';
+import { relaciones, frase } from '../casos/relaciones.js';
+import { dispersion, leyendaDispersion } from './charts.js';
 
 const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad' };
 
@@ -50,6 +52,27 @@ export function panelVecinosDashboard() {
     <div class="row between"><div><h2>Fincas parecidas</h2><p class="muted">Memoria de casos: las ${cfg.casos.k} fincas más parecidas a la tuya, qué hicieron y cómo les fue.</p></div><button class="btn sm" data-view="casos">Ver memoria de casos</button></div>
     ${tarjetasVecinos(lista, cfg)}
     ${notaEjemplos}
+  </section>`;
+}
+
+// Relación entre módulos: un gráfico de dispersión por cada par (n módulos → n(n−1)/2 gráficos).
+// Los puntos son las fincas de la memoria de casos y la tuya. Muestra asociación, no causa; no cambia puntajes.
+export function panelRelaciones() {
+  const cfg = configEfectiva(normalizarAjustes(S.ajustes));
+  const rel = relaciones(memoria(), S.farm, cfg);
+  if (rel.ids.length < 2) return '';
+  const n = rel.ids.length;
+  return `<section class="panel">
+    <div><h2>Relación entre módulos</h2><p class="muted">Un gráfico por cada par de módulos: con ${n} módulos son ${n}·(${n}−1)/2 = ${rel.pares.length}. Cada punto es una finca; tu finca es el rombo rojo. Si los puntos suben juntos, los dos riesgos van de la mano en estas fincas.</p></div>
+    ${rel.avisos.length ? `<div class="notice"><span>${rel.avisos.map(esc).join(' ')}</span></div>` : ''}
+    ${leyendaDispersion()}
+    <div class="cards relaciones">${rel.pares.map((p) => `<article class="card">
+      <h3>${esc(p.nombreA)} y ${esc(p.nombreB)}</h3>
+      ${dispersion(p, rel.puntos)}
+      <p class="small">${esc(frase(p))}</p>
+      ${p.aviso ? `<p class="small muted">${esc(p.aviso)}</p>` : ''}
+    </article>`).join('')}</div>
+    <p class="muted small">Correlación no es causa: dos riesgos pueden subir juntos por una causa común (por ejemplo, un manejo más intensivo) o porque usan los mismos datos. Para mostrar que un riesgo empuja al otro hace falta el mecanismo (los vínculos con fuente de la rúbrica) o un ensayo. Fuerza de la r (débil &lt; ${String(cfg.relaciones.cortes.moderada).replace('.', ',')} ≤ moderada &lt; ${String(cfg.relaciones.cortes.fuerte).replace('.', ',')} ≤ fuerte) y mínimo de ${cfg.relaciones.minPuntos} fincas: criterio propio. Módulos del gráfico: <code>CONFIG.relaciones.modulos</code>.</p>
   </section>`;
 }
 

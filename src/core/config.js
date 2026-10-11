@@ -187,6 +187,25 @@ export const CONFIG = {
     coberturaMinima: 0.5, // fracción del peso que debe poder compararse
   },
 
+  // Relación entre módulos: un gráfico de dispersión por cada par, n(n−1)/2 pares (3 módulos → 3 gráficos).
+  // Cada punto es una finca de la memoria de casos más la tuya. Solo muestra asociación: no cambia ningún puntaje.
+  relaciones: {
+    modulos: ['poli', 'fert', 'agua', 'suelo', 'troficas'], // los 5 módulos → 10 gráficos (decisión de Diego, 2026-10-11)
+    minPuntos: 20, // criterio propio: con menos fincas, la r se muestra pero se avisa que es muy inestable
+    cortes: { moderada: 0.3, fuerte: 0.7 }, // |r| para llamar la asociación débil, moderada o fuerte. Criterio propio (regla práctica usual).
+    // Datos que entran a los dos módulos del par (revisado en src/modules/): parte de la asociación sale de la
+    // misma fórmula, no de la finca. Un par que no aparece no comparte datos de entrada.
+    compartidos: {
+      'poli|fert': ['meses de lluvia fuerte', 'plan de fertilización'],
+      'poli|agua': ['plan de fertilización'],
+      'poli|suelo': ['meses de lluvia fuerte', 'plan de fertilización'],
+      'poli|troficas': ['plaguicidas (productos y meses)', 'inventario de especies'],
+      'fert|agua': ['distancia al cuerpo de agua', 'plan de fertilización'],
+      'fert|suelo': ['meses de lluvia fuerte', 'pendiente', 'plan de fertilización'],
+      'agua|suelo': ['plan de fertilización'],
+    },
+  },
+
   // Nube (Etapa 2 de la memoria de casos): proyecto Supabase "biogap".
   // La clave publicable es pública por diseño; el acceso lo limita la seguridad por filas (RLS) de la base.
   // NUNCA pongas aquí la clave service_role. Con url o clave vacías, la app funciona solo en local.

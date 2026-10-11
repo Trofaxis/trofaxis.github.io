@@ -73,3 +73,26 @@ export function tplChart(t){
   if(t.objetivo>0)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(t.objetivo)}" y2="${y(t.objetivo)}" stroke="var(--pollen)" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-Rr}" y="${y(t.objetivo)-6}" text-anchor="end" font-size="11" fill="var(--pollen)">Objetivo ${t.objetivo}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Registros frente al objetivo" style="width:100%;min-width:480px;height:auto">${g}</svg>`;
 }
+// Dispersión de un par de módulos: cada punto es una finca (x = riesgo de A, y = riesgo de B, de 0 a 100).
+// Ejemplo: círculo hueco gris; tu caso: verde; comunidad: ámbar; tu finca actual: rombo rojo.
+const ESTILO_PUNTO={ejemplo:['none','var(--muted)','Ejemplo'],propio:['var(--accent)','var(--accent)','Tu caso'],nube:['var(--pollen)','var(--pollen)','Comunidad']};
+export function dispersion(par,puntos){
+  const W=300,H=260,L=40,T=12,R=12,B=40,iw=W-L-R,ih=H-T-B;
+  const x=v=>L+v/100*iw,y=v=>T+ih-v/100*ih;let g='';
+  [0,25,50,75,100].forEach(v=>{g+=`<line x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${T+ih}" stroke="var(--line)"/><line x1="${L}" x2="${L+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>`
+    +`<text x="${x(v)}" y="${T+ih+14}" text-anchor="middle" font-size="10" fill="var(--muted)">${v}</text><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;});
+  g+=`<text x="${L+iw/2}" y="${H-6}" text-anchor="middle" font-size="11.5" fill="var(--ink)">Riesgo de ${esc(par.nombreA.toLowerCase())}</text>`;
+  g+=`<text transform="translate(11 ${T+ih/2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--ink)">Riesgo de ${esc(par.nombreB.toLowerCase())}</text>`;
+  const ord=[...puntos].sort((p,q)=>(p.origen==='actual')-(q.origen==='actual'));
+  ord.forEach(p=>{const cx=x(p.v[par.a]),cy=y(p.v[par.b]);const tip=`<title>${esc(p.etiqueta)}: ${par.nombreA} ${p.v[par.a]}, ${par.nombreB} ${p.v[par.b]}</title>`;
+    if(p.origen==='actual')g+=`<path d="M${cx} ${cy-7}L${cx+7} ${cy}L${cx} ${cy+7}L${cx-7} ${cy}Z" fill="var(--crit)" stroke="var(--surface)" stroke-width="1.5">${tip}</path>`;
+    else{const[f,s]=ESTILO_PUNTO[p.origen]??ESTILO_PUNTO.ejemplo;g+=`<circle cx="${cx}" cy="${cy}" r="5" fill="${f}" fill-opacity="${f==='none'?0:.75}" stroke="${s}" stroke-width="1.6">${tip}</circle>`;}});
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dispersión: riesgo de ${esc(par.nombreA)} frente a ${esc(par.nombreB)}, ${puntos.length} fincas" style="width:100%;max-width:340px;height:auto;display:block;margin:0 auto">${g}</svg>`;
+}
+export function leyendaDispersion(){
+  return `<div class="leyenda small muted" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+    <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="var(--muted)" stroke-width="1.6"/></svg> Ejemplo (ficticio)</span>
+    <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--accent)"/></svg> Tus casos guardados</span>
+    <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--pollen)"/></svg> Comunidad</span>
+    <span><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 6L6 12L0 6Z" fill="var(--crit)"/></svg> Tu finca</span></div>`;
+}

@@ -6,7 +6,7 @@ import { CONFIG } from '../core/config.js';
 import { evaluar, simular, nivel } from '../core/engine.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
 import { gauge, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
-import { panelVecinosDashboard } from './casos.js';
+import { panelVecinosDashboard, panelRelaciones } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
 import { ESTADOS } from '../core/rubrica.js';
 import { calcular } from '../riego/calculo.js';
@@ -117,6 +117,7 @@ export function viewDashboard(){
     ${recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>'}
   </section>
   ${panelVecinosDashboard()}
+  ${panelRelaciones()}
   ${gg?`<section class="panel">
     <div><h2>Panel GLOBALG.A.P. IFA v6</h2><p class="muted">Guía de referencia. No reemplaza la auditoría ni garantiza el resultado.</p></div>
     <div class="grid2">
