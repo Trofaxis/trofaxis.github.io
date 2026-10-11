@@ -41,9 +41,10 @@ export function demoFarm() {
         dosis: 1000, dosisUnidad: 'gBarril', volumen: 300 },
     ],
     sueloDesnudoMeses: [3, 4, 5], labranza: 'convencional',
-    plagas: [{ nombre: 'Mosca blanca', meses: [1, 2, 3], severidad: 'alta' }],
+    plagas: [{ nombre: 'Mosca blanca (Bemisia tabaci)', meses: [1, 2, 3], severidad: 'alta', cultivo: 'Melón' }],
     gg: 'si', minorAplicables: 60, minorFallas: 1,
     nc: [{ criterio: 'Registro de aplicaciones incompleto', dias: 9 }],
+    cultivosAledanos: [{ nombre: 'Café', distancia: 200 }], proposito: [],
     acciones: [], resultado: resultadoVacio(),
     clima: null, // ficticia: sin ubicación, sin clima
   };
@@ -54,6 +55,7 @@ export function emptyFarm() {
     nombre: '', depto: '', area: 0, areaProd: 0, altitud: 0, pendiente: 'plana', fuenteAgua: '', distAgua: 500, tieneCultivos: false,
     cultivos: [], especies: [], riego: 'ninguno', nAplicado: 0, nObjetivo: 0, pObjetivo: 0, kObjetivo: 0, fertPlan: [], fertMeses: [], lluviaMeses: [], plaguicidas: [], sueloDesnudoMeses: [],
     labranza: 'cero', plagas: [], gg: 'no', minorAplicables: 60, minorFallas: 0, nc: [],
+    cultivosAledanos: [], proposito: [],
     acciones: [], resultado: resultadoVacio(),
     // Clima por mes de la ubicación (src/clima/normales.js). Sin coordenadas: esas viven solo en el navegador.
     clima: null,
@@ -61,9 +63,10 @@ export function emptyFarm() {
 }
 
 export const blankDrafts = () => ({
-  draftEsp: { nombre: '', tipo: 'Árbol', origen: 'nativa', floracion: [], atrae: false, riesgo: false, cantidad: null, copaD: null, copaH: null },
+  draftEsp: { nombre: '', tipo: 'Árbol', origen: 'nativa', floracion: [], atrae: false, riesgo: false, cantidad: null, copaD: null, copaH: null, presencia: '' },
   draftPlag: plagBorrador(),
-  draftPlaga: { nombre: '', meses: [], severidad: 'media' },
+  draftPlaga: { nombre: '', meses: [], severidad: 'media', cultivo: '', presencia: '' },
+  draftVecino: { nombre: '', distancia: null },
   draftCult: { nombre: '', ha: 0, siembra: [], cosecha: [] },
   draftNC: { criterio: '', dias: 0 },
   draftRow: { fecha: '', lote: '', valor: '' },
@@ -93,6 +96,7 @@ export const S = {
   ajustes: { modulosActivos: [...CONFIG.modulosActivos], niveles: { ...CONFIG.niveles } },
   msg: '',
   casos: [],
+  espSeccion: '', // sección de especies con el formulario abierto: fauna | arboles | malezas
   // Nube (Supabase): sesión por enlace al correo, casos de la comunidad y consentimiento de la sesión actual.
   nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false },
   fertImport: null, // último archivo de fertilización cargado: { archivo, hoja, omitidas, avisos }

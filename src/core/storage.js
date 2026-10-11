@@ -19,6 +19,8 @@ const num = (x, d = 0) => (typeof x === 'number' && Number.isFinite(x) && x >= 0
 const txt = (x, d = '') => (typeof x === 'string' ? x.slice(0, 200) : d);
 const opcion = (x, ops, d) => (ops.includes(x) ? x : d);
 const bool = (x) => x === true;
+// Nivel de presencia observado (opcional). Los umbrales de cada nivel están por definir.
+export const PRESENCIA = ['baja', 'media', 'alta'];
 const lista = (a, fn) => (Array.isArray(a) ? a.slice(0, 500).map(fn).filter(Boolean) : []);
 
 // Convierte cualquier objeto en una finca válida. Lo que no se reconoce se descarta.
@@ -37,6 +39,7 @@ export function normalizarFinca(o) {
       tipo: opcion(e.tipo, ['Árbol', 'Arbusto', 'Maleza', 'Cultivo', 'Fauna'], 'Árbol'),
       origen: opcion(e.origen, ['nativa', 'exótica', 'desconocido'], 'desconocido'),
       floracion: meses(e.floracion), atrae: bool(e.atrae), riesgo: bool(e.riesgo),
+      ...(PRESENCIA.includes(e.presencia) ? { presencia: e.presencia } : {}),
       // Opcionales: número de individuos y medidas de copa en m (para el volumen de copa, Osorio 2025).
       ...Object.fromEntries([['cantidad', numONulo(e.cantidad, 1e6)], ['copaD', numONulo(e.copaD, 100)], ['copaH', numONulo(e.copaH, 100)]].filter(([, v]) => v != null)),
     }),
@@ -52,7 +55,10 @@ export function normalizarFinca(o) {
     plaguicidas: lista(o.plaguicidas, normalizarPlag).slice(0, 200),
     sueloDesnudoMeses: meses(o.sueloDesnudoMeses),
     labranza: opcion(o.labranza, ['convencional', 'minima', 'cero'], v.labranza),
-    plagas: lista(o.plagas, (p) => p && { nombre: txt(p.nombre), meses: meses(p.meses), severidad: opcion(p.severidad, ['baja', 'media', 'alta'], 'media') }),
+    plagas: lista(o.plagas, (p) => p && { nombre: txt(p.nombre), meses: meses(p.meses), severidad: opcion(p.severidad, ['baja', 'media', 'alta'], 'media'),
+      ...(txt(p.cultivo) ? { cultivo: txt(p.cultivo) } : {}), ...(PRESENCIA.includes(p.presencia) ? { presencia: p.presencia } : {}) }),
+    cultivosAledanos: lista(o.cultivosAledanos, (c) => c && txt(c.nombre).trim() && { nombre: txt(c.nombre).trim(), distancia: numONulo(c.distancia, 1e5) }).slice(0, 30),
+    proposito: Array.isArray(o.proposito) ? CONFIG.propositos.map((p) => p.id).filter((id) => o.proposito.includes(id)) : [],
     gg: opcion(o.gg, ['si', 'quiero', 'no'], v.gg),
     minorAplicables: num(o.minorAplicables, v.minorAplicables), minorFallas: num(o.minorFallas),
     nc: lista(o.nc, (n) => n && { criterio: txt(n.criterio), dias: num(n.dias) }),

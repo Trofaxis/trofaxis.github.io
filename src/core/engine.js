@@ -12,6 +12,14 @@ import { cuentaParaAbejas } from '../plag/calculo.js';
 export const nivel = (v, cfg = CONFIG) => (v >= cfg.niveles.alto ? 'Alto' : v >= cfg.niveles.medio ? 'Medio' : 'Bajo');
 
 // Calendarios derivados que comparten varios módulos.
+// Módulos que se evalúan: los activos en Ajustes; en una finca sin cultivos con propósito
+// declarado, solo los de ese propósito.
+export function modulosDe(f, cfg = CONFIG) {
+  if (f.tieneCultivos || !f.proposito?.length) return cfg.modulosActivos;
+  const del = new Set(cfg.propositos.filter((p) => f.proposito.includes(p.id)).flatMap((p) => p.modulos));
+  return cfg.modulosActivos.filter((id) => del.has(id));
+}
+
 // extra.riego: alertas del módulo Riego (validar()), si el usuario cargó sus propios datos de riego.
 // aplic: meses con aplicaciones que exponen a los polinizadores. Lo biológico no cuenta, salvo que su HQ supere
 // el umbral o la etiqueta advierta por abejas (src/plag/calculo.js).
@@ -32,7 +40,7 @@ export function evaluar(f0, cfg = CONFIG, extra = {}) {
   const f = conPlan(f0); // con plan de fertilización, el N y sus meses salen del plan
   const ctx = contexto(f, extra, cfg);
   const helpers = { cfg };
-  const mods = cfg.modulosActivos
+  const mods = modulosDe(f, cfg)
     .map((id) => MODULOS.find((m) => m.id === id))
     .filter(Boolean)
     .map((mod) => {

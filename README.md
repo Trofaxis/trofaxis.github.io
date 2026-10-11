@@ -16,7 +16,7 @@ Eso es la **memoria de casos**, y es el valor que crece con el uso. Desde la v0.
 
 ## Qué hace
 
-1. **Cuestionario** de la finca en seis pasos: finca, cultivos, especies, prácticas, calendarios y certificación. Los plaguicidas ya no se capturan aquí: tienen su pestaña.
+1. **Cuestionario** de la finca en seis pasos: finca, cultivos (y cultivos aledaños; o, sin cultivos, el propósito de manejo), especies por secciones (plagas sugeridas según el cultivo, polinizadores y fauna, árboles, malezas, cultivos que florecen; nivel de presencia opcional), prácticas, calendarios y certificación. Los plaguicidas ya no se capturan aquí: tienen su pestaña.
 2. **Dashboard** con el índice ambiental global, el riesgo (0-100) por módulo, la presión por mes, el cruce de calendarios, un **simulador** ("¿qué pasa si cambio esta práctica?") y un **plan de acción** con casillas.
 3. **Plantillas** de registro (mecanización y personalizada; riego y fertilización tienen su pestaña) comparadas con el objetivo de la finca.
 4. **Panel GLOBALG.A.P.** con el margen de Minor Musts y las no conformidades abiertas.

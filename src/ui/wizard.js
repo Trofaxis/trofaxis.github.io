@@ -6,6 +6,18 @@ import { conPlan } from '../fert/calculo.js';
 import { bloqueUbicacion } from './clima.js';
 import { mesesLluviosos, tieneClima } from '../clima/normales.js';
 import { CONFIG } from '../core/config.js';
+import { plagasDe } from '../especies/plagas.js';
+import { grupoPresencia, textoUmbrales } from '../especies/presencia.js';
+
+// Secciones de especies: obligan a pensar en cada grupo por separado.
+export const SECCIONES = {
+  fauna: { titulo: 'Polinizadores y otra fauna', tipos: ['Fauna'], pista: 'Abejas nativas sin aguijón, abejorros, mariposas, aves, murciélagos.' },
+  arboles: { titulo: 'Árboles y arbustos', tipos: ['Árbol', 'Arbusto'], pista: 'Cercas vivas, sombra, bordes y especies de riesgo como Spathodea campanulata.' },
+  malezas: { titulo: 'Malezas y vegetación espontánea', tipos: ['Maleza'], pista: 'Las que florecen también alimentan a los polinizadores.' },
+  cultivos: { titulo: 'Cultivos que florecen', tipos: ['Cultivo'], pista: 'Para cruzar su floración con las aplicaciones.' },
+};
+const PRES=[['','No sé'],['baja','Baja'],['media','Media'],['alta','Alta']];
+const presTxt=(p)=>p?` · presencia ${p}`:'';
 
 export const STEPS=['Finca','Cultivos','Especies','Prácticas','Calendarios','Certificación'];
 const numOpc=(id,label,bind,val,hint)=>`<div class="f"><label for="${id}">${label}</label><input id="${id}" type="number" min="0" step="any" data-nullable data-bind="${bind}" value="${val??''}"><span class="hint">${hint}</span></div>`;
@@ -30,23 +42,49 @@ export function viewWizard(){
     <div class="subform"><h3>Agregar cultivo</h3><div class="fields">${field('c-nom','Cultivo','draftCult.nombre',S.draftCult.nombre)}${field('c-ha','Área','draftCult.ha',S.draftCult.ha||'','number','Hectáreas')}</div>
     <div class="f"><span class="label">Meses de siembra</span>${months('draftCult.siembra',S.draftCult.siembra)}</div>
     <div class="f"><span class="label">Meses de cosecha</span>${months('draftCult.cosecha',S.draftCult.cosecha)}</div>
-    <div><button class="btn" data-act="add-cult">Agregar cultivo</button></div></div>`:''}`;
-  if(s===2)body=`<h2>¿Qué especies hay en tu finca?</h2><p class="muted">Incluye árboles, malezas, especies nativas y fauna que observes, como abejas nativas.</p>
-    <div class="list">${f.especies.map((e,i)=>`<div class="item"><span class="grow"><b><i>${esc(e.nombre)}</i></b> · ${e.tipo} · ${e.origen}${e.floracion.length?` · florece ${mlist(e.floracion)}`:''}${e.cantidad?` · ${e.cantidad} ind.`:''}${e.copaD&&e.copaH?` · copa ${e.copaD}×${e.copaH} m`:''}</span>${e.atrae?'<span class="chip">Atrae polinizadores</span>':''}${e.riesgo?'<span class="chip r">Riesgo para polinizadores</span>':''}${ed('especies',i)}</div>`).join('')||'<p class="muted">Aún no hay especies.</p>'}</div>
-    <div class="subform"><h3>Agregar especie</h3><div class="fields">
+    <div><button class="btn" data-act="add-cult">Agregar cultivo</button></div></div>
+    <h3>Cultivos aledaños</h3><p class="muted small">Cultivos de fincas vecinas: sus aplicaciones y floración también llegan a tu finca.</p>
+    <div class="list">${f.cultivosAledanos.map((c,i)=>`<div class="item"><span class="grow"><b>${esc(c.nombre)}</b>${c.distancia!=null?` · a ${c.distancia} m`:''}</span>${ed('cultivosAledanos',i)}</div>`).join('')||'<p class="muted">Sin cultivos aledaños registrados.</p>'}</div>
+    <div class="subform"><div class="fields">${field('v-nom','Cultivo vecino','draftVecino.nombre',S.draftVecino.nombre)}${numOpc('v-dist','Distancia aproximada','draftVecino.distancia',S.draftVecino.distancia,'Metros, opcional')}</div><div><button class="btn" data-act="add-vecino">Agregar cultivo aledaño</button></div></div>`
+    :`<h3>¿Para qué quieres usar la app en esta finca?</h3><p class="muted">Elige uno o varios propósitos. El dashboard se enfocará en los módulos de cada uno.</p>
+    <div class="choice">${CONFIG.propositos.map(p=>`<button data-act="proposito" data-id="${p.id}" aria-pressed="${f.proposito.includes(p.id)}">${esc(p.nombre)}<span class="muted small" style="display:block;font-weight:400">${esc(p.detalle)}</span></button>`).join('')}</div>
+    <p class="muted small">Esta lista crecerá con nuevos módulos.</p>`}`;
+  if(s===2){
+    const formEsp=(sec)=>`<div class="subform"><h3>Agregar en ${SECCIONES[sec].titulo.toLowerCase()}</h3><div class="fields">
       ${field('e-nom','Nombre científico o común','draftEsp.nombre',S.draftEsp.nombre)}
-      ${select('e-tipo','Tipo','draftEsp.tipo',S.draftEsp.tipo,[['Árbol','Árbol'],['Arbusto','Arbusto'],['Maleza','Maleza'],['Cultivo','Cultivo'],['Fauna','Fauna']])}
+      ${SECCIONES[sec].tipos.length>1?select('e-tipo','Tipo','draftEsp.tipo',S.draftEsp.tipo,SECCIONES[sec].tipos.map(t=>[t,t])):''}
       ${select('e-orig','Origen','draftEsp.origen',S.draftEsp.origen,[['nativa','Nativa'],['exótica','Exótica'],['desconocido','No sé']])}
-    </div>
-    <div class="f"><span class="label">Calendario de floración</span>${months('draftEsp.floracion',S.draftEsp.floracion)}</div>
+      ${select('e-pres','Nivel de presencia (opcional)','draftEsp.presencia',S.draftEsp.presencia,PRES)}
+    </div>${grupoPresencia(S.draftEsp.tipo)?`<p class="muted small">Nivel de presencia: ${esc(textoUmbrales(grupoPresencia(S.draftEsp.tipo)))}</p>`:''}
+    ${sec==='fauna'?'':`<div class="f"><span class="label">Calendario de floración</span>${months('draftEsp.floracion',S.draftEsp.floracion)}</div>
     <div class="row"><label class="check"><input id="e-atrae" type="checkbox" data-bind="draftEsp.atrae" ${S.draftEsp.atrae?'checked':''}> Atrae polinizadores</label>
     <label class="check"><input id="e-riesgo" type="checkbox" data-bind="draftEsp.riesgo" data-rerender ${S.draftEsp.riesgo?'checked':''}> Es un riesgo para polinizadores</label></div>
     ${S.draftEsp.riesgo?`<div class="fields">
-      ${numOpc('e-cant','Número de individuos','draftEsp.cantidad',S.draftEsp.cantidad,'Árboles en la finca o su borde')}
+      ${numOpc('e-cant','Número de individuos','draftEsp.cantidad',S.draftEsp.cantidad,'En la finca o su borde')}
       ${numOpc('e-cd','Diámetro de copa (m)','draftEsp.copaD',S.draftEsp.copaD,'Opcional: promedio de dos medidas')}
       ${numOpc('e-ch','Altura de copa (m)','draftEsp.copaH',S.draftEsp.copaH,'Opcional')}
-    </div><p class="muted small">Con estas medidas la app estima el volumen de copa (Osorio 2025, Ec. 3), un indicador de cuántas flores puede ofrecer el árbol.</p>`:''}
-    <div><button class="btn" data-act="add-esp">Agregar especie</button></div></div>`;
+    </div><p class="muted small">Con estas medidas la app estima el volumen de copa (Osorio 2025, Ec. 3).</p>`:''}`}
+    <div class="row"><button class="btn" data-act="add-esp">Agregar</button><button class="btn" data-act="esp-seccion" data-sec="">Cancelar</button></div></div>`;
+    const seccion=(sec)=>{const X=SECCIONES[sec];const items=f.especies.map((e,i)=>[e,i]).filter(([e])=>X.tipos.includes(e.tipo));
+      return `<div class="f"><h3>${X.titulo}</h3><p class="muted small">${X.pista}</p>
+      <div class="list">${items.map(([e,i])=>`<div class="item"><span class="grow"><b><i>${esc(e.nombre)}</i></b> · ${e.tipo} · ${e.origen}${e.floracion.length?` · florece ${mlist(e.floracion)}`:''}${e.cantidad?` · ${e.cantidad} ind.`:''}${e.copaD&&e.copaH?` · copa ${e.copaD}×${e.copaH} m`:''}${presTxt(e.presencia)}</span>${e.atrae?'<span class="chip">Atrae polinizadores</span>':''}${e.riesgo?'<span class="chip r">Riesgo para polinizadores</span>':''}${ed('especies',i)}</div>`).join('')||'<p class="muted">Ninguna registrada.</p>'}</div>
+      ${S.espSeccion===sec?formEsp(sec):`<div><button class="btn sm" data-act="esp-seccion" data-sec="${sec}">Agregar en esta sección</button></div>`}</div>`;};
+    const unicos=[...new Map(f.cultivos.map(c=>[c.nombre.trim().toLowerCase(),c])).values()];
+    const sug=f.tieneCultivos?unicos.map(c=>{const ya=new Set(f.plagas.map(p=>p.nombre));const l=plagasDe(c.nombre).filter(n=>!ya.has(n));
+      return l.length?`<p>Tu cultivo es <b>${esc(c.nombre)}</b>: ¿cuáles de estas plagas o enfermedades presentas?</p><div class="row">${l.map(n=>`<button class="btn sm" data-act="plaga-sug" data-n="${esc(n)}" data-c="${esc(c.nombre)}">+ ${esc(n)}</button>`).join('')}</div>`
+        :plagasDe(c.nombre).length?'':`<p class="muted small">Para <b>${esc(c.nombre)}</b> no hay lista sugerida: agrega sus plagas abajo.</p>`;}).join(''):'';
+    body=`<h2>¿Qué especies hay en tu finca?</h2><p class="muted">Recorre cada grupo por separado: así es más difícil olvidar alguna.</p>
+    <div class="f"><h3>Plagas y enfermedades${f.tieneCultivos?' de tus cultivos':''}</h3>${sug}
+      ${sug?'<p class="muted small">Lista sugerida, por validar con un especialista. Toca una para agregarla y luego edita sus meses y severidad.</p>':''}
+      <div class="list">${f.plagas.map((p,i)=>`<div class="item"><span class="grow"><b>${esc(p.nombre)}</b>${p.cultivo?` · en ${esc(p.cultivo)}`:''} · severidad ${p.severidad} · ${p.meses.length?mlist(p.meses):'<span class="warnmsg" style="display:inline">sin meses</span>'}${presTxt(p.presencia)}</span>${ed('plagas',i)}</div>`).join('')||'<p class="muted">Sin plagas registradas.</p>'}</div>
+      <div class="subform"><div class="fields">${field('g-nom','Plaga o enfermedad','draftPlaga.nombre',S.draftPlaga.nombre)}
+        ${f.cultivos.length?select('g-cult','Cultivo','draftPlaga.cultivo',S.draftPlaga.cultivo,[['','General'],...f.cultivos.map(c=>[c.nombre,c.nombre])]):''}
+        ${select('g-sev','Severidad','draftPlaga.severidad',S.draftPlaga.severidad,[['baja','Baja'],['media','Media'],['alta','Alta']])}
+        ${select('g-pres','Nivel de presencia (opcional)','draftPlaga.presencia',S.draftPlaga.presencia,PRES)}</div>
+      <p class="muted small">Nivel de presencia: ${esc(textoUmbrales('plagas'))}</p>
+      <div class="f"><span class="label">Meses en que aparece</span>${months('draftPlaga.meses',S.draftPlaga.meses)}</div><div><button class="btn" data-act="add-plaga">Agregar plaga</button></div></div></div>
+    ${Object.keys(SECCIONES).filter(k=>k!=='cultivos'||f.tieneCultivos).map(seccion).join('')}`;
+  }
   const plan=f.fertPlan.length>0;
   const plag=f.plaguicidas;
   if(s===3)body=`<h2>¿Qué prácticas agrícolas usas?</h2><div class="fields">
@@ -66,10 +104,7 @@ export function viewWizard(){
     <div class="f"><span class="label">Meses de lluvia fuerte</span>${months('farm.lluviaMeses',f.lluviaMeses)}
     ${tieneClima(f.clima)?(()=>{const sug=mesesLluviosos(f.clima);return sug.join()===f.lluviaMeses.join()?`<span class="hint">Coinciden con el clima de tu ubicación (${CONFIG.clima.lluviaFuerteMm} mm o más al mes).</span>`:`<span class="hint">Según el clima de tu ubicación: ${mlist(sug)} (${CONFIG.clima.lluviaFuerteMm} mm o más al mes). <button class="btn sm" data-clima="lluvia">Usar los del clima</button></span>`;})():'<span class="hint">Pon la ubicación en el paso Finca y la app los sugiere con el clima.</span>'}</div>
     <div class="f"><span class="label">Meses con suelo desnudo</span>${months('farm.sueloDesnudoMeses',f.sueloDesnudoMeses)}</div>
-    <h3>Historial de plagas</h3>
-    <div class="list">${f.plagas.map((p,i)=>`<div class="item"><span class="grow"><b>${esc(p.nombre)}</b> · severidad ${p.severidad} · ${mlist(p.meses)}</span>${ed('plagas',i)}</div>`).join('')||'<p class="muted">Sin plagas registradas.</p>'}</div>
-    <div class="subform"><div class="fields">${field('g-nom','Plaga','draftPlaga.nombre',S.draftPlaga.nombre)}${select('g-sev','Severidad','draftPlaga.severidad',S.draftPlaga.severidad,[['baja','Baja'],['media','Media'],['alta','Alta']])}</div>
-    <div class="f"><span class="label">Meses en que aparece</span>${months('draftPlaga.meses',S.draftPlaga.meses)}</div><div><button class="btn" data-act="add-plaga">Agregar plaga</button></div></div>`;
+    <p class="muted small">Las plagas ahora se registran en el paso 3, Especies.</p>`;
   if(s===5)body=`<h2>¿Eres o quieres ser certificado por GLOBALG.A.P.?</h2>
     <p class="muted">Tu respuesta no cambia el cálculo de riesgo. Solo agrega la guía de requisitos de IFA v6 en el dashboard.</p>
     <div class="choice">

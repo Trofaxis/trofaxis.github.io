@@ -1,6 +1,6 @@
 {
   "name": "biogap",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "description": "BioG.A.P. Biodiversity Manager: prototipo de riesgo ambiental de la finca alineado a GLOBALG.A.P. IFA v6",

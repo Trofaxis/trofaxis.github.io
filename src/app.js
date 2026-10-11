@@ -3,7 +3,7 @@ import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
 import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes } from './core/storage.js';
 import { viewDashboard } from './ui/dashboard.js';
-import { viewWizard, STEPS } from './ui/wizard.js';
+import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewRiego } from './ui/riego.js';
@@ -59,7 +59,7 @@ function render(){
   montarMapa();applyTheme();guardarLocal(S);
   if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
 }
-const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga'};
+const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
 const alFormPlag=()=>queueMicrotask(()=>document.getElementById('plag-form')?.scrollIntoView({block:'start'}));
 const limpiarPlag=()=>{S.draftPlag=plagBorrador();S.plagEdit=null;S.plagNotas=[];};
@@ -84,8 +84,13 @@ document.addEventListener('click',e=>{
   else if(act==='cult-no'){f.tieneCultivos=false;}
   else if(act==='gg'){f.gg=a.dataset.v;}
   else if(act==='rm'){f[a.dataset.list].splice(+a.dataset.i,1);}
-  else if(act==='edit'){const l=a.dataset.list,i=+a.dataset.i;S[DRAFTS[l]]=structuredClone(f[l][i]);f[l].splice(i,1);}
-  else if(act==='add-esp'){if(!S.draftEsp.nombre.trim())return;f.especies.push({...S.draftEsp,floracion:[...S.draftEsp.floracion]});S.draftEsp=blankDrafts().draftEsp;}
+  else if(act==='edit'){const l=a.dataset.list,i=+a.dataset.i;S[DRAFTS[l]]={...blankDrafts()[DRAFTS[l]],...structuredClone(f[l][i])};f[l].splice(i,1);
+    if(l==='especies')S.espSeccion=Object.keys(SECCIONES).find(k=>SECCIONES[k].tipos.includes(S.draftEsp.tipo))||'arboles';}
+  else if(act==='esp-seccion'){const sec=a.dataset.sec;S.espSeccion=sec;S.draftEsp={...blankDrafts().draftEsp,...(sec?{tipo:SECCIONES[sec].tipos[0]}:{})};}
+  else if(act==='proposito'){const id=a.dataset.id;f.proposito=f.proposito.includes(id)?f.proposito.filter(x=>x!==id):[...f.proposito,id];S.demo=false;}
+  else if(act==='add-vecino'){const d=S.draftVecino;if(!d.nombre.trim())return;f.cultivosAledanos.push({nombre:d.nombre.trim(),distancia:d.distancia>0?Number(d.distancia):null});S.draftVecino=blankDrafts().draftVecino;S.demo=false;}
+  else if(act==='plaga-sug'){if(!f.plagas.some(p=>p.nombre===a.dataset.n))f.plagas.push({nombre:a.dataset.n,cultivo:a.dataset.c,meses:[],severidad:'media'});S.demo=false;}
+  else if(act==='add-esp'){if(!S.draftEsp.nombre.trim())return;f.especies.push({...S.draftEsp,floracion:[...S.draftEsp.floracion]});S.draftEsp=blankDrafts().draftEsp;S.espSeccion='';}
   else if(act==='add-plag'){const d=S.draftPlag;
     if(!d.producto.trim()){S.plagMsg={nivel:'error',texto:'Escribe el nombre del producto.'};document.getElementById('pq-prod')?.focus();}
     else if(!d.meses.length){S.plagMsg={nivel:'error',texto:'Marca al menos un mes de aplicación.'};}

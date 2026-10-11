@@ -4,6 +4,27 @@
 // Los pesos y cortes son criterio propio salvo que se indique la fuente; están por calibrar con datos reales.
 
 export const CONFIG = {
+  // Propósitos de manejo para fincas sin cultivos: cada uno enfoca el dashboard en sus módulos.
+  // Para agregar uno nuevo basta con sumarlo aquí.
+  propositos: [
+    { id: 'polinizadores', nombre: 'Manejo de polinizadores', detalle: 'Abejas nativas, especies de riesgo y enemigos naturales', modulos: ['poli', 'troficas'] },
+    { id: 'hidrografico', nombre: 'Manejo hidrográfico', detalle: 'Fuentes de agua, escorrentía y suelo', modulos: ['agua', 'suelo'] },
+    { id: 'riego', nombre: 'Manejo de riego', detalle: 'Diseño y eficiencia del riego', modulos: ['agua'] },
+  ],
+
+  // NIVEL DE PRESENCIA (baja / media / alta) por grupo, para especies y plagas (issue #13).
+  // Cortes [a, b]: valor < a → baja; < b → media; desde b → alta.
+  // CRITERIO PROPIO, POR VALIDAR con especialistas de Zamorano. Solo el método de muestreo de
+  // plagas tiene fuente (estaciones de monitoreo del curso de Protección Vegetal); los cortes no.
+  // Hoy el nivel de presencia es informativo: no entra en ninguna fórmula de riesgo.
+  presencia: {
+    polinizadores: { medida: 'Individuos vistos en flores durante 10 minutos de observación', unidad: 'individuos / 10 min', cortes: [5, 20] },
+    arboles: { medida: 'Individuos por hectárea en la finca y sus bordes', unidad: 'individuos / ha', cortes: [5, 20] },
+    malezas: { medida: 'Cobertura del suelo estimada a la vista en el lote', unidad: '% de cobertura', cortes: [10, 30] },
+    plagas: { medida: 'Plantas con la plaga o el síntoma en 15 a 20 estaciones de monitoreo de 2 a 5 plantas', unidad: '% de plantas', cortes: [5, 20],
+      fuenteMetodo: 'Monitoreo en Cultivos Hortícolas, AH Protección Vegetal (Zamorano), diapositiva 5' },
+  },
+
   // Módulos activos, en el orden en que aparecen en el dashboard.
   modulosActivos: ['poli', 'fert', 'agua', 'suelo', 'troficas'],
 
