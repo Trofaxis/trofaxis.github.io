@@ -27,6 +27,7 @@ import { extraerRiego } from './riego/extraer.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
 import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
+import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
 const previo = cargarLocal(S.tpl);
@@ -54,15 +55,15 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 function render(){
-  // Conserva el foco y el cursor del campo que se estaba editando.
-  const ae=document.activeElement;const id=ae&&ae.id;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
+  // Conserva el foco y el cursor del control que se estaba usando (campo, botón de mes, simulador o acción de fila).
   const app=document.getElementById('app');
+  const ae=document.activeElement;const sel=app&&app.contains(ae)?selectorDeFoco(ae):null;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
   const views={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,riego:viewRiego,fertilizacion:viewFertilizacion,plaguicidas:viewPlaguicidas,casos:viewCasos,ajustes:viewSettings};
   app.innerHTML=(views[S.view]||viewDashboard)();
   S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
   montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
-  if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
+  const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
