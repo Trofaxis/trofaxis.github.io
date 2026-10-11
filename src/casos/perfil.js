@@ -36,7 +36,7 @@ export function perfil(f, cfg = CONFIG) {
     distAgua: f.distAgua == null ? null : Math.min(f.distAgua, tope) / tope,
     propNativas: silvestres.length ? silvestres.filter((e) => e.origen === 'nativa').length / silvestres.length : null,
     mesesCoincidencia: R.mh.filter((a) => a.length).length / 12,
-    scores: Object.fromEntries(R.mods.map((m) => [m.id, m.score / 100])),
+    scores: Object.fromEntries(R.mods.filter((m) => m.suficiente).map((m) => [m.id, m.score / 100])), // un módulo sin datos no es riesgo 0
     overall: R.overall,
   };
 }

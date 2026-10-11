@@ -12,6 +12,13 @@ export function gauge(v,level){
     <text x="180" y="116" text-anchor="middle" font-size="11" fill="var(--muted)">100</text></svg>
     <span class="pill ${level}">Riesgo ${level.toLowerCase()}</span></div>`;
 }
+// Índice global cuando ningún módulo tiene datos suficientes: no se dibuja un número que parezca un resultado.
+export function gaugeSinDatos(){
+  return `<div class="gauge"><svg viewBox="0 0 200 118" role="img" aria-label="Índice ambiental sin datos suficientes">
+    <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="var(--chip)" stroke-width="16" stroke-linecap="round"/>
+    <text x="100" y="88" text-anchor="middle" font-size="38" font-weight="600" fill="var(--muted)" font-family="JetBrains Mono, monospace">—</text></svg>
+    <span class="pill sin-datos">Sin datos suficientes</span></div>`;
+}
 export function radar(mods){
   const cx=240,cy=165,R=105,n=mods.length;
   const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]};

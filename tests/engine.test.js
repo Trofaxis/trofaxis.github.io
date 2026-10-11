@@ -136,3 +136,40 @@ test('sin responder, las recomendaciones no inventan problemas (distancia al agu
   assert.ok(!/franja de amortiguamiento/.test(recs));
   assert.ok(!/diseño de riego/.test(recs));
 });
+
+// ---- Un módulo sin datos no es riesgo cero ----
+import { perfil } from '../src/casos/perfil.js';
+
+test('finca sin respuestas: ningún módulo tiene datos suficientes y el índice lo dice', () => {
+  const R = evaluar(emptyFarm());
+  assert.ok(R.mods.every((m) => m.suficiente === false));
+  assert.equal(R.sinDatos, true);
+  assert.equal(R.parcial, false);
+});
+
+test('la finca demostrativa tiene datos suficientes en todos los módulos y su índice no cambia', () => {
+  const R = evaluar(demoFarm());
+  assert.ok(R.mods.every((m) => m.suficiente));
+  assert.equal(R.sinDatos, false);
+  assert.equal(R.parcial, false);
+});
+
+test('un módulo sin datos no diluye el índice global', () => {
+  // Solo Agua tiene respuestas: riego por gravedad y cuerpo de agua a 10 m (ambas de riesgo máximo).
+  const R = evaluar({ ...emptyFarm(), riego: 'gravedad', distAgua: 10 });
+  const agua = R.mods.find((m) => m.id === 'agua');
+  assert.equal(agua.suficiente, true);
+  assert.equal(R.parcial, true);
+  assert.equal(R.overall, agua.score); // antes el 0 de los otros cuatro módulos lo bajaba a ~20
+});
+
+test('el umbral de confianza mínima sale de la configuración', () => {
+  const f = { ...emptyFarm(), pendiente: 'fuerte' }; // Suelo: 25 de 100 puntos de peso con dato
+  assert.equal(evaluar(f).mods.find((m) => m.id === 'suelo').suficiente, true);
+  assert.equal(evaluar(f, { ...CONFIG, confianzaMinima: 0.5 }).mods.find((m) => m.id === 'suelo').suficiente, false);
+});
+
+test('el perfil de la memoria de casos no guarda como riesgo 0 a un módulo sin datos', () => {
+  assert.deepEqual(perfil(emptyFarm()).scores, {});
+  assert.deepEqual(Object.keys(perfil(demoFarm()).scores).sort(), ['agua', 'fert', 'poli', 'suelo', 'troficas']);
+});
