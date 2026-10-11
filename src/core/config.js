@@ -47,6 +47,10 @@ export const CONFIG = {
   // Si se desactivan módulos, el índice se recalcula con los pesos de los activos.
   pesos: { poli: 0.25, fert: 0.2, agua: 0.2, suelo: 0.15, troficas: 0.2 },
 
+  // Confianza mínima de un módulo para calificarlo: con menos datos se muestra «Sin datos suficientes» y no entra al índice
+  // global (un módulo sin datos no es riesgo cero). Criterio propio, por validar.
+  confianzaMinima: 0.25, // una cuarta parte del peso de la rúbrica con dato
+
   // Umbrales del índice 0-100.
   niveles: { alto: 67, medio: 34 },
 

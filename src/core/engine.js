@@ -40,17 +40,20 @@ export function evaluar(f0, cfg = CONFIG, extra = {}) {
   const f = conPlan(f0); // con plan de fertilización, el N y sus meses salen del plan
   const ctx = contexto(f, extra, cfg);
   const helpers = { cfg };
+  const minConf = cfg.confianzaMinima ?? CONFIG.confianzaMinima;
   const mods = modulosDe(f, cfg)
     .map((id) => MODULOS.find((m) => m.id === id))
     .filter(Boolean)
     .map((mod) => {
       const r = mod.evaluar(f, ctx, helpers);
       const p = puntuar(r.variables);
-      return { id: mod.id, nombre: mod.nombre, ifa: mod.ifa, ...r, ...p, level: nivel(p.score, cfg) };
+      return { id: mod.id, nombre: mod.nombre, ifa: mod.ifa, ...r, ...p, level: nivel(p.score, cfg), suficiente: p.conf >= minConf };
     });
-  // Índice global: promedio ponderado de los módulos activos (pesos renormalizados).
-  const pesoTotal = mods.reduce((s, m) => s + (cfg.pesos?.[m.id] ?? 0), 0);
-  const overall = pesoTotal ? Math.round(mods.reduce((s, m) => s + m.score * (cfg.pesos[m.id] ?? 0), 0) / pesoTotal) : 0;
+  // Índice global: promedio ponderado de los módulos con datos suficientes (pesos renormalizados).
+  // Un módulo sin datos no es riesgo cero: no entra al promedio. sinDatos: ninguno alcanza; parcial: faltan algunos.
+  const conDatos = mods.filter((m) => m.suficiente);
+  const pesoTotal = conDatos.reduce((s, m) => s + (cfg.pesos?.[m.id] ?? 0), 0);
+  const overall = pesoTotal ? Math.round(conDatos.reduce((s, m) => s + m.score * (cfg.pesos[m.id] ?? 0), 0) / pesoTotal) : 0;
   const conf = mods.length ? mods.reduce((s, m) => s + m.conf, 0) / mods.length : 0;
 
   // Coincidencias de riesgo por mes (para el gráfico de presión).
@@ -61,7 +64,7 @@ export function evaluar(f0, cfg = CONFIG, extra = {}) {
   inter(ctx.amplio, ctx.plagaM).forEach((m) => mh[m].push('Amplio espectro con plaga presente'));
   inter(ctx.aplic, ctx.cosechaM).forEach((m) => mh[m].push('Aplicación en mes de cosecha'));
 
-  return { mods, overall, conf, mh, ...ctx };
+  return { mods, overall, sinDatos: !conDatos.length, parcial: conDatos.length > 0 && conDatos.length < mods.length, conf, mh, ...ctx };
 }
 
 // Simulador: aplica cambios hipotéticos a una copia de la finca y recalcula. No toca los datos reales.
