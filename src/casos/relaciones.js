@@ -67,10 +67,14 @@ export function relaciones(casos, finca, cfg = CONFIG) {
   return {
     ids, puntos: pts, soloEjemplo, avisos,
     pares: pares(ids).map(([a, b]) => {
-      const r = pearson(pts.map((p) => p.v[a]), pts.map((p) => p.v[b]));
+      const xs = pts.map((p) => p.v[a]), ys = pts.map((p) => p.v[b]);
+      const r = pearson(xs, ys);
+      // Sensibilidad: la r recalculada quitando una finca a la vez. Si el rango es ancho, una sola finca manda.
+      const sin = pts.length > 3 ? pts.map((_, i) => pearson(xs.filter((_, j) => j !== i), ys.filter((_, j) => j !== i))).filter((v) => v != null) : [];
+      const rango = sin.length ? [Math.min(...sin), Math.max(...sin)] : null;
       const comp = R.compartidos?.[`${a}|${b}`] ?? R.compartidos?.[`${b}|${a}`] ?? [];
       const aviso = comp.length ? `Los dos módulos usan ${comp.join(' y ')}: parte de la asociación sale de la fórmula, no de la finca.` : null;
-      return { a, b, nombreA: nombreModulo(a), nombreB: nombreModulo(b), n: pts.length, r, fuerza: fuerza(r, cfg), compartidos: comp, aviso };
+      return { a, b, nombreA: nombreModulo(a), nombreB: nombreModulo(b), n: pts.length, r, rango, suficiente: pts.length >= R.minPuntos, fuerza: fuerza(r, cfg), compartidos: comp, aviso };
     }),
   };
 }
@@ -78,9 +82,13 @@ export function relaciones(casos, finca, cfg = CONFIG) {
 // Frase que describe la asociación sin hablar de causa.
 export function frase(par) {
   if (par.r == null) return `No se puede calcular la relación entre ${par.nombreA.toLowerCase()} y ${par.nombreB.toLowerCase()}: hacen falta al menos 3 fincas y que ambos riesgos varíen.`;
+  const f2 = (v) => v.toFixed(2).replace('.', ',');
+  const r = f2(par.r);
+  const rango = par.rango ? ` Quitando una finca a la vez, la r va de ${f2(par.rango[0])} a ${f2(par.rango[1])}.` : '';
+  // Con pocas fincas no se califica la fuerza: la r es solo una descripción de estos puntos.
+  if (par.suficiente === false) return `r = ${r} con ${par.n} fincas: pocas para calificar la asociación.${rango}`;
   const sentido = par.r > 0 ? 'las fincas con más riesgo en uno tienden a tener más riesgo en el otro' : 'las fincas con más riesgo en uno tienden a tener menos riesgo en el otro';
-  const r = par.r.toFixed(2).replace('.', ',');
   return par.fuerza === 'débil o nula'
-    ? `Asociación débil o nula (r = ${r}, ${par.n} fincas): no se ve un patrón claro.`
-    : `Asociación ${par.fuerza} ${par.r > 0 ? 'positiva' : 'negativa'} (r = ${r}, ${par.n} fincas): ${sentido}. Es asociación, no prueba que uno cause el otro.`;
+    ? `Asociación débil o nula (r = ${r}, ${par.n} fincas): no se ve un patrón claro.${rango}`
+    : `Asociación ${par.fuerza} ${par.r > 0 ? 'positiva' : 'negativa'} (r = ${r}, ${par.n} fincas): ${sentido}. Es asociación, no prueba que uno cause el otro.${rango}`;
 }

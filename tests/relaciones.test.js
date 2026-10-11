@@ -85,3 +85,25 @@ test('el gráfico dibuja un punto por finca y el rombo de la finca actual', () =
   assert.equal((svg.match(/<circle /g) || []).length, CASOS_EJEMPLO.length);
   assert.equal((svg.match(/<path d="M/g) || []).length, 1);
 });
+
+test('con pocas fincas no califica la fuerza y muestra cuánto cambia la r al quitar una', () => {
+  const rel = relaciones(CASOS_EJEMPLO, demoFarm(), CONFIG);
+  const p = rel.pares.find((x) => x.a === 'agua' && x.b === 'suelo');
+  assert.equal(p.suficiente, false);
+  assert.ok(p.rango[0] <= p.r && p.r <= p.rango[1]);
+  const t = frase(p);
+  assert.match(t, /pocas para calificar/);
+  assert.match(t, /Quitando una finca a la vez/);
+  assert.doesNotMatch(t, /fuerte|moderada/);
+});
+
+test('la r coincide con un cálculo hecho a mano sobre los puntos del gráfico', () => {
+  const rel = relaciones(CASOS_EJEMPLO, demoFarm(), CONFIG);
+  for (const p of rel.pares) {
+    const x = rel.puntos.map((q) => q.v[p.a]), y = rel.puntos.map((q) => q.v[p.b]);
+    const mx = x.reduce((s, v) => s + v) / x.length, my = y.reduce((s, v) => s + v) / y.length;
+    const cov = x.reduce((s, v, i) => s + (v - mx) * (y[i] - my), 0);
+    const sx = Math.sqrt(x.reduce((s, v) => s + (v - mx) ** 2, 0)), sy = Math.sqrt(y.reduce((s, v) => s + (v - my) ** 2, 0));
+    assert.ok(Math.abs(p.r - cov / (sx * sy)) < 1e-12, `${p.a}-${p.b}`);
+  }
+});

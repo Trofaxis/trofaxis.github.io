@@ -154,6 +154,6 @@ Con el punto de la finca (mapa, coordenadas o GPS) la app descarga el clima y el
 - Un gráfico por cada par de módulos activos de `CONFIG.relaciones.modulos`: con n módulos, n(n−1)/2 pares (5 → 10). Código: `src/casos/relaciones.js`, panel en `src/ui/casos.js`.
 - Cada punto es una finca: los casos de la memoria (ejemplo, propios, comunidad) y la finca actual (rombo rojo). Eje x = riesgo del módulo A, eje y = riesgo del módulo B, de 0 a 100.
 - r de Pearson: r = Σ(x−x̄)(y−ȳ) / √(Σ(x−x̄)² · Σ(y−ȳ)²). Sin definir con menos de 3 fincas o si un riesgo no varía.
-- Cortes de |r| (0,3 y 0,7) y mínimo de 20 fincas: **criterio propio**.
+- Cortes de |r| (0,3 y 0,7) y mínimo de 20 fincas: **criterio propio**. Con menos de 20 fincas la app no califica la fuerza (no dice "fuerte" ni "moderada"); solo da la r y su rango al quitar una finca a la vez (sensibilidad), para ver si una sola finca manda.
 - **Solo muestra asociación.** No cambia ningún puntaje ni demuestra que el riesgo de un módulo cause el del otro. Los pares que usan los mismos datos de entrada (`CONFIG.relaciones.compartidos`) tienen parte de la asociación construida por la fórmula y la app lo avisa.
 - Hoy los únicos puntos además de tu finca son los 9 casos de ejemplo (ficticios): las r que salen no describen el campo.
