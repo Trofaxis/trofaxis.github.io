@@ -9,8 +9,9 @@ import { aPixel, aGrados, teselasVisibles, urlTesela, areaHa, leerCoordenadas, a
 import { clasificarArboles, evaluarSitios, nombreSitio, censoEjemplo, VEREDICTO } from '../apiradar/censo.js';
 import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
+import { mapaRiesgoDe } from './mapariesgo.js';
 
-const C = CONFIG.mapa;
+const C = CONFIG.mapa, C_AR = CONFIG.apiradar;
 let U = cargarUbicacion();
 let modo = 'ver'; // ver | punto | contorno | sitio
 let msg = '';
@@ -46,7 +47,9 @@ export function panelMapa() {
     </div>
     <details class="arboles" id="censo" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
       <summary>Censo de árboles y sitios (ApiRadar)${U.arboles.length ? ` · ${U.arboles.length} árbol(es)` : ''}${U.sitios.length ? ` · ${U.sitios.length} sitio(s)` : ''}</summary>
-      <p class="muted small">Coordenadas en UTM («este norte», 501177 1547784) o en grados («latitud, longitud», 14.0108, -87.0044), con punto decimal. DAP, diámetro y altura de copa son opcionales, pero sin diámetro y altura el árbol no se clasifica por riesgo. La altura es la de la copa (H de la Ec. 3 de Osorio 2025). Todo se guarda solo en este navegador.</p>
+      <p class="muted small">Coordenadas en UTM («este norte», 501177 1547784) o en grados («latitud, longitud», 14.0108, -87.0044), con punto decimal. DAP, diámetro y altura de copa son opcionales, pero sin diámetro y altura el árbol no se clasifica por riesgo. La altura es la de la copa (H de la Ec. 3 de Osorio 2025). El riesgo de cada árbol sale de su volumen de copa: con solo las coordenadas la app ubica el árbol, pero no puede decir cuál pesa más. Todo se guarda solo en este navegador.</p>
+      <h4>Mapa de riesgo</h4>
+      ${mapaRiesgoDe(U, C_AR.radioExclusionM)}
       ${U.ejemplo ? '<p class="mapa-aviso">Estás viendo datos de ejemplo (ficticios). Al agregar un árbol o un sitio, el ejemplo se borra.</p>' : ''}
       <div class="row"><div class="f" style="width:150px"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div></div>
       <h4>Agregar un árbol</h4>
