@@ -30,7 +30,7 @@ test('descarta valores inválidos (meses fuera de rango, negativos, opciones des
     especies: [{ nombre: 'Gliricidia sepium', tipo: 'Dragón', floracion: [12, 1] }, null],
   });
   assert.equal(f.area, 0);
-  assert.equal(f.pendiente, 'plana');
+  assert.equal(f.pendiente, null);
   assert.deepEqual(f.fertMeses, [0, 3]);
   assert.equal(f.especies.length, 1);
   assert.equal(f.especies[0].tipo, 'Árbol');

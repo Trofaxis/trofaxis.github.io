@@ -3,6 +3,7 @@
 import { variable, porCortes } from '../core/rubrica.js';
 import { resumen } from '../fert/calculo.js';
 
+const SIN_RESPUESTA = 'Sin responder';
 const NOMBRE_RIEGO = { goteo: 'Goteo (90 %)', aspersion: 'Aspersión (75 %)', gravedad: 'Gravedad (60 %)', ninguno: 'Sin riego' };
 
 export default {
@@ -21,9 +22,9 @@ export default {
     const fertirriego = f.fertPlan?.length ? resumen(f, cfg).fertirriego : false;
     const escurre = al?.some((a) => a.id === 'escorrentia' && a.nivel === 'error');
     const variables = [
-      variable('sistema', 'Sistema de riego (eficiencia de aplicación)', R.sistema.peso, cfg.categorias.sistemaRiego[f.riego],
-        NOMBRE_RIEGO[f.riego], 'criterio propio', 'Eficiencias: FAO, Training Manual 4, Tabla 8 (verificado). El puntaje es criterio propio.'),
-      variable('distancia', 'Distancia al cuerpo de agua', R.distancia.peso, porCortes(f.distAgua, R.distancia), `${f.distAgua} m`),
+      variable('sistema', 'Sistema de riego (eficiencia de aplicación)', R.sistema.peso, cfg.categorias.sistemaRiego[f.riego] ?? null,
+        NOMBRE_RIEGO[f.riego] ?? SIN_RESPUESTA, 'criterio propio', 'Eficiencias: FAO, Training Manual 4, Tabla 8 (verificado). El puntaje es criterio propio.'),
+      variable('distancia', 'Distancia al cuerpo de agua', R.distancia.peso, porCortes(f.distAgua, R.distancia), f.distAgua == null ? SIN_RESPUESTA : `${f.distAgua} m`),
       variable('proporcionProductiva', 'Área productiva / área total', R.proporcionProductiva.peso, porCortes(prop, R.proporcionProductiva),
         prop == null ? 'Sin dato' : `${Math.round(prop * 100)} %`),
       variable('disenoRiego', 'Diseño de riego validado (pestaña Riego)', R.disenoRiego.peso, diseno,
@@ -37,10 +38,10 @@ export default {
     ];
     const recs = [];
     if (f.riego === 'gravedad') recs.push('Evaluar riego por goteo en los lotes de mayor consumo.');
-    if (f.distAgua < 30) recs.push('Mantener una franja de amortiguamiento junto al cuerpo de agua.');
+    if (f.distAgua != null && f.distAgua < 30) recs.push('Mantener una franja de amortiguamiento junto al cuerpo de agua.');
     if (fertirriego && escurre) recs.push('Corregir la escorrentía del goteo antes de fertirrigar: el fertilizante se pierde con el agua.');
     if (errores) recs.push('Corregir los errores del diseño de riego que señala la pestaña Riego.');
-    if (f.riego !== 'ninguno' && !al?.length) recs.push('Cargar tu diseño de riego en la pestaña Riego para validarlo contra FAO-56.');
+    if (f.riego && f.riego !== 'ninguno' && !al?.length) recs.push('Cargar tu diseño de riego en la pestaña Riego para validarlo contra FAO-56.');
     return { variables, recs };
   },
 };

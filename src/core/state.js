@@ -52,9 +52,9 @@ export function demoFarm() {
 
 export function emptyFarm() {
   return {
-    nombre: '', depto: '', area: 0, areaProd: 0, altitud: 0, pendiente: 'plana', fuenteAgua: '', distAgua: 500, tieneCultivos: false,
-    cultivos: [], especies: [], riego: 'ninguno', nAplicado: 0, nObjetivo: 0, pObjetivo: 0, kObjetivo: 0, fertPlan: [], fertMeses: [], lluviaMeses: [], plaguicidas: [], sueloDesnudoMeses: [],
-    labranza: 'cero', plagas: [], gg: 'no', minorAplicables: 60, minorFallas: 0, nc: [],
+    nombre: '', depto: '', area: 0, areaProd: 0, altitud: 0, pendiente: null, fuenteAgua: '', distAgua: null, tieneCultivos: false, // null = sin responder (no cuenta como dato)
+    cultivos: [], especies: [], riego: null, nAplicado: 0, nObjetivo: 0, pObjetivo: 0, kObjetivo: 0, fertPlan: [], fertMeses: [], lluviaMeses: [], plaguicidas: [], sueloDesnudoMeses: [],
+    labranza: null, plagas: [], gg: 'no', minorAplicables: 60, minorFallas: 0, nc: [],
     cultivosAledanos: [], proposito: [],
     acciones: [], resultado: resultadoVacio(),
     // Clima por mes de la ubicación (src/clima/normales.js). Sin coordenadas: esas viven solo en el navegador.
