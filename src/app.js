@@ -78,6 +78,8 @@ document.addEventListener('click',e=>{
   else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
   else if(act==='prev'){S.step=Math.max(0,S.step-1);}
   else if(act==='finish'){S.view='dashboard';}
+  else if(act==='apiradar'){S.problema=a.dataset.p;}
+  else if(act==='apiradar-cerrar'){S.problema='';}
   else if(act==='start-empty'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.view='wizard';S.step=0;}
   else if(act==='load-demo'){reiniciarMapa();S.farm=demoFarm();S.demo=true;S.done={};S.view='dashboard';S.msg='Se cargó la finca de ejemplo.';}
   else if(act==='cult-yes'){f.tieneCultivos=true;}
