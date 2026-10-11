@@ -1,7 +1,7 @@
 // ApiRadar: diagnóstico del problema Spathodea y abejas a partir de los datos de la finca.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { apiRadar } from '../src/apiradar/diagnostico.js';
+import { apiRadar, apiRadarAplica } from '../src/apiradar/diagnostico.js';
 import { evaluar } from '../src/core/engine.js';
 import { CONFIG } from '../src/core/config.js';
 import { demoFarm, emptyFarm } from '../src/core/state.js';
@@ -117,4 +117,31 @@ test('con árboles censados los sitios candidatos sí entran al diagnóstico', (
   const r = apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [{ id: '1', lat: 14.0, lon: -87.2 }], contorno: [], sitios: [{ id: 'S1', lat: 14.0, lon: -87.2 }] });
   assert.equal(r.censo.sitios.length, 1);
   assert.match(acc(r, 'refugio').detalle, /Sitios que propusiste: Sitio S1: cerca/);
+});
+
+// Issue 55: con el panel cerrado solo se calcula si el problema aplica, y debe dar lo mismo que el diagnóstico completo.
+test('apiRadarAplica coincide con apiRadar(...).aplica en todos los casos', () => {
+  const conRiesgo = demoFarm();
+  const sinRiesgo = demoFarm(); sinRiesgo.especies = sinRiesgo.especies.map((e) => ({ ...e, riesgo: false }));
+  const sinCultivosConPropositoRiego = { ...demoFarm(), tieneCultivos: false, proposito: ['riego'] };
+  const sinCultivosConPropositoPoli = { ...demoFarm(), tieneCultivos: false, proposito: ['polinizadores'] };
+  const fincas = { conRiesgo, sinRiesgo, vacia: emptyFarm(), sinCultivosConPropositoRiego, sinCultivosConPropositoPoli };
+  const configs = {
+    normal: CONFIG,
+    sinPoli: { ...CONFIG, modulosActivos: CONFIG.modulosActivos.filter((id) => id !== 'poli') },
+  };
+  for (const [nf, f] of Object.entries(fincas)) for (const [nc, cfg] of Object.entries(configs)) {
+    assert.equal(apiRadarAplica(f, cfg), apiRadar(f, cfg).aplica, `${nf} con config ${nc}`);
+  }
+  assert.equal(apiRadarAplica(conRiesgo, CONFIG), true);
+  assert.equal(apiRadarAplica(sinRiesgo, CONFIG), false);
+  assert.equal(apiRadarAplica(conRiesgo, configs.sinPoli), false);
+});
+
+test('el panel cerrado no arma el diagnóstico: apiRadar solo se llama al abrirlo', async () => {
+  const { readFileSync } = await import('node:fs');
+  const ui = readFileSync(new URL('../src/ui/apiradar.js', import.meta.url), 'utf8');
+  assert.match(ui, /const R = abierto \? apiRadar\(/);
+  assert.match(ui, /abierto \? R\.aplica : apiRadarAplica\(f, cfg\)/);
+  assert.doesNotMatch(ui, /apiRadar\([^)]*'spathodea'/);
 });

@@ -3,7 +3,7 @@
 // cuánto baja el riesgo, qué falta) y recalcula la finca con cada cambio para medir cuánto baja. Cada cifra trae su estado de evidencia.
 import { CONFIG } from '../core/config.js';
 import { FUENTES } from '../core/fuentes.js';
-import { evaluar, nivel } from '../core/engine.js';
+import { evaluar, nivel, modulosDe } from '../core/engine.js';
 import { conPlan } from '../fert/calculo.js';
 import { cuentaParaAbejas, puntajePeligro, fmtHQ, abejasSinAguijon } from '../plag/calculo.js';
 import { volumenCopa } from '../modules/polinizadores.js';
@@ -40,6 +40,12 @@ const CAMBIOS = {
 };
 
 // ubic: ubicación guardada en el navegador ({ contorno, arboles: censo, sitios }); no forma parte de la finca ni se exporta.
+// ¿Aplica el problema? Es lo único que el panel cerrado necesita: no hace falta evaluar la finca ni armar el diagnóstico.
+// Debe coincidir siempre con apiRadar(...).aplica (lo vigila tests/apiradar.test.js).
+export function apiRadarAplica(f0, cfg = CONFIG) {
+  return modulosDe(f0, cfg).includes('poli') && f0.especies.some((e) => e.riesgo);
+}
+
 export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', ubic = null) {
   const f = conPlan(f0);
   const base = evaluar(f, cfg, extra);
