@@ -1,35 +1,68 @@
 /* Estilos de BioG.A.P. Diseño base: versión mejorada del artefacto (2026-10-04); bloque final: módulo de riego. */
 body{margin:0}
 :root{
-  --bg:#F3F5EF; --surface:#FFFFFF; --ink:#1B2A22; --muted:#5B6B61; --line:#D8DED4;
-  --accent:#2F6B4F; --accent-ink:#FFFFFF; --accent-soft:#E2EEE6; --pollen:#9A6A0E; --pollen-soft:#F6EBD2;
-  --good:#2E7D4F; --warn:#A8690F; --crit:#B83A2E; --chip:#EEF1EA;
-  --f-display:'Familjen Grotesk','Segoe UI',system-ui,sans-serif;
-  --f-body:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+  /* Paleta tomada del dashboard de Figma (Energy Management System, globals.css); la barra lateral y las KPI usan --side*. */
+  --bg:#F4F7F5; --surface:#FFFFFF; --ink:#1A1A1A; --muted:#5F6B66; --line:#E3E8E5;
+  --accent:#2C5F4E; --accent-ink:#FFFFFF; --accent-soft:#DCFCE7; --pollen:#9A6A0E; --pollen-soft:#F6EBD2;
+  --good:#16803C; --warn:#B45309; --crit:#DC2626; --chip:#EEF3F0;
+  --side:#2C5F4E; --side-2:#3A6B5A; --side-ink:#FFFFFF; --side-hi:#7BDC93; --side-hi-ink:#1F4A3B;
+  --shadow:0 1px 2px rgba(16,40,30,.05),0 6px 20px rgba(16,40,30,.06);
+  --radius:18px;
+  --f-display:'Inter','Segoe UI',system-ui,sans-serif;
+  --f-body:'Inter','Segoe UI',system-ui,sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121A16; --surface:#1A2420; --ink:#E6EDE8; --muted:#9DB0A4; --line:#2E3B35;
-  --accent:#7FC4A0; --accent-ink:#0F1A14; --accent-soft:#1F3329; --pollen:#E3B04B; --pollen-soft:#3A3020;
-  --good:#6FCB94; --warn:#E3B04B; --crit:#F07A6B; --chip:#22302A; color-scheme:dark;}}
+  --bg:#0E1714; --surface:#16231E; --ink:#E8EFEB; --muted:#9DB0A6; --line:#26362F;
+  --accent:#7BDC93; --accent-ink:#0F2A1F; --accent-soft:#1E3A2E; --pollen:#E3B04B; --pollen-soft:#3A3020;
+  --good:#6FCB94; --warn:#E3B04B; --crit:#F07A6B; --chip:#1D2B25;
+  --side:#1F4A3B; --side-2:#2C5F4E; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;}}
 :root[data-theme="dark"]{
-  --bg:#121A16; --surface:#1A2420; --ink:#E6EDE8; --muted:#9DB0A4; --line:#2E3B35;
-  --accent:#7FC4A0; --accent-ink:#0F1A14; --accent-soft:#1F3329; --pollen:#E3B04B; --pollen-soft:#3A3020;
-  --good:#6FCB94; --warn:#E3B04B; --crit:#F07A6B; --chip:#22302A; color-scheme:dark;}
+  --bg:#0E1714; --surface:#16231E; --ink:#E8EFEB; --muted:#9DB0A6; --line:#26362F;
+  --accent:#7BDC93; --accent-ink:#0F2A1F; --accent-soft:#1E3A2E; --pollen:#E3B04B; --pollen-soft:#3A3020;
+  --good:#6FCB94; --warn:#E3B04B; --crit:#F07A6B; --chip:#1D2B25;
+  --side:#1F4A3B; --side-2:#2C5F4E; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
-header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
-.wrap{max-width:1120px;margin:0 auto;padding-inline:16px}
-.bar{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;padding-block:10px}
-.brand{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.01em;line-height:1.15}
-.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted);letter-spacing:0}
-.hright{display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap}
-nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
-nav.tabs button{font:600 14px var(--f-body);border:1px solid transparent;background:none;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
-nav.tabs button:hover{color:var(--ink)}
-nav.tabs button[aria-current="page"]{background:var(--accent-soft);color:var(--ink);border-color:var(--line)}
+/* Esqueleto: barra lateral verde + contenido (diseño de Figma). En pantallas angostas la barra pasa arriba. */
+.shell{display:flex;align-items:flex-start;gap:8px;min-height:100vh}
+.side{position:sticky;top:0;flex:none;width:248px;height:100vh;padding:20px 0 20px 20px}
+.side-in{height:100%;display:flex;flex-direction:column;gap:18px;padding:22px 14px;border-radius:24px;color:var(--side-ink);
+  background:linear-gradient(180deg,var(--side) 0%,var(--side) 55%,var(--side-2) 100%);box-shadow:0 18px 40px rgba(20,60,45,.25);overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding-inline:6px;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:-.01em;line-height:1.15}
+.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;color:rgba(255,255,255,.72);letter-spacing:0}
+.logo{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--side-hi);color:var(--side-hi-ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs{display:flex;flex-direction:column;gap:6px;flex:1}
+nav.tabs button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:500 14px var(--f-body);border:none;background:transparent;color:rgba(255,255,255,.85);padding:10px 12px;border-radius:14px;cursor:pointer}
+nav.tabs button .ic{padding:8px;width:36px;height:36px;border-radius:50%;background:var(--side-2);color:#fff}
+nav.tabs button:hover{background:rgba(255,255,255,.08);color:#fff}
+nav.tabs button[aria-current="page"]{background:var(--side-hi);color:var(--side-hi-ink);font-weight:600;box-shadow:0 6px 16px rgba(123,220,147,.3)}
+nav.tabs button[aria-current="page"] .ic{background:var(--side-hi-ink);color:var(--side-hi)}
+.side .btn.theme{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff}
+.side .btn.theme:hover{border-color:var(--side-hi)}
+.side :focus-visible{outline-color:var(--side-hi)}
+.shell>main.wrap{flex:1;min-width:0;max-width:1180px;margin:0 auto;padding-inline:20px}
+@media (max-width:900px){
+  .shell{display:block}
+  .side{position:sticky;top:0;z-index:5;width:auto;height:auto;padding:8px 8px 0;padding-top:max(8px,env(safe-area-inset-top))}
+  .side-in{flex-direction:row;align-items:center;gap:10px;padding:8px 10px;border-radius:18px;overflow:visible}
+  .brand small{display:none}
+  .brand{font-size:15px;padding:0}
+  .logo{width:34px;height:34px}
+  nav.tabs{flex-direction:row;overflow-x:auto;gap:4px;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs button{width:auto;flex:none;padding:6px 10px 6px 6px;gap:8px;white-space:nowrap}
+  nav.tabs button .ic{width:30px;height:30px;padding:6px}
+  nav.tabs button:not([aria-current="page"]){padding:4px}
+  nav.tabs button:not([aria-current="page"]) span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  nav.tabs button{position:relative}
+  .side .btn.theme{flex:none;font-size:12px;padding:4px 8px}
+  .shell>main.wrap{padding-inline:16px}
+}
+@media (max-width:560px){.brand>div{display:none}}
 main{padding-block:20px 56px;display:flex;flex-direction:column;gap:20px}
-h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
 h1{font-size:26px;font-weight:700;letter-spacing:-.015em;line-height:1.15}
 h2{font-size:18px;font-weight:600}
 h3{font-size:15px;font-weight:600}
@@ -37,11 +70,11 @@ p{margin:0}
 .muted{color:var(--muted)}
 .small{font-size:13px}
 .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.panel.flat{background:transparent;border-style:dashed}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel.flat{background:transparent;border-style:dashed;box-shadow:none}
 .notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--pollen-soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px}
 .notice span{flex:1;min-width:200px}
-.btn{font:600 14px var(--f-body);border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn{font:600 14px var(--f-body);border-radius:10px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .btn:hover{border-color:var(--accent)}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -62,7 +95,7 @@ p{margin:0}
 .gauge{text-align:center}
 .gauge svg{width:100%;max-width:220px;height:auto}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-.card{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.card{border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .card .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .score{font-family:var(--f-mono);font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
 .bar-track{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
@@ -245,3 +278,13 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .mapa-aviso{color:var(--warn);margin:4px 0}
 .mapa-msg{margin:4px 0}
 #mapa-info p{margin:4px 0}
+
+/* Tarjetas KPI del resumen de la finca: verde oscuro como en el diseño de Figma */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.summary .k{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.summary .v{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.3;margin-top:4px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stats>div,.summary>div{padding:12px}.stats .v{font-size:16px}}
+.stats>div,.summary>div{border-radius:16px;padding:14px 16px;color:var(--side-ink);background:linear-gradient(135deg,var(--side) 0%,var(--side-2) 100%);box-shadow:0 8px 20px rgba(20,60,45,.18)}
+.stats .k,.summary .k{color:var(--side-hi);font-size:11.5px}
+.stats .v{font-size:19px;font-weight:700;margin-top:4px}

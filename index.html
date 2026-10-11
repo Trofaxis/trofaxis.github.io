@@ -6,27 +6,40 @@
   <title>BioG.A.P.</title>
   <meta name="description" content="Prototipo de evaluación de riesgo ambiental de la finca, alineado a GLOBALG.A.P. IFA v6.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-  <header class="top"><div class="wrap bar">
-    <div class="brand">BioG.A.P.<small>Riesgo ambiental de la finca</small></div>
-    <div class="hright">
+  <!-- Íconos: Lucide (lucide.dev, licencia ISC), los mismos que usa el diseño de Figma. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-dash" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+    <symbol id="i-wizard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+    <symbol id="i-plantillas" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+    <symbol id="i-riego" viewBox="0 0 24 24"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></symbol>
+    <symbol id="i-fert" viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></symbol>
+    <symbol id="i-plag" viewBox="0 0 24 24"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></symbol>
+    <symbol id="i-casos" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-hoja" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+    <symbol id="i-tema" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  </svg>
+  <div class="shell">
+    <aside class="side"><div class="side-in">
+      <div class="brand"><span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-hoja"/></svg></span><div>BioG.A.P.<small>Riesgo ambiental de la finca</small></div></div>
       <nav class="tabs" aria-label="Vistas">
-        <button data-view="dashboard" id="tab-dashboard">Dashboard</button>
-        <button data-view="wizard" id="tab-wizard">Cuestionario</button>
-        <button data-view="plantillas" id="tab-plantillas">Plantillas</button>
-        <button data-view="riego" id="tab-riego">Riego</button>
-        <button data-view="fertilizacion" id="tab-fertilizacion">Fertilización</button>
-        <button data-view="plaguicidas" id="tab-plaguicidas">Plaguicidas</button>
-        <button data-view="casos" id="tab-casos">Casos</button>
-        <button data-view="ajustes" id="tab-ajustes">Ajustes</button>
+          <button data-view="dashboard" id="tab-dashboard"><svg class="ic" aria-hidden="true"><use href="#i-dash"/></svg><span>Dashboard</span></button>
+          <button data-view="wizard" id="tab-wizard"><svg class="ic" aria-hidden="true"><use href="#i-wizard"/></svg><span>Cuestionario</span></button>
+          <button data-view="plantillas" id="tab-plantillas"><svg class="ic" aria-hidden="true"><use href="#i-plantillas"/></svg><span>Plantillas</span></button>
+          <button data-view="riego" id="tab-riego"><svg class="ic" aria-hidden="true"><use href="#i-riego"/></svg><span>Riego</span></button>
+          <button data-view="fertilizacion" id="tab-fertilizacion"><svg class="ic" aria-hidden="true"><use href="#i-fert"/></svg><span>Fertilización</span></button>
+          <button data-view="plaguicidas" id="tab-plaguicidas"><svg class="ic" aria-hidden="true"><use href="#i-plag"/></svg><span>Plaguicidas</span></button>
+          <button data-view="casos" id="tab-casos"><svg class="ic" aria-hidden="true"><use href="#i-casos"/></svg><span>Casos</span></button>
+          <button data-view="ajustes" id="tab-ajustes"><svg class="ic" aria-hidden="true"><use href="#i-ajustes"/></svg><span>Ajustes</span></button>
       </nav>
-      <button class="btn sm" id="theme-btn" data-act="theme" aria-label="Cambiar tema">Tema: sistema</button>
-    </div>
-  </div></header>
-  <main class="wrap" id="app" aria-live="polite"></main>
+      <button class="btn sm theme" id="theme-btn" data-act="theme" aria-label="Cambiar tema">Tema: sistema</button>
+    </div></aside>
+    <main class="wrap" id="app" aria-live="polite"></main>
+  </div>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
