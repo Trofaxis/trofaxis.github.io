@@ -2,6 +2,7 @@
 import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
 import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes } from './core/storage.js';
+import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
 import { viewDashboard } from './ui/dashboard.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
@@ -18,7 +19,8 @@ import { extraerFert, PLANTILLA_CSV } from './fert/extraer.js';
 import { nombreCultivoPrincipal } from './casos/perfil.js';
 import { casoAnonimo } from './casos/anonimo.js';
 import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
-import { casoEjemplo, riegoVacio, declaradosEjemplo } from './riego/calculo.js';
+import { riegoVacio } from './riego/calculo.js';
+import { riegoInicial } from './riego/guardado.js';
 import { leerXlsx, ErrorLectura } from './riego/xlsx.js';
 import { leerCsv } from './riego/csv.js';
 import { extraerRiego } from './riego/extraer.js';
@@ -47,6 +49,9 @@ function sesionLista() {
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
+// Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
+function avisoGuardado(){const app=document.getElementById('app');if(!app)return;app.querySelector('#aviso-guardado')?.remove();
+  if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 function render(){
   // Conserva el foco y el cursor del campo que se estaba editando.
@@ -56,7 +61,7 @@ function render(){
   app.innerHTML=(views[S.view]||viewDashboard)();
   S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();guardarLocal(S);
+  montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
   if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
@@ -75,6 +80,7 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,f=S.farm;
   S.ioMsg='';S.plagMsg=null;
   if(act==='theme'){S.theme={system:'light',light:'dark',dark:'system'}[S.theme];}
+  else if(act==='guardado-ok'){guardado.descartado=true;}
   else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
   else if(act==='prev'){S.step=Math.max(0,S.step-1);}
   else if(act==='finish'){S.view='dashboard';}
@@ -117,7 +123,7 @@ document.addEventListener('click',e=>{
   else if(act==='sim-reset'){Object.keys(S.sim).forEach(k=>S.sim[k]=false);}
   else if(act==='reset'){S.confirmReset=true;}
   else if(act==='reset-no'){S.confirmReset=false;}
-  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
+  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.riego=riegoInicial();S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
   else if(act==='io-copy'){
     const txt=exportarTexto(S.farm,S.ajustes,S.tpl);S.io=txt;render();
     const box=document.getElementById('io-box');const m=document.getElementById('io-msg');
@@ -149,7 +155,7 @@ document.addEventListener('click',e=>{
   else if(act.startsWith('nube-')){nubeAccion(act);return;}
   else if(act==='caso-rm'){S.casos=S.casos.filter(c=>c.id!==a.dataset.id);guardarCasos(S.casos);S.msg='Caso quitado de la memoria.';}
   else if(act==='riego-import'){importarRiego();return;}
-  else if(act==='riego-ejemplo'){S.riego={datos:casoEjemplo(),fuente:'ejemplo',archivo:'',origen:{},declarados:declaradosEjemplo(),faltan:[],omitidas:[]};}
+  else if(act==='riego-ejemplo'){S.riego=riegoInicial();}
   else if(act==='riego-blanco'){S.riego={datos:riegoVacio(),fuente:'manual',archivo:'',origen:{},declarados:{},faltan:[],omitidas:[]};climaARiego();}
   else if(act==='riego-add-suelo'){S.riego.datos.suelo.push({nombre:`Parte ${S.riego.datos.suelo.length+1}`,area:null,textura:'',da:null,cc:null,pmp:null,pedregosidad:null,infiltracion:null});}
   else if(act==='riego-rm-suelo'){S.riego.datos.suelo.splice(+a.dataset.i,1);}
@@ -166,7 +172,7 @@ function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);avisoGuardado();}});
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);
