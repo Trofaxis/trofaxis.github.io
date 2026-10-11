@@ -107,3 +107,13 @@ test('toda coincidencia de evaluar() tiene módulo asignado', () => {
   const R = evaluar(demoFarm());
   intensidadMeses(R.mh).forEach((x) => assert.ok(!('Otro' in x.mods)));
 });
+
+import { filaIntensidad } from '../src/ui/charts.js';
+test('la fila de intensidad tiene una celda por mes, igual que el calendario (issue #14)', () => {
+  const mh = Array.from({ length: 12 }, () => []);
+  mh[2] = ['Aplicación durante floración visitada', 'Suelo desnudo con lluvia'];
+  const html = filaIntensidad(mh);
+  assert.equal((html.match(/<td /g) || []).length, 12);
+  assert.equal((html.match(/<th /g) || []).length, 1);
+  assert.match(html, /<b>2<\/b><span>Pol<\/span><span>Sue<\/span>/);
+});

@@ -5,7 +5,7 @@ import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
 import { evaluar, simular, nivel } from '../core/engine.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
-import { gauge, radar, pressureChart, calRow, dlt, leyendaCal } from './charts.js';
+import { gauge, radar, pressureChart, calRow, dlt, leyendaCal, filaIntensidad } from './charts.js';
 import { panelVecinosDashboard } from './casos.js';
 import { conPlan } from '../fert/calculo.js';
 import { ESTADOS } from '../core/rubrica.js';
@@ -99,8 +99,8 @@ export function viewDashboard(){
       ${calRow('Lluvia fuerte',f.lluviaMeses,'on-gen')}
       ${calRow('Suelo desnudo',f.sueloDesnudoMeses,'on-gen',inter(f.sueloDesnudoMeses,f.lluviaMeses))}
       ${calRow('Plagas',R.plagaM,'on-gen',inter(R.amplio,R.plagaM))}
-    </tbody></table></div>
-    ${leyendaCal(R.mh)}
+    </tbody><tfoot>${filaIntensidad(R.mh)}</tfoot></table></div>
+    ${leyendaCal()}
   </section>
   <section class="panel">
     <div><h2>¿Qué pasa si cambias algo?</h2><p class="muted">Activa uno o varios cambios y mira cómo se mueve el riesgo. No modifica tus respuestas.</p></div>
