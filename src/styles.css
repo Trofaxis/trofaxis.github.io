@@ -202,10 +202,35 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .mapa-vertice{fill:#fff;stroke:#9A6A0E;stroke-width:2}
 .mapa-punto circle{fill:rgba(240,122,107,.35);stroke:#fff;stroke-width:2}
 .mapa-punto circle.centro{fill:#B83A2E;stroke:#fff;stroke-width:1.5}
-.mapa-arbol{fill:#B83A2E;stroke:#fff;stroke-width:1.5}
-.mapa-radio{fill:rgba(184,58,46,.08);stroke:#F07A6B;stroke-width:1.5}
-.mapa-radio.min{fill:none;stroke-dasharray:5 4}
+.mapa-arbol{stroke:#fff;stroke-width:1.5;fill:#8A8F8C}
+.mapa-arbol.alto{fill:#D9402E} .mapa-arbol.medio{fill:#E3A21B} .mapa-arbol.bajo{fill:#2FA46B}
+.mapa-radio{stroke:#F07A6B;stroke-width:1.5;fill:none}
+.mapa-radio.min{fill:rgba(184,58,46,.1)}
+.mapa-radio.max{stroke-dasharray:5 4}
+.mapa-candidato path{stroke:#fff;stroke-width:2;fill:#8A8F8C}
+.mapa-candidato.cerca path{fill:#D9402E} .mapa-candidato.revisar path{fill:#E3A21B} .mapa-candidato.lejos path{fill:#2FA46B}
+.mapa-candidato text{font:700 12px var(--f-body);fill:#fff;stroke:rgba(0,0,0,.7);stroke-width:3;paint-order:stroke;pointer-events:none}
 .mapa-sitio circle{fill:rgba(60,170,110,.45);stroke:#fff;stroke-width:2.5}
+.censo-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;align-items:end;margin:6px 0 10px}
+.censo-form .cx{grid-column:span 2}
+.censo-form input{width:100%}
+.arboles h4{margin:12px 0 4px}
+/* Mapa de riesgo del ApiRadar (SVG en metros) */
+.mapa-riesgo-caja{border:1px solid var(--line);border-radius:12px;overflow-x:auto;background:var(--chip)}
+.mapa-riesgo{display:block;width:100%;min-width:560px;height:auto}
+.mr-rejilla{stroke:var(--line);fill:none}
+.mr-finca{fill:color-mix(in srgb,var(--muted) 16%,transparent);stroke:var(--muted);stroke-linejoin:round}
+.mr-radios circle{stroke:var(--crit);stroke-opacity:.55;fill:none}
+.mr-radios circle.min{fill:color-mix(in srgb,var(--crit) 4%,transparent)}
+.mr-mejor circle{fill:color-mix(in srgb,var(--good) 40%,transparent);stroke:var(--good)}
+.mr-arboles circle,.mr-sitios path{stroke:var(--surface)}
+.mr-arboles circle.alto,.mr-sitios path.cerca{fill:var(--crit)} .mr-arboles circle.medio,.mr-sitios path.revisar{fill:var(--warn)}
+.mr-arboles circle.bajo,.mr-sitios path.lejos{fill:var(--good)} .mr-arboles circle.sin{fill:var(--muted)}
+.mr-arboles text,.mr-sitios text,.mr-norte text,.mr-escala{fill:var(--ink)}
+.mr-escala{fill:var(--muted)}
+.mr-leyenda{margin-top:8px}
+.mr-leyenda span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw.alto{background:var(--crit)} .legend .sw.medio{background:var(--warn)} .legend .sw.bajo{background:var(--good)} .legend .sw.sin{background:var(--muted)}
 .arboles{border:1px solid var(--line);border-radius:10px;padding:8px 12px}
 .arboles summary{cursor:pointer;font-weight:600}
 .arboles textarea{width:100%;font-family:var(--f-mono,monospace)}

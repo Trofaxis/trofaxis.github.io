@@ -92,13 +92,13 @@ test('con coordenadas de los árboles y el contorno, el ApiRadar da el punto del
   const f = demoFarm();
   const lat0 = 14, lon0 = -87, dLat = 500 / 110574, dLon = 500 / (111319.5 * Math.cos((lat0 * Math.PI) / 180));
   const contorno = [[lat0 - dLat, lon0 - dLon], [lat0 - dLat, lon0 + dLon], [lat0 + dLat, lon0 + dLon], [lat0 + dLat, lon0 - dLon]];
-  const r = apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [[lat0, lon0]], contorno });
+  const r = apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [{ id: '1', lat: lat0, lon: lon0 }], contorno });
   assert.ok(r.radio.sitio);
   assert.equal(r.radio.coordenadas, 1);
   const a = acc(r, 'refugio');
   assert.match(a.detalle, /72 %/); // 71.7 % de la finca queda a 300 m o más
   assert.match(a.detalle, /punto más alejado/);
   // Sin contorno pide dibujarlo; sin árboles pide cargarlos.
-  assert.match(acc(apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [[lat0, lon0]], contorno: [] }), 'refugio').detalle, /dibuja el contorno/);
+  assert.match(acc(apiRadar(f, CONFIG, {}, 'spathodea', { arboles: [{ id: '1', lat: lat0, lon: lon0 }], contorno: [] }), 'refugio').detalle, /dibuja el contorno/);
   assert.match(acc(apiRadar(f), 'refugio').detalle, /carga las coordenadas/);
 });

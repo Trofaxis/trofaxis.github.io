@@ -108,29 +108,56 @@ export function utmALatLon(este, norte, zona = 16) {
   return { lat: grad(lat), lon: grad(lon0 + Math.atan2(Math.sinh(ep), Math.cos(xp))) };
 }
 
-// Lee los árboles de riesgo: una línea por árbol, con "latitud, longitud" (grados decimales) o "este norte" (UTM en metros,
-// zona indicada). Distingue por el tamaño del número. Devuelve { arboles: [[lat, lon]], errores: [texto] }.
-export function leerArboles(texto, zona = 16, max = 500) {
-  const arboles = [], errores = [];
+// Un punto escrito como "latitud, longitud" (grados decimales) o "este norte" (UTM en metros, zona indicada).
+// Distingue por el tamaño del número. Devuelve [lat, lon] o null.
+export function puntoDe(a, b, zona = 16) {
+  if (![a, b].every(Number.isFinite)) return null;
+  let p = null;
+  if (Math.abs(a) <= 90 && Math.abs(b) <= 180) p = [a, b];
+  else if (a >= 100000 && a <= 900000 && b > 0 && b < 10000000) { const g = utmALatLon(a, b, zona); p = [g.lat, g.lon]; }
+  return p && [+p[0].toFixed(6), +p[1].toFixed(6)];
+}
+
+const MAX_TXT = 20;
+const medida = (t) => (t === undefined || t === '' ? null : Number(t));
+
+// Una línea del censo: "ID, este, norte, DAP, diámetro de copa, altura de copa". Solo ID y coordenadas son obligatorios; con
+// solo dos números se toman como coordenadas y el ID se pone solo. Separadores: tabulador (pegado desde Excel; los campos
+// vacíos cuentan), coma, punto y coma o espacio. Se pide punto decimal. Devuelve { arbol } o { error }.
+export function leerLineaCenso(linea, zona = 16, n = 1) {
+  const l = String(linea).trim();
+  const t = l.includes('\t') ? l.split('\t').map((x) => x.trim()) : l.split(/[;, ]+/).filter(Boolean);
+  const fmt = 'escribe ID, este, norte, DAP, diámetro de copa y altura de copa (ej. 27 501227 1547802 89.4 18.7 19.2), o solo las coordenadas.';
+  if (t.length < 2 || t.length > 6) return { error: `${fmt}` };
+  const sinId = t.length === 2;
+  const [id, x, y, ...medidas] = sinId ? [String(n), t[0], t[1]] : t;
+  const [dap, d, h] = medidas.map(medida);
+  const p = puntoDe(Number(x), Number(y), zona);
+  if (!p || !x || !y) return { error: `no reconozco las coordenadas (${x} ${y}). Usa grados (14.0108, -87.0044) o UTM (501177 1547784).` };
+  if (![dap, d, h].every((v) => v == null || (Number.isFinite(v) && v >= 0))) return { error: 'DAP, diámetro y altura de copa deben ser números positivos (con punto decimal).' };
+  if (String(id).length > MAX_TXT) return { error: `el ID es muy largo (máximo ${MAX_TXT} caracteres).` };
+  return { arbol: { id: String(id), lat: p[0], lon: p[1], dap: dap || null, d: d || null, h: h || null } };
+}
+
+// Lee el censo de árboles de riesgo, una línea por árbol. Salta la fila de títulos y las líneas con # o //.
+// Devuelve { arboles: [{ id, lat, lon, dap, d, h }], errores: [texto] }.
+export function leerCenso(texto, zona = 16, max = 500) {
+  const arboles = [], errores = [], ids = new Set();
   String(texto ?? '').split(/\r?\n/).forEach((linea, i) => {
     const l = linea.trim();
     if (!l || /^[#/]/.test(l)) return;
-    // Con coma decimal y separador por coma no se puede distinguir: se pide punto decimal.
-    const m = l.match(/^(-?\d+(?:\.\d+)?)\s*[,; \t]\s*(-?\d+(?:\.\d+)?)$/);
-    if (!m) { errores.push(`Línea ${i + 1}: escribe dos números, por ejemplo 14.0108, -87.0044 (grados) o 501177 1547784 (UTM).`); return; }
-    const a = +m[1], bb = +m[2];
-    let p;
-    if (Math.abs(a) <= 90 && Math.abs(bb) <= 180) p = [a, bb];
-    else if (a >= 100000 && a <= 900000 && bb > 0 && bb < 10000000) { const g = utmALatLon(a, bb, zona); p = [g.lat, g.lon]; }
-    else { errores.push(`Línea ${i + 1}: no reconozco las coordenadas (${l}).`); return; }
-    arboles.push([+p[0].toFixed(6), +p[1].toFixed(6)]);
+    if (!arboles.length && !errores.length && /^[A-Za-zÁÉÍÓÚáéíóúñ]/.test(l) && !/\d{3,}/.test(l) && l.split(/[\t;, ]+/).length >= 3) return; // fila de títulos
+    const r = leerLineaCenso(linea, zona, arboles.length + 1);
+    if (r.error) { errores.push(`Línea ${i + 1}: ${r.error}`); return; }
+    if (ids.has(r.arbol.id)) { errores.push(`Línea ${i + 1}: el ID ${r.arbol.id} ya está en la lista; se omitió.`); return; }
+    ids.add(r.arbol.id); arboles.push(r.arbol);
   });
   if (arboles.length > max) { errores.push(`Se cargaron los primeros ${max} árboles.`); arboles.length = max; }
   return { arboles, errores };
 }
 
 // Plano local en metros alrededor de una referencia (aproximación equirectangular: sobra para decenas de km).
-const planoDe = (ref) => { const k = Math.cos(rad(ref[0])) * (Math.PI / 180) * R, h = (Math.PI / 180) * R; return { aM: ([la, lo]) => [(lo - ref[1]) * k, (la - ref[0]) * h], aG: ([x, y]) => [ref[0] + y / h, ref[1] + x / k] }; };
+export const planoDe = (ref) => { const k = Math.cos(rad(ref[0])) * (Math.PI / 180) * R, h = (Math.PI / 180) * R; return { aM: ([la, lo]) => [(lo - ref[1]) * k, (la - ref[0]) * h], aG: ([x, y]) => [ref[0] + y / h, ref[1] + x / k] }; };
 
 export function distanciaM(a, b) {
   const { aM } = planoDe(a), [x, y] = aM(b);

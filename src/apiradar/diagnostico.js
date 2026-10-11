@@ -9,6 +9,7 @@ import { cuentaParaAbejas, puntajePeligro, fmtHQ, abejasSinAguijon } from '../pl
 import { volumenCopa } from '../modules/polinizadores.js';
 import { M, mlist, uniq, inter } from '../core/utils.js';
 import { sitiosFuera } from '../mapa/geo.js';
+import { clasificarArboles, resumenCenso, evaluarSitios, nombreSitio, VEREDICTO } from './censo.js';
 
 export const PROBLEMAS = {
   spathodea: { id: 'spathodea', nombre: 'Spathodea campanulata y las abejas nativas', modulo: 'poli' },
@@ -39,7 +40,7 @@ const CAMBIOS = {
   },
 };
 
-// ubic: ubicación guardada en el navegador ({ contorno, arboles }); no forma parte de la finca ni se exporta.
+// ubic: ubicación guardada en el navegador ({ contorno, arboles: censo, sitios }); no forma parte de la finca ni se exporta.
 export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', ubic = null) {
   const f = conPlan(f0);
   const base = evaluar(f, cfg, extra);
@@ -59,9 +60,12 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   const sinAguijon = abejasSinAguijon(f);
   const enFlor = f.plaguicidas.filter((p) => cuentaParaAbejas(p, f, cfg) && p.meses.some((m) => ctx.atraeFlor.includes(m)))
     .map((p) => ({ p, ...puntajePeligro(p, f, cfg) })).sort((a, b) => b.puntaje - a.puntaje);
+  const censoArb = clasificarArboles(ubic?.arboles ?? []);
+  const rc = resumenCenso(censoArb);
   const datos = [
     { dato: 'Especies de riesgo', valor: riesgo.map((e) => e.nombre).join(', '), de: 'Cuestionario, Especies' },
     { dato: 'Árboles y copa', valor: arboles ? `${arboles} árbol(es)${conMedidas.length ? `, ${Math.round(vol).toLocaleString('es-HN')} m³ de copa` : ', sin medidas de copa'}` : 'Sin número de árboles', de: 'Cuestionario, Especies' },
+    ...(rc.n ? [{ dato: 'Censo de árboles de riesgo', valor: `${rc.n} con coordenadas${rc.conMedidas ? `, ${Math.round(rc.volumen).toLocaleString('es-HN')} m³ de copa (alto ${rc.porClase.alto.n}, medio ${rc.porClase.medio.n}, bajo ${rc.porClase.bajo.n})` : ', ninguno con medidas de copa'}`, de: 'Mapa de la finca (solo en este navegador)' }] : []),
     { dato: 'Floración de riesgo', valor: mlist(ctx.riesgoFlor), de: 'Cuestionario, Especies' },
     { dato: 'Floración que visitan los polinizadores', valor: mlist(ctx.atraeFlor), de: 'Cuestionario, Especies' },
     { dato: 'Aplicaciones de plaguicidas', valor: f.plaguicidas.length ? `${f.plaguicidas.length} aplicación(es); ${enFlor.length} en floración visitada` : 'Ninguna registrada', de: 'Pestaña Plaguicidas' },
@@ -115,12 +119,13 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   // Ubicación del refugio: sin coordenadas de cada árbol, la app no puede decir el punto exacto. Da el radio y lo que implica.
   const [rMin, rMax] = cfg.apiradar.radioExclusionM;
   const haCirculo = (r) => (Math.PI * r * r) / 10000;
-  const nCoord = ubic?.arboles?.length ?? 0;
-  const sitio = sitiosFuera(ubic?.arboles, ubic?.contorno, [rMin, rMax]);
+  const nCoord = rc.n;
+  const sitio = sitiosFuera(censoArb.map((a) => [a.lat, a.lon]), ubic?.contorno, [rMin, rMax]);
+  const sitios = evaluarSitios(censoArb, ubic?.sitios, [rMin, rMax]);
   const radio = {
     min: rMin, max: rMax, haMin: Math.round(haCirculo(rMin)), haMax: Math.round(haCirculo(rMax)),
     fuente: FUENTES.barrantes.corta, hayTrigona: sinAguijon.some((e) => /trigona/i.test(e.nombre)),
-    finca: f.area > 0 ? f.area : null, porArbol: arboles || null, coordenadas: nCoord, sitio,
+    finca: f.area > 0 ? f.area : null, porArbol: arboles || null, coordenadas: nCoord, sitio, sitios,
   };
   const ha = (x) => (x >= 10 ? Math.round(x) : Math.round(x * 10) / 10).toLocaleString('es-HN');
   const pct = (x) => `${Math.round(x * 100)} %`;
@@ -134,6 +139,11 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     detalleRefugio = `Mantén los refugios y las colonias a ${rMin}-${rMax} m o más de cualquier árbol de riesgo y cerca de la floración alternativa. Cada árbol deja sin uso un círculo de ${radio.haMin} a ${radio.haMax} ha${f.area > 0 ? `; tu finca tiene ${f.area} ha, así que ${f.area <= radio.haMax ? 'es probable que el radio cubra buena parte de ella: si el refugio no cabe fuera, el control del árbol pesa más que la ubicación' : 'hay espacio para ubicar fuera del radio si los árboles no están todos juntos'}` : ''}. `
       + (nCoord ? 'Ya cargaste los árboles: dibuja el contorno de la finca en el mapa para calcular el punto exacto.' : 'Para calcular el punto exacto, carga las coordenadas de los árboles de riesgo y dibuja el contorno de la finca en el mapa.');
   }
+  if (sitios.length) {
+    const lista = sitios.map((x) => `${nombreSitio(x)}: ${VEREDICTO[x.veredicto].texto.toLowerCase()}, a ${x.distanciaM} m del árbol ${x.arbol.id}`).join('; ');
+    const lejos = sitios.filter((x) => x.veredicto === 'lejos');
+    detalleRefugio = `Sitios que propusiste: ${lista}. ${lejos.length ? `Sirve${lejos.length > 1 ? 'n' : ''} ${lejos.map(nombreSitio).join(' y ')} (fuera de ${rMax} m); confirma que tenga${lejos.length > 1 ? 'n' : ''} floración alternativa cerca.` : `Ninguno queda fuera de ${rMax} m: prueba otro punto o reduce los árboles de riesgo.`} ${detalleRefugio}`;
+  }
   acciones.push({
     id: 'refugio', titulo: 'Ubicar colonias y refugios fuera del radio de los árboles de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la próxima floración',
     detalle: detalleRefugio,
@@ -141,10 +151,11 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay cifra en los documentos del proyecto; se usa el mismo radio como referencia (criterio propio). La app no sabe dónde hay floración alternativa: eso lo decides tú.${nCoord && arboles && nCoord !== arboles ? ` Ojo: registraste ${arboles} árbol(es) en Especies y ${nCoord} con coordenadas.` : ''} Las coordenadas se guardan solo en este navegador.`,
     delta: null,
   });
+  const prioritarios = censoArb.filter((a) => a.clase === 'alto').sort((a, b) => b.vol - a.vol).slice(0, 6);
   if (riesgo.length) {
     acciones.push({
       id: 'arbol', titulo: 'Reducir la flor disponible de la especie de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la floración',
-      detalle: `No sembrar más individuos de ${riesgo[0].nombre}; podar o controlar rebrotes reduce las flores disponibles.`,
+      detalle: `No sembrar más individuos de ${riesgo[0].nombre}; podar o controlar rebrotes reduce las flores disponibles.${prioritarios.length ? ` Empieza por los árboles ${prioritarios.map((a) => a.id).join(', ')}: son ${prioritarios.length === 1 ? 'el de' : 'los de'} más volumen de copa del censo (${Math.round((prioritarios.reduce((t, a) => t + a.vol, 0) / rc.volumen) * 100)} % del volumen total).` : ''}`,
       estado: 'criterio propio', nota: 'La rúbrica mide la abundancia con el volumen de copa; no mide cuánto baja el riesgo por una poda parcial, por eso no se da una cifra.', delta: null,
     });
   }
@@ -154,6 +165,9 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   const faltan = [];
   if (!arboles) faltan.push('Número de árboles de la especie de riesgo.');
   if (arboles && !conMedidas.length) faltan.push('Diámetro y altura de copa de los árboles de riesgo (para el volumen de copa).');
+  if (rc.sinMedidas) faltan.push(`${rc.sinMedidas} árbol(es) del censo sin diámetro o altura de copa: no se clasifican por riesgo.`);
+  if (!rc.n) faltan.push('Censo de árboles de riesgo con coordenadas (en el mapa de la finca): permite clasificar cada árbol, dibujar el mapa de riesgo y juzgar sitios candidatos.');
+  else if (!sitios.length) faltan.push('Sitios candidatos para colonias o refugios (en el mapa de la finca): la app dice si cada uno queda dentro o fuera del radio.');
   if (!ctx.riesgoFlor.length) faltan.push('Meses de floración de la especie de riesgo.');
   if (!f.plaguicidas.length) faltan.push('Aplicaciones de plaguicidas (pestaña Plaguicidas): sin ellas, no se evalúa la coincidencia con la floración.');
   if (!f.especies.some((e) => e.tipo === 'Fauna')) faltan.push('Abejas nativas que observas en la finca.');
@@ -170,6 +184,7 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   return {
     aplica: true, problema: PROBLEMAS[problema], score: mod.score, nivel: nivel(mod.score, cfg), conf: mod.conf, driver: mod.driver,
     datos, evidencia, causas, acciones, total, faltan, comprobar, radio,
+    censo: { arboles: censoArb, resumen: rc, sitios, prioritarios, ejemplo: !!ubic?.ejemplo },
     resumen: `Riesgo ${nivel(mod.score, cfg).toLowerCase()} para las abejas (${mod.score} de 100)${causas.length ? `, sobre todo por: ${causas.slice(0, 2).map((c) => c.nombre.toLowerCase()).join(' y ')}` : ''}.`,
     radar: evidencia.filter((v) => v.puntaje != null).map((v) => ({ nombre: v.corto, score: v.puntaje, level: nivelDe(v.puntaje) })),
   };

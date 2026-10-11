@@ -89,7 +89,7 @@ test('las coordenadas nunca entran a la finca exportada ni a la memoria de casos
 });
 
 // ---------- Árboles de riesgo (ApiRadar) ----------
-import { utmALatLon, leerArboles, sitiosFuera, distanciaM } from '../src/mapa/geo.js';
+import { utmALatLon, leerCenso, leerLineaCenso, puntoDe, sitiosFuera, distanciaM } from '../src/mapa/geo.js';
 
 // Longitud del arco de meridiano (WGS84) por integración numérica: sobre el meridiano central, N = k0 · arco(φ).
 function arcoMeridiano(latGrados) {
@@ -112,13 +112,25 @@ test('UTM: 1 km al este en la latitud 14° son ~0.00927° de longitud', () => {
   cerca(distanciaM([a.lat, a.lon], [b.lat, b.lon]), 1000, 2.5); // la escala de UTM (k0 = 0.9996 en el centro) deja ~0.4 m por km de diferencia
 });
 
-test('leer árboles: grados, UTM, comentarios y errores', () => {
-  const r = leerArboles('14.0108, -87.0044\n501177 1547784\n# comentario\n\nhola\n999, 999');
-  assert.equal(r.arboles.length, 2);
-  assert.deepEqual(r.arboles[0], [14.0108, -87.0044]);
-  cerca(r.arboles[1][0], 14.0005, 0.001); cerca(r.arboles[1][1], -86.9891, 0.001);
-  assert.equal(r.errores.length, 2);
-  assert.equal(leerArboles('501177 1547784', 17).arboles[0][1] > -81, true);
+test('censo: títulos, ID, UTM, grados, medidas opcionales, comentarios y errores', () => {
+  const r = leerCenso('ID Este Norte DAP Copa Alto\n27 501227 1547802 89.4 18.7 19.2\n23, 501178, 1547785, 83, 18.35, 14.4\n# comentario\n\nA7 14.0108 -87.0044\nhola\n999, 999, 5\n27 501300 1547900');
+  assert.equal(r.arboles.length, 3);
+  assert.equal(r.arboles[0].id, '27');
+  assert.deepEqual([r.arboles[0].dap, r.arboles[0].d, r.arboles[0].h], [89.4, 18.7, 19.2]);
+  cerca(r.arboles[0].lat, 14.0007, 0.0005); cerca(r.arboles[0].lon, -86.9887, 0.0005);
+  assert.deepEqual([r.arboles[2].lat, r.arboles[2].lon, r.arboles[2].d], [14.0108, -87.0044, null]);
+  assert.equal(r.errores.length, 3); // «hola», «999, 999, 5» y el ID 27 repetido
+  assert.match(r.errores.join(' '), /ID 27 ya está/);
+});
+
+test('censo: solo coordenadas (el ID se pone solo), pegado de Excel con campos vacíos y zona 17', () => {
+  const r = leerCenso('14.0108, -87.0044\n501177 1547784');
+  assert.deepEqual(r.arboles.map((a) => a.id), ['1', '2']);
+  const t = leerLineaCenso('5\t501177\t1547784\t\t12.5\t9', 16);
+  assert.deepEqual([t.arbol.dap, t.arbol.d, t.arbol.h], [null, 12.5, 9]);
+  assert.equal(leerLineaCenso('1 501177 1547784', 17).arbol.lon > -81, true);
+  assert.match(leerLineaCenso('1 501177 1547784 -3').error, /positivos/);
+  assert.equal(puntoDe(20, 500), null);
 });
 
 test('sitios fuera del radio: un árbol al centro de un cuadrado de 1 km', () => {
@@ -133,11 +145,16 @@ test('sitios fuera del radio: un árbol al centro de un cuadrado de 1 km', () =>
   assert.equal(sitiosFuera([[lat0, lon0]], cont.slice(0, 2), [300, 500]), null);
 });
 
-test('los árboles de riesgo se guardan en la ubicación del navegador, no en la finca exportada', () => {
-  const u = normalizarUbicacion({ arboles: [[14.0108, -87.0044], [999, 1], 'x'] });
-  assert.deepEqual(u.arboles, [[14.0108, -87.0044]]);
-  assert.deepEqual(ubicacionVacia().arboles, []);
+test('el censo y los sitios se guardan en la ubicación del navegador, no en la finca exportada', () => {
+  const u = normalizarUbicacion({ arboles: [[14.0108, -87.0044], { id: 27, lat: 14.01, lon: -87, dap: 89.4, d: 18.7, h: -2 }, [999, 1], 'x'], sitios: [{ id: 'A', lat: 14, lon: -87 }, { lat: 200, lon: 0 }], ejemplo: true });
+  assert.deepEqual(u.arboles[0], { id: '1', lat: 14.0108, lon: -87.0044, dap: null, d: null, h: null }); // formato anterior: par [lat, lon]
+  assert.deepEqual(u.arboles[1], { id: '27', lat: 14.01, lon: -87, dap: 89.4, d: 18.7, h: null }); // una medida negativa se descarta
+  assert.equal(u.arboles.length, 2);
+  assert.deepEqual(u.sitios, [{ id: 'A', lat: 14, lon: -87 }]);
+  assert.equal(u.ejemplo, true);
+  assert.deepEqual([ubicacionVacia().arboles, ubicacionVacia().sitios, ubicacionVacia().ejemplo], [[], [], false]);
   // La finca no tiene campo de árboles, y si un archivo lo trae, al cargarlo se descarta.
   assert.equal('arboles' in demoFarm(), false);
-  assert.equal('arboles' in normalizarFinca({ ...demoFarm(), arboles: [[14.0108, -87.0044]] }), false);
+  assert.equal('arboles' in normalizarFinca({ ...demoFarm(), arboles: [{ id: '1', lat: 14.0108, lon: -87.0044 }], sitios: [] }), false);
+  assert.equal('sitios' in normalizarFinca({ ...demoFarm(), sitios: [] }), false);
 });
