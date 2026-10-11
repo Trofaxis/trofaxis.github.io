@@ -41,4 +41,4 @@ Dos problemas:
 ## Consecuencias
 
 - **A favor:** el riesgo para polinizadores usa la toxicidad real del producto y la dosis aplicada; el usuario ve el cálculo mientras llena el formulario; los fungicidas del cuadro SAG se registran con un clic; las fincas guardadas no cambian de puntaje.
-- **En contra:** el catálogo hay que actualizarlo (las fichas del PPDB cambian); la toxicidad publicada es casi toda de *Apis mellifera*; el factor ×10 es una derivación por validar con un especialista; la "S" de reingreso del cuadro SAG sigue sin definir.
+- **En contra:** el catálogo hay que actualizarlo (las fichas del PPDB cambian); la toxicidad publicada es casi toda de *Apis mellifera*; el factor ×10 es una derivación por validar con un especialista; la "S" de reingreso del cuadro SAG se interpreta como "hasta que seque la aspersión" sin confirmación del SAG (criterio propio).

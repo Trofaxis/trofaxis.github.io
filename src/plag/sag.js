@@ -3,7 +3,8 @@
 // ef: eficacia por enfermedad, un carácter por columna de ENFERMEDADES (5 excelente … 1 poco o nada, - sin dato),
 // escala de la American Phytopathological Society según la leyenda del cuadro.
 // Celdas dañadas o dudosas del PDF: se corrigen solo cuando la misma fila da el valor y se explica en `nota`.
-// "S" en reingreso: así viene en el cuadro y la leyenda no la define.
+// "S" en reingreso: la leyenda no la define. Se interpreta como "hasta que seque la aspersión" (criterio propio:
+// aparece en 35 productos sin nada en común, así que no es azufre ni un número de horas). No se convierte en horas.
 
 export const FUENTE_SAG = 'SAG Honduras, Cuadro de referencia de fungicidas (Producción, 2021-02-21). Material de la clase de Protección Vegetal, Zamorano.';
 

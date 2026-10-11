@@ -404,7 +404,7 @@ function notasSag(prod, formulacion, dosis, cfg) {
   if (cmp) notas.push(`${fmt(cmp.copas, 2)} copa(s) por bomba equivalen a ${fmt(cmp.deCopas)} ml por barril; la tabla dice ${fmt(cmp.tabla)} ml (${cmp.dif >= 0 ? '+' : ''}${fmt(cmp.dif * 100, 0)} %)${cmp.cuadra ? '.' : ': las dos columnas no cuadran, usa la etiqueta.'}`);
   if (componentesDe(prod.ia).some((c) => c.conc != null)) notas.push('La concentración sale del nombre en la tabla (%): confírmala con la etiqueta.');
   if (prod.nota) notas.push(`Ojo con la tabla: ${prod.nota}`);
-  if (prod.reingreso === 'S') notas.push('Reingreso "S": así viene en la tabla y la leyenda no lo define. Usa las horas de la etiqueta.');
+  if (prod.reingreso === 'S') notas.push('Reingreso "S": la leyenda no lo define; probablemente es "hasta que seque la aspersión" (criterio propio, sin confirmar con el SAG). Entra cuando el follaje esté seco y, si la etiqueta da horas, usa las de la etiqueta.');
   return notas;
 }
 
