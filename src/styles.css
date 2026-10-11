@@ -174,15 +174,16 @@ table.rubrica td{padding:6px 4px}
 .legend .sw.on-gen{background:color-mix(in srgb,var(--muted) 28%,var(--surface))}
 .legend .sw.on-cult{background:color-mix(in srgb,var(--good) 26%,var(--surface))}
 .legend .sw.hit{background:var(--crit)}
-table.inten{border-collapse:separate;border-spacing:3px;font-size:12px;min-width:640px;width:100%}
-table.inten caption{text-align:left;padding-bottom:4px}
-table.inten th{font-weight:600;color:var(--muted);text-align:center}
-table.inten td{vertical-align:top;text-align:center;border-radius:5px;padding:4px 2px;background:var(--chip)}
-table.inten td b{display:block;font-size:14px}
-table.inten td span{display:block;font-size:11px;color:var(--muted)}
-table.inten td.i1{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
-table.inten td.i2{background:color-mix(in srgb,var(--crit) 28%,var(--surface))}
-table.inten td.i3{background:color-mix(in srgb,var(--crit) 50%,var(--surface))}
+table.cal{table-layout:fixed}
+table.cal th.rowh,table.cal thead th:first-child{width:230px}
+table.cal th.rowh{white-space:normal}
+table.cal tr.inten th.rowh{white-space:normal;vertical-align:top;padding-top:6px}
+table.cal tr.inten td{height:auto;vertical-align:top;padding:4px 1px;overflow:hidden}
+table.cal tr.inten td b{display:block;font-size:14px}
+table.cal tr.inten td span{display:block;font-size:10px;color:var(--muted)}
+table.cal tr.inten td.i1{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
+table.cal tr.inten td.i2{background:color-mix(in srgb,var(--crit) 28%,var(--surface))}
+table.cal tr.inten td.i3{background:color-mix(in srgb,var(--crit) 50%,var(--surface))}
 
 /* mapa satelital de la finca (src/ui/mapa.js) */
 .mapa-bloque{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
