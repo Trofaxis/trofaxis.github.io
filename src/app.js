@@ -23,6 +23,7 @@ import { ingrediente } from './plag/catalogo.js';
 import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
+import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
@@ -74,7 +75,9 @@ function render(){
   const ae=document.activeElement;const sel=app&&app.contains(ae)?selectorDeFoco(ae):null;let ss=null;try{ss=ae&&ae.selectionStart;}catch(e){}
   const vista=cargador.incluye(S.view)?cargador.vista(S.view):(VISTAS[S.view]||viewDashboard);
   if(!vista)cargador.pedir(S.view);
-  app.innerHTML=vista?vista():htmlCargando(cargador.fallo(S.view));
+  let html;
+  try{html=vista?vista():htmlCargando(cargador.fallo(S.view));}catch(e){console.error(e);html=htmlErrorVista(S.view,e);}
+  app.innerHTML=html;
   const msg=S.msg;S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
