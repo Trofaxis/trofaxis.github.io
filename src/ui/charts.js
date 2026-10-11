@@ -45,13 +45,18 @@ const MOD_COINC={'Aplicación durante floración visitada':'Polinizadores','Fert
 export function intensidadMeses(mh){
   return mh.map((a,i)=>{const mods={};a.forEach(t=>{const m=MOD_COINC[t]||'Otro';mods[m]=(mods[m]||0)+1;});return {mes:i,n:a.length,mods,items:a};});
 }
-export function leyendaCal(mh){
+// Abreviatura de cada módulo en la fila de intensidad (la celda mide lo mismo que un mes del calendario).
+const ABREV={'Polinizadores':'Pol','Fertilización':'Fer','Suelo':'Sue','Cadenas tróficas':'Tró','Otro':'Otro'};
+// Fila de intensidad dentro de la tabla del calendario: comparte las 12 columnas, así cada celda queda bajo su mes.
+export function filaIntensidad(mh){
+  return `<tr class="inten"><th class="rowh" scope="row">Intensidad <span class="muted small">(coincidencias)</span></th>${intensidadMeses(mh).map(x=>`<td class="i${Math.min(x.n,3)}" title="${MFULL[x.mes]}: ${x.n?x.items.join('; '):'sin coincidencias'}"><b>${x.n}</b>${Object.entries(x.mods).map(([k,v])=>`<span>${ABREV[k]||k}${v>1?'×'+v:''}</span>`).join('')}</td>`).join('')}</tr>`;
+}
+export function leyendaCal(){
   const sw=(c,t)=>`<span class="lg"><i class="sw ${c}"></i>${t}</span>`;
-  const inten=intensidadMeses(mh);
   return `<div class="legend" role="list" aria-label="Leyenda del calendario">
     ${sw('on-flor','Floración visitada por polinizadores')}${sw('on-riesgo','Floración de especies de riesgo')}${sw('on-apl','Aplicación de plaguicidas')}${sw('on-cult','Siembra / cosecha')}${sw('on-gen','Fertilización, lluvia, suelo desnudo, plagas')}${sw('hit','! Coincidencia de riesgo')}
   </div>
-  <div class="scroll"><table class="inten"><caption class="muted small">Intensidad por mes: número de coincidencias de riesgo y módulo que las puntúa</caption><thead><tr>${M.map(m=>`<th scope="col">${m}</th>`).join('')}</tr></thead><tbody><tr>${inten.map(x=>`<td class="i${Math.min(x.n,3)}" title="${M[x.mes]}: ${x.n?x.items.join('; '):'sin coincidencias'}"><b>${x.n}</b>${Object.entries(x.mods).map(([k,v])=>`<span>${k}${v>1?' ×'+v:''}</span>`).join('')}</td>`).join('')}</tr></tbody></table></div>`;
+  <p class="muted small">Intensidad: número de coincidencias del mes y módulo que las puntúa (Pol = Polinizadores, Fer = Fertilización, Sue = Suelo, Tró = Cadenas tróficas).</p>`;
 }
 export function dlt(a,b){const d=b-a;return `<span class="delta ${d<0?'down':d>0?'up':'zero'}">${d>0?'+':''}${d}</span>`;}
 export function tplChart(t){
