@@ -27,6 +27,7 @@ import { extraerRiego } from './riego/extraer.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
 import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
+import { crearGuardado } from './core/guardado-diferido.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
 const previo = cargarLocal(S.tpl);
@@ -49,6 +50,10 @@ function sesionLista() {
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
+// Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
+const guardador=crearGuardado(()=>{guardarLocal(S);avisoGuardado();});
+addEventListener('pagehide',()=>guardador.ahora());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')guardador.ahora();});
 // Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
 function avisoGuardado(){const app=document.getElementById('app');if(!app)return;app.querySelector('#aviso-guardado')?.remove();
   if(guardado.fallo&&!guardado.descartado)app.insertAdjacentHTML('afterbegin',`<div class="notice" id="aviso-guardado" role="alert"><span>${TEXTO_AVISO}</span><button class="btn sm" data-act="export">Exportar finca</button><button class="btn sm" data-act="guardado-ok">Entendido</button></div>`);}
@@ -61,7 +66,7 @@ function render(){
   app.innerHTML=(views[S.view]||viewDashboard)();
   S.msg='';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();guardarLocal(S);avisoGuardado();
+  montarMapa();applyTheme();guardador.pedir();avisoGuardado();
   if(id){const el=document.getElementById(id);if(el&&el.tagName!=='BUTTON'){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
@@ -172,7 +177,7 @@ function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else if(el.tagName==='SELECT'&&el.value===''&&'nullable' in el.dataset)o[k]=null;else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardarLocal(S);avisoGuardado();}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardador.pedir();}});
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);
