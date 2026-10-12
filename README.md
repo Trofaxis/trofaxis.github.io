@@ -111,20 +111,31 @@ Este repositorio es la **única versión oficial**. Cualquier asistente (Claude 
 
 ## Hoja de ruta
 
+Versión actual: **0.10.0** (`package.json`). El README numera solo los hitos hasta la v0.6; lo posterior no tiene número de versión por hito en el repositorio, así que va sin él.
+
+**Hecho**
+
 - [x] v0.2: código dividido en módulos, configuración central y pruebas de regresión
 - [x] v0.3: guardar y cargar fincas (JSON) y ajustes por finca (módulos activos y umbrales)
 - [x] v0.4: módulo de riego (calculadora, validador e importador de Excel/CSV), validado con el diseño agronómico del Lab de Riego
 - [x] v0.5: diseño mejorado (índice global, simulador, plan de acción, presión por mes, tema oscuro, edición en el cuestionario, respaldo en texto)
+- [x] v0.6: **memoria de casos** (razonamiento basado en casos, k-NN, Etapa 1): sugerir acciones a partir de fincas parecidas ya evaluadas
+- [x] Memoria de casos en la nube, opcional (Etapa 2, `docs/nube.md`)
 - [x] Mapa satelital con contorno y área (Issue #10)
 - [x] Pestaña Plaguicidas: peligro para himenópteros por ingrediente activo y dosis, etiqueta, condiciones y cuadro SAG
 - [x] Clima por ubicación: Open-Meteo por coordenadas, con respaldo manual (Issue #8)
 - [x] Guardar los datos de riego en el navegador (sobreviven a recargar la página)
+- [x] Diseño hidráulico y cubicación de reservorio (`src/riego/hidraulica.js`)
+- [x] ApiRadar: diagnóstico por problema con los datos de la finca (hoy, *Spathodea* y abejas nativas; `docs/apiradar.md`)
+- [x] Relación entre módulos: gráficos de dispersión entre pares de módulos con las fincas de la memoria (`src/casos/relaciones.js`); solo muestra asociación, no cambia ningún puntaje
+
+**Pendiente**
+
 - [ ] Llevar los datos de riego también en el archivo exportado de la finca
-- [ ] Diseño hidráulico y cubicación de reservorio
 - [ ] Más cultivos en `src/riego/referencias.js` (hoy solo maíz)
+- [ ] Más problemas en el ApiRadar (hoy solo uno)
 - [ ] Perfiles de configuración por cultivo o exportador
 - [ ] Calibrar pesos con los datos de las tesis de Zamorano, cuando estén disponibles
-- [ ] **Memoria de casos (razonamiento basado en casos, k-NN):** sugerir acciones a partir de fincas parecidas ya evaluadas
 - [ ] Modelo de aprendizaje automático entrenado, **solo** cuando haya decenas de fincas reales registradas
 
 > Sobre el aprendizaje automático: con pocos casos, un modelo entrenado no es confiable. Primero va la memoria de casos, que funciona con pocos datos y es explicable.
