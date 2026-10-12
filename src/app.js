@@ -347,7 +347,7 @@ if(nube.activo&&S.nube.sesion)sesionLista().then(()=>render(),(err)=>{if(err.est
 if(nube.activo)nubeAccion('nube-comunidad',true); // casos de la comunidad: lectura pública, sin sesión
 
 // Exportar e importar la finca como archivo JSON.
-function nombreArchivo(){const base=(S.farm.nombre||'finca').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'finca';return `biogap-${base}.json`;}
+function nombreArchivo(){const base=(S.farm.nombre||'finca').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'finca';return `trofaxis-${base}.json`;}
 function descargar(){
   const blob=new Blob([exportarTexto(S.farm,S.ajustes,S.tpl)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const link=document.createElement('a');

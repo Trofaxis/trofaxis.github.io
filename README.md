@@ -1,4 +1,6 @@
-# BioG.A.P. Biodiversity Manager
+# Trofaxis
+
+*Antes «BioG.A.P. Biodiversity Manager». El repositorio, la URL publicada y las claves internas (`biogap:` en el navegador, `biogap-finca` y `biogap-mapa` en los archivos) conservan el nombre viejo para no perder datos guardados ni respaldos.*
 
 Prototipo de evaluación de riesgo ambiental de la finca, orientado a exportadores certificados en GLOBALG.A.P. IFA v6. Proyecto de innovación del curso CADS, Zamorano.
 

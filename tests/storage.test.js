@@ -11,7 +11,7 @@ test('exportar e importar devuelve la misma finca', () => {
   assert.deepEqual(r.ajustes, ajustes);
 });
 
-test('rechaza archivos que no son de BioG.A.P.', () => {
+test('rechaza archivos que no son de Trofaxis', () => {
   assert.throws(() => importarTexto('no es json'), /JSON válido/);
   assert.throws(() => importarTexto('{"hola":1}'), /no es una finca/);
   assert.throws(() => importarTexto('{"formato":"biogap-finca","version":99}'), /más nueva/);

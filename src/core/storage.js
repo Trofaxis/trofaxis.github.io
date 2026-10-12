@@ -144,7 +144,7 @@ export function importarTexto(texto) {
   if (respaldoDemasiadoGrande(texto.length) || respaldoDemasiadoGrande(new TextEncoder().encode(texto).length)) throw new Error(MENSAJE_RESPALDO_GRANDE);
   let o;
   try { o = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
-  if (!o || o.formato !== FORMATO) throw new Error('El archivo no es una finca de BioG.A.P.');
+  if (!o || o.formato !== FORMATO) throw new Error('El archivo no es una finca de Trofaxis');
   if (typeof o.version !== 'number' || o.version > VERSION) throw new Error('El archivo viene de una versión más nueva de la app.');
   return { farm: normalizarFinca(o.finca), ajustes: normalizarAjustes(o.ajustes), tpl: o.plantillas ? normalizarTpl(o.plantillas, { tipo: 'mec', objetivo: 0, rows: [], paste: '' }) : null };
 }

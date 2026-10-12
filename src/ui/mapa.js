@@ -353,7 +353,7 @@ document.addEventListener('click', (e) => {
 function bajarRespaldo() {
   const url = URL.createObjectURL(new Blob([exportarUbicacion(U)], { type: 'application/json' }));
   const l = document.createElement('a');
-  l.href = url; l.download = `biogap-mapa-${new Date().toISOString().slice(0, 10)}.json`;
+  l.href = url; l.download = `trofaxis-mapa-${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(l); l.click(); l.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   msg = 'Se descargó el respaldo del mapa y del censo. Guárdalo en un lugar privado: lleva coordenadas exactas.';

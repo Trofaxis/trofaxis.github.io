@@ -58,7 +58,7 @@ export function exportarUbicacion(u) {
 export function importarUbicacion(texto) {
   let o;
   try { o = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
-  if (!o || o.formato !== FORMATO_MAPA) throw new Error('El archivo no es un respaldo de mapa y censo de BioG.A.P.');
+  if (!o || o.formato !== FORMATO_MAPA) throw new Error('El archivo no es un respaldo de mapa y censo de Trofaxis');
   if (typeof o.version !== 'number' || o.version > VERSION_MAPA) throw new Error('El archivo viene de una versión más nueva de la app.');
   const u = normalizarUbicacion(o.ubicacion);
   if (!hayDatosPropios(u)) throw new Error('El archivo no trae punto, contorno, árboles ni sitios.');
