@@ -1,6 +1,8 @@
 # Trofaxis
 
-*Antes «BioG.A.P. Biodiversity Manager». El repositorio, la URL publicada y las claves internas (`biogap:` en el navegador, `biogap-finca` y `biogap-mapa` en los archivos) conservan el nombre viejo para no perder datos guardados ni respaldos.*
+**App:** https://trofaxis.github.io
+
+*Antes «BioG.A.P. Biodiversity Manager». Las claves internas (`biogap:` en el navegador, `biogap-finca` y `biogap-mapa` en los archivos) conservan el nombre viejo para no perder datos guardados ni respaldos.*
 
 Prototipo de evaluación de riesgo ambiental de la finca, orientado a exportadores certificados en GLOBALG.A.P. IFA v6. Proyecto de innovación del curso CADS, Zamorano.
 
@@ -100,7 +102,7 @@ tests/                  pruebas del motor
 
 Este repositorio es la **única versión oficial**. Cualquier asistente (Claude en el chat o Claude Code) trabaja sobre el repo, no sobre copias sueltas:
 
-1. Pídele que clone `diegoguevara912-pixel/biogap` y trabaje en una rama nueva (por ejemplo, `mejoras-diseno`).
+1. Pídele que clone `trofaxis/trofaxis.github.io` y trabaje en una rama nueva (por ejemplo, `mejoras-diseno`).
 2. Que suba esa rama y deje las pruebas pasando (`npm test`).
 3. Luego se revisa y se une a `main`. GitHub Pages publica `main` sola.
 
