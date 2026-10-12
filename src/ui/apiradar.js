@@ -2,7 +2,7 @@
 // El usuario elige el problema; la app cruza sus datos y muestra qué usó, por qué sale ese riesgo y qué hacer.
 import { esc } from '../core/utils.js';
 import { S } from '../core/state.js';
-import { apiRadar, PROBLEMAS } from '../apiradar/diagnostico.js';
+import { apiRadar, apiRadarAplica, PROBLEMAS } from '../apiradar/diagnostico.js';
 import { radar } from './charts.js';
 import { pastillaPuntaje, estadoFuente } from './components.js';
 import { ubicacionActual } from './mapa.js';
@@ -67,9 +67,10 @@ function seccionMapa(R, ubic, cfg) {
 
 export function panelApiRadar(f, cfg, X) {
   const abierto = S.problema && PROBLEMAS[S.problema];
-  const ubic = ubicacionActual();
-  const R = apiRadar(f, cfg, X, abierto ? S.problema : 'spathodea', ubic);
-  const sugerido = R.aplica;
+  const ubic = abierto ? ubicacionActual() : null;
+  // Con el panel cerrado solo se necesita saber si el problema aplica; el diagnóstico completo se arma al abrirlo.
+  const R = abierto ? apiRadar(f, cfg, X, S.problema, ubic) : null;
+  const sugerido = abierto ? R.aplica : apiRadarAplica(f, cfg);
   const lista = Object.values(PROBLEMAS);
   // Con un solo problema no hay nada que elegir: se nombra y el botón basta. El selector vuelve cuando haya más de uno.
   const control = lista.length === 1
