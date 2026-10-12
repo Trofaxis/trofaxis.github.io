@@ -1,4 +1,4 @@
-# BioG.A.P. — instrucciones para Claude Code
+# Trofaxis (antes BioG.A.P.) — instrucciones para Claude Code
 
 App de riesgo ambiental de fincas para exportadores GLOBALG.A.P. IFA v6.
 Proyecto CADS (Zamorano). Dueño: Diego Guevara.
