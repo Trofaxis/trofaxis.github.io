@@ -1,7 +1,7 @@
 // Punto de entrada: renderizado y eventos.
 import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
-import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes } from './core/storage.js';
+import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes, respaldoDemasiadoGrande, MENSAJE_RESPALDO_GRANDE } from './core/storage.js';
 import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
 import { viewDashboard } from './ui/dashboard.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
@@ -234,7 +234,7 @@ function abrirArchivo(){
   input.addEventListener('change',async()=>{
     const file=input.files&&input.files[0];if(!file)return;
     try{
-      if(file.size>2_000_000)throw new Error('El archivo es demasiado grande.');
+      if(respaldoDemasiadoGrande(file.size))throw new Error(MENSAJE_RESPALDO_GRANDE);
       const {farm,ajustes,tpl}=importarTexto(await file.text());
       S.farm=farm;S.ajustes=ajustes;if(tpl)S.tpl=tpl;S.demo=false;S.done={};S.view='dashboard';
       S.msg=`Se importó la finca "${farm.nombre||'sin nombre'}".`;

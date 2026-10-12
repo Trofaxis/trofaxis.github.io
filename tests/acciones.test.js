@@ -90,6 +90,16 @@ test('io-load carga un respaldo exportado: finca, plantillas y vuelve a marcar l
   assert.equal(S.ioMsg, 'Respaldo cargado.');
 });
 
+test('io-load rechaza un texto de más de 2 MB sin tocar la finca (issue 60)', () => {
+  preparar();
+  S.farm.nombre = 'No me toques';
+  S.io = 'x'.repeat(2_000_001);
+  dom.clic('io-load');
+  assert.equal(S.farm.nombre, 'No me toques');
+  assert.match(S.ioMsg, /No se pudo cargar: El respaldo es demasiado grande \(máximo 2 MB\)/);
+  assert.equal(S.io.length, 2_000_001, 'el texto pegado se conserva para que se pueda recortar');
+});
+
 test('io-load con un texto que no sirve dice por qué y no toca nada', () => {
   const valido = JSON.parse(exportarTexto(demoFarm(), configBase(), S.tpl));
   const casos = {

@@ -102,3 +102,32 @@ test('un caso guardado mal formado se descarta o se corrige', () => {
   assert.equal(c.origen, 'propio'); // nadie puede marcar un caso como real desde el navegador
   assert.equal(c.finca.nombre, 'Y');
 });
+
+// Issue 60: el mismo límite de tamaño para el respaldo pegado y para el archivo.
+test('importarTexto rechaza un respaldo de más de 2 MB con el mismo mensaje que el archivo', async () => {
+  const { MENSAJE_RESPALDO_GRANDE, respaldoDemasiadoGrande } = await import('../src/core/storage.js');
+  const { LIMITE_RESPALDO_BYTES } = await import('../src/core/config.js');
+  assert.equal(LIMITE_RESPALDO_BYTES, 2_000_000);
+  assert.throws(() => importarTexto('x'.repeat(LIMITE_RESPALDO_BYTES + 1)), { message: MENSAJE_RESPALDO_GRANDE });
+  assert.match(MENSAJE_RESPALDO_GRANDE, /2 MB/);
+  assert.equal(respaldoDemasiadoGrande(LIMITE_RESPALDO_BYTES), false);
+  assert.equal(respaldoDemasiadoGrande(LIMITE_RESPALDO_BYTES + 1), true);
+});
+
+test('importarTexto mide bytes, no caracteres: 1 100 000 letras con tilde (2 bytes cada una) pasan de 2 MB', () => {
+  assert.throws(() => importarTexto('á'.repeat(1_100_000)), /demasiado grande/);
+});
+
+test('un respaldo normal sigue cargando y un texto no válido sigue dando su mensaje', () => {
+  const f = normalizarFinca({});
+  assert.equal(importarTexto(exportarTexto(f, configBase(), null)).farm.nombre, f.nombre);
+  assert.throws(() => importarTexto('no es json'), /no es un JSON válido/);
+  assert.throws(() => importarTexto(undefined), /no es un JSON válido/);
+});
+
+test('app.js usa el mismo límite y mensaje en el archivo (sin número fijo)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const app = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
+  assert.match(app, /respaldoDemasiadoGrande\(file\.size\)/);
+  assert.doesNotMatch(app, /2_000_000/);
+});
