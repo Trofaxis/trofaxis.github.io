@@ -89,6 +89,217 @@ const alFormPlag=()=>queueMicrotask(()=>document.getElementById('plag-form')?.sc
 const limpiarPlag=()=>{S.draftPlag=plagBorrador();S.plagEdit=null;S.plagNotas=[];};
 const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.componentes.length)d.componentes=[componenteVacio()];
   d.grupoAuto=!d.grupo;d.usoAuto=!d.uso;return d;}; // lo ya guardado se respeta al cambiar de ingrediente
+// Acciones de los botones con data-act. Cada una recibe el botón pulsado `a` y la finca `f`.
+// Al terminar, el manejador de clics vuelve a dibujar la pantalla; una acción que devuelve `false`
+// (porque no cambió nada o porque ya dibujó o delega en otra función) evita ese dibujo.
+const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'start-empty', 'load-demo', 'reset-yes']);
+
+const accionesGenerales = {
+  'theme': () => { S.theme = { system: 'light', light: 'dark', dark: 'system' }[S.theme]; },
+  'guardado-ok': () => { guardado.descartado = true; },
+  'reintentar-vista': () => { cargador.reintentar(S.view); },
+  'reset-ajustes': () => { S.ajustes = configBase(); },
+  'toggle-mod': (a) => {
+    const id = a.dataset.id, on = S.ajustes.modulosActivos;
+    S.ajustes.modulosActivos = on.includes(id) ? on.filter((x) => x !== id) : [...on, id];
+  },
+  'sim-reset': () => { Object.keys(S.sim).forEach((k) => { S.sim[k] = false; }); },
+  'reset': () => { S.confirmReset = true; },
+  'reset-no': () => { S.confirmReset = false; },
+  'reset-yes': () => {
+    reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.tpl.rows = []; S.riego = riegoInicial();
+    S.confirmReset = false; S.view = 'wizard'; S.step = 0; S.ioMsg = 'Datos borrados.';
+  },
+  'io-copy': () => {
+    const txt = exportarTexto(S.farm, S.ajustes, S.tpl); S.io = txt; render();
+    const box = document.getElementById('io-box'), m = document.getElementById('io-msg');
+    const sel = () => { if (box) { box.focus(); box.select(); } if (m) m.textContent = 'Respaldo seleccionado: cópialo con Ctrl+C.'; };
+    try { navigator.clipboard.writeText(txt).then(() => { if (m) m.textContent = 'Respaldo copiado.'; }, sel); } catch (err) { sel(); }
+    return false;
+  },
+  'io-load': () => {
+    try {
+      const r = importarTexto(S.io); S.farm = r.farm; S.ajustes = r.ajustes; if (r.tpl) S.tpl = r.tpl;
+      S.demo = false; S.done = {}; S.io = ''; S.ioMsg = 'Respaldo cargado.';
+    } catch (err) { S.ioMsg = `No se pudo cargar: ${err.message} Copia uno con "Copiar respaldo".`; }
+  },
+  'export': () => { descargar(); return false; },
+  'import': () => { abrirArchivo(); return false; },
+};
+
+const accionesCuestionario = {
+  'next': () => { S.step = Math.min(STEPS.length - 1, S.step + 1); },
+  'prev': () => { S.step = Math.max(0, S.step - 1); },
+  'finish': () => { S.view = 'dashboard'; },
+  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; },
+  'load-demo': () => {
+    reiniciarMapa(); S.farm = demoFarm(); S.demo = true; S.done = {}; S.view = 'dashboard'; S.msg = 'Se cargó la finca de ejemplo.';
+  },
+  'cult-yes': (a, f) => { f.tieneCultivos = true; },
+  'cult-no': (a, f) => { f.tieneCultivos = false; },
+  'gg': (a, f) => { f.gg = a.dataset.v; },
+  'rm': (a, f) => { f[a.dataset.list].splice(+a.dataset.i, 1); },
+  'edit': (a, f) => {
+    const l = a.dataset.list, i = +a.dataset.i;
+    S[DRAFTS[l]] = { ...blankDrafts()[DRAFTS[l]], ...structuredClone(f[l][i]) }; f[l].splice(i, 1);
+    if (l === 'especies') S.espSeccion = Object.keys(SECCIONES).find((k) => SECCIONES[k].tipos.includes(S.draftEsp.tipo)) || 'arboles';
+  },
+  'esp-seccion': (a) => {
+    const sec = a.dataset.sec; S.espSeccion = sec;
+    S.draftEsp = { ...blankDrafts().draftEsp, ...(sec ? { tipo: SECCIONES[sec].tipos[0] } : {}) };
+  },
+  'proposito': (a, f) => {
+    const id = a.dataset.id; f.proposito = f.proposito.includes(id) ? f.proposito.filter((x) => x !== id) : [...f.proposito, id]; S.demo = false;
+  },
+  'add-vecino': (a, f) => {
+    const d = S.draftVecino; if (!d.nombre.trim()) return false;
+    f.cultivosAledanos.push({ nombre: d.nombre.trim(), distancia: d.distancia > 0 ? Number(d.distancia) : null });
+    S.draftVecino = blankDrafts().draftVecino; S.demo = false;
+  },
+  'plaga-sug': (a, f) => {
+    if (!f.plagas.some((p) => p.nombre === a.dataset.n)) f.plagas.push({ nombre: a.dataset.n, cultivo: a.dataset.c, meses: [], severidad: 'media' });
+    S.demo = false;
+  },
+  'add-esp': (a, f) => {
+    if (!S.draftEsp.nombre.trim()) return false;
+    f.especies.push({ ...S.draftEsp, floracion: [...S.draftEsp.floracion] }); S.draftEsp = blankDrafts().draftEsp; S.espSeccion = '';
+  },
+  'add-plaga': (a, f) => {
+    if (!S.draftPlaga.nombre.trim()) return false;
+    f.plagas.push({ ...S.draftPlaga, meses: [...S.draftPlaga.meses] }); S.draftPlaga = blankDrafts().draftPlaga;
+  },
+  'add-cult': (a, f) => {
+    if (!S.draftCult.nombre.trim()) return false;
+    f.cultivos.push({ ...S.draftCult, ha: Number(S.draftCult.ha) || 0, siembra: [...S.draftCult.siembra], cosecha: [...S.draftCult.cosecha] });
+    S.draftCult = blankDrafts().draftCult;
+  },
+  'add-nc': (a, f) => {
+    if (!S.draftNC.criterio.trim()) return false;
+    f.nc.push({ criterio: S.draftNC.criterio, dias: Number(S.draftNC.dias) || 0 }); S.draftNC = blankDrafts().draftNC;
+  },
+  'rm-nc': (a, f) => { f.nc.splice(+a.dataset.i, 1); },
+};
+
+const accionesPlantillas = {
+  'rm-row': (a) => { S.tpl.rows.splice(+a.dataset.i, 1); },
+  'add-row': () => {
+    const d = S.draftRow; if (!d.fecha || d.valor === '' || isNaN(Number(d.valor))) return false;
+    S.tpl.rows.push({ fecha: d.fecha, lote: d.lote || 'Sin lote', valor: Number(d.valor) }); S.draftRow = { fecha: '', lote: d.lote, valor: '' };
+  },
+  'paste': () => {
+    const lines = S.tpl.paste.split(/\r?\n/).map((l) => l.trim()).filter(Boolean); let ok = 0, bad = 0;
+    lines.forEach((l) => {
+      const c = l.split(/\t|;|,/).map((x) => x.trim()); const val = Number((c[2] || '').replace(',', '.'));
+      if (c.length >= 3 && !isNaN(val)) { S.tpl.rows.push({ fecha: c[0], lote: c[1], valor: val }); ok++; } else bad++;
+    });
+    S.tpl.paste = ''; render();
+    const m = document.getElementById('paste-msg');
+    if (m) m.textContent = `Se agregaron ${ok} filas${bad ? `; ${bad} no tenían el formato fecha, lote, valor` : ''}.`;
+    return false;
+  },
+};
+
+const accionesApiRadar = {
+  'apiradar': (a) => { S.problema = a.dataset.p; },
+  'apiradar-cerrar': () => { S.problema = ''; },
+  'apiradar-censo': () => {
+    S.abiertos['mapa-arboles'] = true;
+    queueMicrotask(() => { const c = document.getElementById('censo'); c?.scrollIntoView({ block: 'start' }); document.getElementById('censo-id')?.focus({ preventScroll: true }); });
+  },
+};
+
+const accionesPlaguicidas = {
+  'add-plag': (a, f) => {
+    const d = S.draftPlag;
+    if (!d.producto.trim()) { S.plagMsg = { nivel: 'error', texto: 'Escribe el nombre del producto.' }; document.getElementById('pq-prod')?.focus(); }
+    else if (!d.meses.length) { S.plagMsg = { nivel: 'error', texto: 'Marca al menos un mes de aplicación.' }; }
+    else {
+      const x = normalizarPlag(d), ed = S.plagEdit != null && S.plagEdit < f.plaguicidas.length;
+      if (ed) f.plaguicidas[S.plagEdit] = x; else f.plaguicidas.push(x);
+      limpiarPlag();
+      S.plagMsg = { nivel: 'ok', texto: ed ? `Se guardaron los cambios de ${x.producto}.` : `Se agregó ${x.producto}. Ya aparece en la tabla de aplicaciones; puedes registrar otra.` };
+    }
+  },
+  'plag-edit': (a, f) => {
+    const i = +a.dataset.i; if (!f.plaguicidas[i]) return false;
+    S.draftPlag = aBorrador(f.plaguicidas[i]); S.plagEdit = i; S.plagNotas = []; alFormPlag();
+  },
+  'plag-dup': (a, f) => {
+    const i = +a.dataset.i; if (!f.plaguicidas[i]) return false;
+    S.draftPlag = { ...aBorrador(f.plaguicidas[i]), meses: [] }; S.plagEdit = null; S.plagNotas = [];
+    S.plagMsg = { nivel: 'ok', texto: `Copia de ${f.plaguicidas[i].producto || 'la aplicación'} lista: marca los meses de la nueva aplicación y agrégala.` };
+    alFormPlag();
+  },
+  'plag-cancel': () => { limpiarPlag(); },
+  'plag-rm': (a, f) => {
+    const i = +a.dataset.i; f.plaguicidas.splice(i, 1);
+    if (S.plagEdit === i) limpiarPlag(); else if (S.plagEdit != null && S.plagEdit > i) S.plagEdit--;
+  },
+  'plag-add-comp': () => { if (S.draftPlag.componentes.length < 3) S.draftPlag.componentes.push(componenteVacio()); },
+  'plag-rm-comp': (a) => {
+    S.draftPlag.componentes.splice(+a.dataset.i, 1);
+    if (!S.draftPlag.componentes.length) S.draftPlag.componentes.push(componenteVacio());
+  },
+  'plag-vol': (a) => { S.draftPlag.volumen = Number(a.dataset.v) || null; },
+};
+
+const accionesFertilizacion = {
+  'fert-import': () => { importarFert(); return false; },
+  'fert-plantilla': () => {
+    import(conIntento('./fert/extraer.js', intentoPlantilla)).then(
+      (m) => bajar(m.PLANTILLA_CSV, 'plantilla-fertilizacion.csv', 'text/csv;charset=utf-8'),
+      () => { intentoPlantilla++; S.msg = 'No se pudo descargar la plantilla. Revisa la conexión.'; render(); },
+    );
+    return false;
+  },
+  'fert-unidad': (a) => { S.fertUnidad = UNIDADES[a.dataset.u] ? a.dataset.u : 'kgha'; },
+  'add-fert': (a, f) => {
+    const d = S.draftFert, dos = Number(d.dosis);
+    if (!(dos > 0)) { S.msg = 'Escribe una dosis mayor que cero.'; render(); return false; }
+    const g = producto(d.producto), otro = g.id === 'otro', pct = (x) => Math.min(100, Math.max(0, Number(x) || 0));
+    f.fertPlan.push({
+      mes: Number(d.mes) || 0, producto: g.id, n: otro ? pct(d.n) : g.n, p: otro ? pct(d.p) : g.p, k: otro ? pct(d.k) : g.k,
+      dosis: dos * UNIDADES[S.fertUnidad].aKgHa, metodo: d.metodo,
+    });
+    f.fertPlan.sort((x, y) => x.mes - y.mes); S.draftFert = { ...d, dosis: '' }; S.demo = false;
+  },
+  'rm-fert': (a, f) => { f.fertPlan.splice(+a.dataset.i, 1); S.demo = false; },
+  'edit-fert': (a, f) => {
+    const x = f.fertPlan.splice(+a.dataset.i, 1)[0];
+    S.draftFert = { mes: x.mes, producto: x.producto, n: x.n, p: x.p, k: x.k, dosis: +(x.dosis / UNIDADES[S.fertUnidad].aKgHa).toFixed(2), metodo: x.metodo };
+  },
+};
+
+const accionesCasos = {
+  'caso-guardar': (a, f) => {
+    const finca = normalizarFinca(structuredClone(f)); const cult = nombreCultivoPrincipal(finca);
+    S.casos.push({ id: 'propio-' + Date.now().toString(36), origen: S.demo ? 'ejemplo' : 'propio', etiqueta: `${finca.nombre || 'Finca sin nombre'}${cult ? ' · ' + cult : ''}`, guardado: new Date().toISOString(), finca });
+    S.msg = guardarCasos(S.casos) ? `Caso guardado. La memoria tiene ${S.casos.length} caso(s) tuyos.` : 'El caso quedó en esta sesión, pero el navegador no permitió guardarlo.';
+  },
+  'caso-rm': (a) => { S.casos = S.casos.filter((c) => c.id !== a.dataset.id); guardarCasos(S.casos); S.msg = 'Caso quitado de la memoria.'; },
+};
+
+const accionesRiego = {
+  'riego-import': () => { importarRiego(); return false; },
+  'riego-ejemplo': () => { S.riego = riegoInicial(); },
+  'riego-blanco': () => {
+    S.riego = { datos: riegoVacio(), fuente: 'manual', archivo: '', origen: {}, declarados: {}, faltan: [], omitidas: [] }; climaARiego();
+  },
+  'riego-add-suelo': () => {
+    S.riego.datos.suelo.push({ nombre: `Parte ${S.riego.datos.suelo.length + 1}`, area: null, textura: '', da: null, cc: null, pmp: null, pedregosidad: null, infiltracion: null });
+  },
+  'riego-rm-suelo': (a) => { S.riego.datos.suelo.splice(+a.dataset.i, 1); },
+  'riego-add-tramo': () => {
+    const p = S.riego.datos.hidraulica.principal; p.push({ nombre: String(p.length + 1), caudal: null, largo: null, di: null, c: 140 });
+  },
+  'riego-rm-tramo': (a) => { S.riego.datos.hidraulica.principal.splice(+a.dataset.i, 1); },
+};
+
+const ACCIONES = {
+  ...accionesGenerales, ...accionesCuestionario, ...accionesApiRadar, ...accionesPlaguicidas,
+  ...accionesFertilizacion, ...accionesCasos, ...accionesRiego, ...accionesPlantillas,
+};
+
 document.addEventListener('click',e=>{
   // Secciones plegables con data-keep: se recuerda lo que el usuario abrió o cerró (el navegador hace el cambio).
   const su=e.target.closest('summary');if(su&&su.parentElement.dataset.keep){S.abiertos[su.parentElement.dataset.keep]=!su.parentElement.open;return;}
@@ -96,97 +307,12 @@ document.addEventListener('click',e=>{
   const st=e.target.closest('[data-step]');if(st){S.step=+st.dataset.step;render();return;}
   const sm=e.target.closest('[data-sim]');if(sm&&!sm.disabled){S.sim[sm.dataset.sim]=!S.sim[sm.dataset.sim];render();return;}
   const mb=e.target.closest('[data-month]');if(mb){S.plagMsg=null;const[o,k]=getRef(mb.dataset.path);const i=+mb.dataset.month;o[k]=o[k].includes(i)?o[k].filter(x=>x!==i):uniq([...o[k],i]);render();return;}
-  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,f=S.farm;
+  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
   S.ioMsg='';S.plagMsg=null;
-  if(act==='theme'){S.theme={system:'light',light:'dark',dark:'system'}[S.theme];}
-  else if(act==='guardado-ok'){guardado.descartado=true;}
-  else if(act==='reintentar-vista'){cargador.reintentar(S.view);}
-  else if(act==='next'){S.step=Math.min(STEPS.length-1,S.step+1);}
-  else if(act==='prev'){S.step=Math.max(0,S.step-1);}
-  else if(act==='finish'){S.view='dashboard';}
-  else if(act==='apiradar'){S.problema=a.dataset.p;}
-  else if(act==='apiradar-cerrar'){S.problema='';}
-  else if(act==='apiradar-censo'){S.abiertos['mapa-arboles']=true;queueMicrotask(()=>{const c=document.getElementById('censo');c?.scrollIntoView({block:'start'});document.getElementById('censo-id')?.focus({preventScroll:true});});}
-  else if(act==='start-empty'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.view='wizard';S.step=0;}
-  else if(act==='load-demo'){reiniciarMapa();S.farm=demoFarm();S.demo=true;S.done={};S.view='dashboard';S.msg='Se cargó la finca de ejemplo.';}
-  else if(act==='cult-yes'){f.tieneCultivos=true;}
-  else if(act==='cult-no'){f.tieneCultivos=false;}
-  else if(act==='gg'){f.gg=a.dataset.v;}
-  else if(act==='rm'){f[a.dataset.list].splice(+a.dataset.i,1);}
-  else if(act==='edit'){const l=a.dataset.list,i=+a.dataset.i;S[DRAFTS[l]]={...blankDrafts()[DRAFTS[l]],...structuredClone(f[l][i])};f[l].splice(i,1);
-    if(l==='especies')S.espSeccion=Object.keys(SECCIONES).find(k=>SECCIONES[k].tipos.includes(S.draftEsp.tipo))||'arboles';}
-  else if(act==='esp-seccion'){const sec=a.dataset.sec;S.espSeccion=sec;S.draftEsp={...blankDrafts().draftEsp,...(sec?{tipo:SECCIONES[sec].tipos[0]}:{})};}
-  else if(act==='proposito'){const id=a.dataset.id;f.proposito=f.proposito.includes(id)?f.proposito.filter(x=>x!==id):[...f.proposito,id];S.demo=false;}
-  else if(act==='add-vecino'){const d=S.draftVecino;if(!d.nombre.trim())return;f.cultivosAledanos.push({nombre:d.nombre.trim(),distancia:d.distancia>0?Number(d.distancia):null});S.draftVecino=blankDrafts().draftVecino;S.demo=false;}
-  else if(act==='plaga-sug'){if(!f.plagas.some(p=>p.nombre===a.dataset.n))f.plagas.push({nombre:a.dataset.n,cultivo:a.dataset.c,meses:[],severidad:'media'});S.demo=false;}
-  else if(act==='add-esp'){if(!S.draftEsp.nombre.trim())return;f.especies.push({...S.draftEsp,floracion:[...S.draftEsp.floracion]});S.draftEsp=blankDrafts().draftEsp;S.espSeccion='';}
-  else if(act==='add-plag'){const d=S.draftPlag;
-    if(!d.producto.trim()){S.plagMsg={nivel:'error',texto:'Escribe el nombre del producto.'};document.getElementById('pq-prod')?.focus();}
-    else if(!d.meses.length){S.plagMsg={nivel:'error',texto:'Marca al menos un mes de aplicación.'};}
-    else{const x=normalizarPlag(d),ed=S.plagEdit!=null&&S.plagEdit<f.plaguicidas.length;
-      if(ed)f.plaguicidas[S.plagEdit]=x;else f.plaguicidas.push(x);
-      limpiarPlag();S.plagMsg={nivel:'ok',texto:ed?`Se guardaron los cambios de ${x.producto}.`:`Se agregó ${x.producto}. Ya aparece en la tabla de aplicaciones; puedes registrar otra.`};}}
-  else if(act==='plag-edit'){const i=+a.dataset.i;if(!f.plaguicidas[i])return;S.draftPlag=aBorrador(f.plaguicidas[i]);S.plagEdit=i;S.plagNotas=[];alFormPlag();}
-  else if(act==='plag-dup'){const i=+a.dataset.i;if(!f.plaguicidas[i])return;S.draftPlag={...aBorrador(f.plaguicidas[i]),meses:[]};S.plagEdit=null;S.plagNotas=[];
-    S.plagMsg={nivel:'ok',texto:`Copia de ${f.plaguicidas[i].producto||'la aplicación'} lista: marca los meses de la nueva aplicación y agrégala.`};alFormPlag();}
-  else if(act==='plag-cancel'){limpiarPlag();}
-  else if(act==='plag-rm'){const i=+a.dataset.i;f.plaguicidas.splice(i,1);if(S.plagEdit===i)limpiarPlag();else if(S.plagEdit!=null&&S.plagEdit>i)S.plagEdit--;}
-  else if(act==='plag-add-comp'){if(S.draftPlag.componentes.length<3)S.draftPlag.componentes.push(componenteVacio());}
-  else if(act==='plag-rm-comp'){S.draftPlag.componentes.splice(+a.dataset.i,1);if(!S.draftPlag.componentes.length)S.draftPlag.componentes.push(componenteVacio());}
-  else if(act==='plag-vol'){S.draftPlag.volumen=Number(a.dataset.v)||null;}
-  else if(act==='add-plaga'){if(!S.draftPlaga.nombre.trim())return;f.plagas.push({...S.draftPlaga,meses:[...S.draftPlaga.meses]});S.draftPlaga=blankDrafts().draftPlaga;}
-  else if(act==='add-cult'){if(!S.draftCult.nombre.trim())return;f.cultivos.push({...S.draftCult,ha:Number(S.draftCult.ha)||0,siembra:[...S.draftCult.siembra],cosecha:[...S.draftCult.cosecha]});S.draftCult=blankDrafts().draftCult;}
-  else if(act==='add-nc'){if(!S.draftNC.criterio.trim())return;f.nc.push({criterio:S.draftNC.criterio,dias:Number(S.draftNC.dias)||0});S.draftNC=blankDrafts().draftNC;}
-  else if(act==='rm-nc'){f.nc.splice(+a.dataset.i,1);}
-  else if(act==='rm-row'){S.tpl.rows.splice(+a.dataset.i,1);}
-  else if(act==='add-row'){const d=S.draftRow;if(!d.fecha||d.valor===''||isNaN(Number(d.valor)))return;S.tpl.rows.push({fecha:d.fecha,lote:d.lote||'Sin lote',valor:Number(d.valor)});S.draftRow={fecha:'',lote:d.lote,valor:''};}
-  else if(act==='sim-reset'){Object.keys(S.sim).forEach(k=>S.sim[k]=false);}
-  else if(act==='reset'){S.confirmReset=true;}
-  else if(act==='reset-no'){S.confirmReset=false;}
-  else if(act==='reset-yes'){reiniciarMapa();S.farm=emptyFarm();S.demo=false;S.done={};S.tpl.rows=[];S.riego=riegoInicial();S.confirmReset=false;S.view='wizard';S.step=0;S.ioMsg='Datos borrados.';}
-  else if(act==='io-copy'){
-    const txt=exportarTexto(S.farm,S.ajustes,S.tpl);S.io=txt;render();
-    const box=document.getElementById('io-box');const m=document.getElementById('io-msg');
-    const sel=()=>{if(box){box.focus();box.select();}if(m)m.textContent='Respaldo seleccionado: cópialo con Ctrl+C.';};
-    try{navigator.clipboard.writeText(txt).then(()=>{if(m)m.textContent='Respaldo copiado.';},sel);}catch(err){sel();}
-    return;}
-  else if(act==='io-load'){
-    try{const r=importarTexto(S.io);S.farm=r.farm;S.ajustes=r.ajustes;if(r.tpl)S.tpl=r.tpl;S.demo=false;S.done={};S.io='';S.ioMsg='Respaldo cargado.';}
-    catch(err){S.ioMsg=`No se pudo cargar: ${err.message} Copia uno con "Copiar respaldo".`;}}
-  else if(act==='export'){descargar();return;}
-  else if(act==='import'){abrirArchivo();return;}
-  else if(act==='toggle-mod'){const id=a.dataset.id,on=S.ajustes.modulosActivos;S.ajustes.modulosActivos=on.includes(id)?on.filter(x=>x!==id):[...on,id];}
-  else if(act==='reset-ajustes'){S.ajustes=configBase();}
-  else if(act==='fert-import'){importarFert();return;}
-  else if(act==='fert-plantilla'){import(conIntento('./fert/extraer.js',intentoPlantilla)).then((m)=>bajar(m.PLANTILLA_CSV,'plantilla-fertilizacion.csv','text/csv;charset=utf-8'),()=>{intentoPlantilla++;S.msg='No se pudo descargar la plantilla. Revisa la conexión.';render();});return;}
-  else if(act==='fert-unidad'){S.fertUnidad=UNIDADES[a.dataset.u]?a.dataset.u:'kgha';}
-  else if(act==='add-fert'){const d=S.draftFert,dos=Number(d.dosis);if(!(dos>0)){S.msg='Escribe una dosis mayor que cero.';render();return;}
-    const g=producto(d.producto),otro=g.id==='otro',pct=x=>Math.min(100,Math.max(0,Number(x)||0));
-    f.fertPlan.push({mes:Number(d.mes)||0,producto:g.id,n:otro?pct(d.n):g.n,p:otro?pct(d.p):g.p,k:otro?pct(d.k):g.k,
-      dosis:dos*UNIDADES[S.fertUnidad].aKgHa,metodo:d.metodo});
-    f.fertPlan.sort((x,y)=>x.mes-y.mes);S.draftFert={...d,dosis:''};S.demo=false;}
-  else if(act==='rm-fert'){f.fertPlan.splice(+a.dataset.i,1);S.demo=false;}
-  else if(act==='edit-fert'){const x=f.fertPlan.splice(+a.dataset.i,1)[0];
-    S.draftFert={mes:x.mes,producto:x.producto,n:x.n,p:x.p,k:x.k,dosis:+(x.dosis/UNIDADES[S.fertUnidad].aKgHa).toFixed(2),metodo:x.metodo};}
-  else if(act==='caso-guardar'){
-    const finca=normalizarFinca(structuredClone(f));const cult=nombreCultivoPrincipal(finca);
-    S.casos.push({id:'propio-'+Date.now().toString(36),origen:S.demo?'ejemplo':'propio',etiqueta:`${finca.nombre||'Finca sin nombre'}${cult?' · '+cult:''}`,guardado:new Date().toISOString(),finca});
-    S.msg=guardarCasos(S.casos)?`Caso guardado. La memoria tiene ${S.casos.length} caso(s) tuyos.`:'El caso quedó en esta sesión, pero el navegador no permitió guardarlo.';}
-  else if(act.startsWith('nube-')){nubeAccion(act);return;}
-  else if(act==='caso-rm'){S.casos=S.casos.filter(c=>c.id!==a.dataset.id);guardarCasos(S.casos);S.msg='Caso quitado de la memoria.';}
-  else if(act==='riego-import'){importarRiego();return;}
-  else if(act==='riego-ejemplo'){S.riego=riegoInicial();}
-  else if(act==='riego-blanco'){S.riego={datos:riegoVacio(),fuente:'manual',archivo:'',origen:{},declarados:{},faltan:[],omitidas:[]};climaARiego();}
-  else if(act==='riego-add-suelo'){S.riego.datos.suelo.push({nombre:`Parte ${S.riego.datos.suelo.length+1}`,area:null,textura:'',da:null,cc:null,pmp:null,pedregosidad:null,infiltracion:null});}
-  else if(act==='riego-rm-suelo'){S.riego.datos.suelo.splice(+a.dataset.i,1);}
-  else if(act==='riego-add-tramo'){const p=S.riego.datos.hidraulica.principal;p.push({nombre:String(p.length+1),caudal:null,largo:null,di:null,c:140});}
-  else if(act==='riego-rm-tramo'){S.riego.datos.hidraulica.principal.splice(+a.dataset.i,1);}
-  else if(act==='paste'){
-    const lines=S.tpl.paste.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);let ok=0,bad=0;
-    lines.forEach(l=>{const c=l.split(/\t|;|,/).map(x=>x.trim());const val=Number((c[2]||'').replace(',','.'));if(c.length>=3&&!isNaN(val)){S.tpl.rows.push({fecha:c[0],lote:c[1],valor:val});ok++;}else bad++;});
-    S.tpl.paste='';render();const m=document.getElementById('paste-msg');if(m)m.textContent=`Se agregaron ${ok} filas${bad?`; ${bad} no tenían el formato fecha, lote, valor`:''}.`;return;
-  }
-  render();if(['next','prev','finish','start-empty','load-demo','reset-yes'].includes(act))window.scrollTo(0,0);
+  if(act.startsWith('nube-')){nubeAccion(act);return;}
+  // Una acción sin función asociada solo vuelve a dibujar, como antes.
+  if(Object.hasOwn(ACCIONES,act)&&ACCIONES[act](a,S.farm)===false)return;
+  render();if(ACCIONES_QUE_SUBEN.has(act))window.scrollTo(0,0);
 });
 function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
