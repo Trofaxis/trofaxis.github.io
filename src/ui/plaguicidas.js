@@ -166,7 +166,7 @@ export function viewPlaguicidas() {
       ${sel('pq-du', 'Unidad de la dosis', 'draftPlag.dosisUnidad', d.dosisUnidad, Object.entries(UNIDADES_DOSIS).map(([k, u]) => [k, u.nombre]))}
       ${U.tanque ? numero('pq-vol', 'Agua por hectárea (L/ha)', 'draftPlag.volumen', d.volumen, 'Para pasar la dosis por tanque a dosis por hectárea') : ''}
     </div>
-    ${U.tanque ? `<div class="row small"><span class="muted">Volumen de la clase según los días después del trasplante:</span>${cfg.plag.volumenClase.map((v) => `<button class="btn sm ${Number(d.volumen) === v.litros ? 'primary' : ''}" data-act="plag-vol" data-v="${v.litros}">${v.litros} L/ha a ${v.ddt} DDT</button>`).join('')}</div>` : ''}
+    ${U.tanque ? `<div class="row small"><span class="muted">Volumen de referencia según los días después del trasplante:</span>${cfg.plag.volumenClase.map((v) => `<button class="btn sm ${Number(d.volumen) === v.litros ? 'primary' : ''}" data-act="plag-vol" data-v="${v.litros}">${v.litros} L/ha a ${v.ddt} DDT</button>`).join('')}</div>` : ''}
     <div class="fields">
       ${sel('pq-met', 'Cómo se aplica', 'draftPlag.metodo', d.metodo, METODOS)}
       ${sel('pq-dir', 'Dirección de la aspersión', 'draftPlag.direccion', d.direccion, DIRECCIONES, 'Cambia el umbral: 42 hacia abajo, 85 hacia arriba o de lado')}
@@ -199,7 +199,7 @@ export function viewPlaguicidas() {
     <details ${plegable('pq-condiciones', d.hora || d.viento != null || d.temp != null || d.hr != null || d.lluviaH != null || d.ph != null)}><summary>Condiciones el día de la aplicación</summary>
       <div class="subform mt-8">
         <div class="fields">
-          <div class="f"><label for="pq-hora">Hora</label><input id="pq-hora" type="time" data-bind="draftPlag.hora" data-rerender value="${esc(d.hora)}"><span class="hint">La clase indica 5:00-9:30 o 15:30-18:00</span></div>
+          <div class="f"><label for="pq-hora">Hora</label><input id="pq-hora" type="time" data-bind="draftPlag.hora" data-rerender value="${esc(d.hora)}"><span class="hint">La guía de Zamorano indica 5:00-9:30 o 15:30-18:00</span></div>
           ${numero('pq-vien', 'Viento (km/h)', 'draftPlag.viento', d.viento, `Máximo ${cfg.plag.vientoMax} km/h`)}
           ${numero('pq-temp', 'Temperatura (°C)', 'draftPlag.temp', d.temp, `Entre ${cfg.plag.temp[0]} y ${cfg.plag.temp[1]} °C`)}
           ${numero('pq-hr', 'Humedad relativa (%)', 'draftPlag.hr', d.hr, `Más de ${cfg.plag.hrMin} %`, 'max="100"')}

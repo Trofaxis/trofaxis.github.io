@@ -193,7 +193,7 @@ export function validar(r, declarados = {}) {
       .filter((x) => x && x[1] > vmax);
     if (rapidas.length) {
       out.push(alerta('velocidad', 'advertencia', 'Agua demasiado rápida en la tubería',
-        `${rapidas.map(([n, v]) => `En ${n} va a ${f2(v)} m/s`).join('; ')}. Por encima de ${vmax} m/s aumentan las pérdidas y el riesgo de golpe de ariete al cerrar válvulas. Es un criterio común para PVC, no una norma: la hoja del Lab dimensiona las principales a 2 m/s.`));
+        `${rapidas.map(([n, v]) => `En ${n} va a ${f2(v)} m/s`).join('; ')}. Por encima de ${vmax} m/s aumentan las pérdidas y el riesgo de golpe de ariete al cerrar válvulas. Es un criterio común para PVC, no una norma: la hoja de diseño del Lab de Riego de Zamorano dimensiona las principales a 2 m/s.`));
     }
     if (h.principal.some((t) => t.incompleto)) {
       out.push(alerta('principal-incompleta', 'criterio', 'Tramos de la principal sin datos', 'Algunos tramos no tienen largo o diámetro y no suman a la carga de la bomba.'));

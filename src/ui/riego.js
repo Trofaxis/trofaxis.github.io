@@ -130,13 +130,13 @@ export function viewRiego() {
     ${r.suelo.some((x) => x.laaPorMetro !== undefined) ? `<h3>Por qué hay tres láminas</h3>
     <p class="muted">Las tres usan agua disponible × p × (1 − piedras) × 10. Cambia la profundidad y la p:</p>
     <div class="scroll"><table class="data"><thead><tr><th>Sección</th>
-      <th class="num">Por metro de suelo, p = ${fmt(d.p, 2)} (como muchas hojas)</th>
+      <th class="num">Por metro de suelo, p = ${fmt(d.p, 2)} (como muchas hojas de Excel)</th>
       <th class="num">En ${fmt(d.profRaiz, 2)} m de raíces, p = ${fmt(d.p, 2)}</th>
       <th class="num">En raíces, p ajustada = ${fmt(r.pAjustada, 2)} (la que usa la app)</th>
     </tr></thead><tbody>
       ${r.suelo.map((x) => `<tr><td>${esc(x.nombre)}</td><td class="num">${fmt(x.laaPorMetro)} mm</td><td class="num">${fmt(x.laaSinAjuste)} mm</td><td class="num"><b>${fmt(x.laa)} mm</b></td></tr>`).join('')}
     </tbody></table></div>
-    <p class="muted small">La primera ignora que las raíces solo llegan a ${fmt(d.profRaiz, 2)} m. La segunda es la fórmula de la clase. La tercera además baja p porque con ETc alta la planta se estresa antes (FAO-56, Tabla 22); la app la usa para el intervalo entre riegos porque es la más segura.</p>` : ''}
+    <p class="muted small">La primera ignora que las raíces solo llegan a ${fmt(d.profRaiz, 2)} m. La segunda es la fórmula del cálculo manual habitual. La tercera además baja p porque con ETc alta la planta se estresa antes (FAO-56, Tabla 22); la app la usa para el intervalo entre riegos porque es la más segura.</p>` : ''}
   </section>
 
   <section class="panel">
@@ -144,7 +144,7 @@ export function viewRiego() {
     ${lineaClima}
     <div class="fields">
       <div class="f"><label for="rg-siembra">Fecha de siembra</label><input id="rg-siembra" type="date" data-bind="riego.datos.siembra" data-rerender value="${esc(d.siembra)}"></div>
-      <div class="f"><label class="check"><input type="checkbox" class="w-auto" data-bind="riego.datos.mes30" data-rerender ${d.mes30 ? 'checked' : ''}> Meses de 30 días (como en la clase)</label></div>
+      <div class="f"><label class="check"><input type="checkbox" class="w-auto" data-bind="riego.datos.mes30" data-rerender ${d.mes30 ? 'checked' : ''}> Meses de 30 días (cálculo manual)</label></div>
     </div>
     <div class="fields">
       ${NOMBRES_MES.map((m, i) => `<div class="f maxw-110"><label for="rg-eto-${i}">${m[0].toUpperCase() + m.slice(1, 3)}</label><input id="rg-eto-${i}" type="number" step="any" inputmode="decimal" data-bind="riego.datos.etoMensual.${i}" data-nullable data-rerender value="${d.etoMensual[i] ?? ''}"><span class="hint">mm/día</span></div>`).join('')}

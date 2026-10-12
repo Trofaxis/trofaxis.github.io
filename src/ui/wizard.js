@@ -104,7 +104,7 @@ export function viewWizard(){
     <div class="f"><span class="label">Meses de lluvia fuerte</span>${months('farm.lluviaMeses',f.lluviaMeses)}
     ${tieneClima(f.clima)?(()=>{const sug=mesesLluviosos(f.clima);return sug.join()===f.lluviaMeses.join()?`<span class="hint">Coinciden con el clima de tu ubicación (${CONFIG.clima.lluviaFuerteMm} mm o más al mes).</span>`:`<span class="hint">Según el clima de tu ubicación: ${mlist(sug)} (${CONFIG.clima.lluviaFuerteMm} mm o más al mes). <button class="btn sm" data-clima="lluvia">Usar los del clima</button></span>`;})():'<span class="hint">Pon la ubicación en el paso Finca y la app los sugiere con el clima.</span>'}</div>
     <div class="f"><span class="label">Meses con suelo desnudo</span>${months('farm.sueloDesnudoMeses',f.sueloDesnudoMeses)}</div>
-    <p class="muted small">Las plagas ahora se registran en el paso 3, Especies.</p>`;
+    <p class="muted small">Las plagas se registran en el paso 3, Especies.</p>`;
   if(s===5)body=`<h2>¿Eres o quieres ser certificado por GLOBALG.A.P.?</h2>
     <p class="muted">Tu respuesta no cambia el cálculo de riesgo. Solo agrega la guía de requisitos de IFA v6 en el dashboard. La app no verifica ninguna certificación: muestra lo que tú declaras.</p>
     <div class="choice">
