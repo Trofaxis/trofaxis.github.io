@@ -10,6 +10,8 @@ import { casoAnonimo } from '../casos/anonimo.js';
 import { nubeConfigurada } from '../nube/cliente.js';
 import { perfil } from '../casos/perfil.js';
 import { relaciones, frase } from '../casos/relaciones.js';
+
+const NOMBRE_RASGO = { cultivo: 'cultivo', riego: 'riego', pendiente: 'pendiente', distAgua: 'distancia al agua', propNativas: 'especies nativas', mesesCoincidencia: 'meses con coincidencias', scores: 'riesgo por módulo' };
 import { dispersion, leyendaDispersion } from './charts.js';
 
 const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad' };
@@ -72,7 +74,7 @@ export function panelRelaciones() {
       <p class="small">${esc(frase(p))}</p>
       ${p.aviso ? `<p class="small muted">${esc(p.aviso)}</p>` : ''}
     </article>`).join('')}</div>
-    <p class="muted small">Correlación no es causa: dos riesgos pueden subir juntos por una causa común (por ejemplo, un manejo más intensivo) o porque usan los mismos datos. Para mostrar que un riesgo empuja al otro hace falta el mecanismo (los vínculos con fuente de la rúbrica) o un ensayo. Fuerza de la r (débil &lt; ${String(cfg.relaciones.cortes.moderada).replace('.', ',')} ≤ moderada &lt; ${String(cfg.relaciones.cortes.fuerte).replace('.', ',')} ≤ fuerte) y mínimo de ${cfg.relaciones.minPuntos} fincas: criterio propio. Módulos del gráfico: <code>CONFIG.relaciones.modulos</code>.</p>
+    <p class="muted small">Correlación no es causa: dos riesgos pueden subir juntos por una causa común (por ejemplo, un manejo más intensivo) o porque usan los mismos datos. Para mostrar que un riesgo empuja al otro hace falta el mecanismo (los vínculos con fuente de la rúbrica) o un ensayo. Fuerza de la r (débil &lt; ${String(cfg.relaciones.cortes.moderada).replace('.', ',')} ≤ moderada &lt; ${String(cfg.relaciones.cortes.fuerte).replace('.', ',')} ≤ fuerte) y mínimo de ${cfg.relaciones.minPuntos} fincas: criterio propio.</p>
   </section>`;
 }
 
@@ -126,8 +128,8 @@ export function viewCasos() {
   return `
   ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
   <section class="panel">
-    <div><p class="label">Memoria de casos · Etapa 2</p><h1>Cada finca es un caso</h1>
-    <p class="muted">Cada finca evaluada guarda su situación, lo que hizo y cómo le fue. La app busca las más parecidas a la tuya con k vecinos más cercanos (k-NN), en tu navegador y sin servicios de pago. Mientras más casos reales se acumulan, mejores son las comparaciones: <b>un competidor puede copiar las fórmulas, pero no los casos acumulados.</b></p></div>
+    <div><p class="label">Memoria de casos</p><h1>Cada finca es un caso</h1>
+    <p class="muted">Cada finca evaluada guarda su situación, lo que hizo y cómo le fue. La app busca las fincas más parecidas a la tuya para que veas qué hicieron y cómo les fue. La búsqueda se hace en tu navegador. Mientras más fincas reales se registran, mejores son las comparaciones.</p></div>
     <div class="stats">
       <div><div class="k">Casos en memoria</div><div class="v">${todos.length}</div></div>
       <div><div class="k">De ejemplo</div><div class="v">${CASOS_EJEMPLO.length}</div></div>
@@ -143,8 +145,8 @@ export function viewCasos() {
     <details><summary>¿Cómo se calcula la similitud?</summary><div class="formula">Perfil de cada finca: cultivo principal, tipo de riego, pendiente, distancia al agua (tope ${cfg.casos.topeDistAgua} m), proporción de especies nativas, meses con coincidencias de riesgo y el riesgo de cada módulo.
 Distancia por rasgo (0 a 1): categoría igual = 0, distinta = 1; números = diferencia absoluta.
 Similitud = 1 − Σ peso·distancia / Σ peso (solo rasgos que ambas fincas tienen).
-Pesos: ${Object.entries(cfg.casos.pesos).map(([k, w]) => `${k} ${w}`).join(', ')}.
-Pesos y umbrales: criterio propio, por calibrar con casos reales (Etapa 3).</div></details>
+Pesos: ${Object.entries(cfg.casos.pesos).map(([k, w]) => `${NOMBRE_RASGO[k] ?? k} ${w}`).join(', ')}.
+Pesos y umbrales: criterio propio, por calibrar con casos reales.</div></details>
   </section>
   <section class="panel">
     <div><h2>Tu finca como caso</h2><p class="muted">Registra lo que hiciste y cómo te fue. Esto es lo que otras fincas verán cuando se parezcan a la tuya.</p></div>

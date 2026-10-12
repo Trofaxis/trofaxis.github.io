@@ -102,7 +102,7 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     const lista = enFlor.filter((x) => x.p.meses.some((m) => ctx.atraeFlor.includes(m)));
     acciones.push({
       id: 'mover', titulo: 'Sacar las aplicaciones de la floración visitada', cuando: ctx.ov1.map((m) => M[m]).join(', '),
-      detalle: `Evita aplicar ${lista.map((x) => `${x.p.producto || 'producto sin nombre'} (${x.por === 'hq' && x.r?.calculable ? `HQ ${x.r.cota ? 'hasta ' : ''}${fmtHQ(x.r.hqEf)}` : x.por === 'etiqueta' ? 'la etiqueta advierte por abejas' : 'clase elegida'})`).join(', ')} en ${ctx.ov1.map((m) => M[m]).join(', ')}. Antes de elegir el mes nuevo, revisa que no coincida con la cosecha ni deje la plaga sin control. Si no hay otra salida, la clase de Protección Vegetal (Zamorano) indica aplicar de noche cuando hay polinizadores.`,
+      detalle: `Evita aplicar ${lista.map((x) => `${x.p.producto || 'producto sin nombre'} (${x.por === 'hq' && x.r?.calculable ? `HQ ${x.r.cota ? 'hasta ' : ''}${fmtHQ(x.r.hqEf)}` : x.por === 'etiqueta' ? 'la etiqueta advierte por abejas' : 'clase elegida'})`).join(', ')} en ${ctx.ov1.map((m) => M[m]).join(', ')}. Antes de elegir el mes nuevo, revisa que no coincida con la cosecha ni deje la plaga sin control. Si no hay otra salida, la guía de Protección Vegetal de Zamorano indica aplicar de noche cuando hay polinizadores.`,
       estado: lista.some((x) => x.por !== 'clase') ? 'verificado' : 'criterio propio', ...medir('mover'),
     });
   }
@@ -154,7 +154,7 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     id: 'refugio', titulo: 'Ubicar colonias y refugios fuera del radio de los árboles de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la próxima floración',
     detalle: detalleRefugio,
     estado: radio.hayTrigona ? 'verificado' : 'criterio propio',
-    nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay cifra en los documentos del proyecto; se usa el mismo radio como referencia (criterio propio). La app no sabe dónde hay floración alternativa: eso lo decides tú.${nCoord && arboles && nCoord !== arboles ? ` Ojo: registraste ${arboles} árbol(es) en Especies y ${nCoord} con coordenadas.` : ''} Las coordenadas se guardan solo en este navegador.`,
+    nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay una cifra publicada en las fuentes revisadas; se usa el mismo radio como referencia (criterio propio). La app no sabe dónde hay floración alternativa: eso lo decides tú.${nCoord && arboles && nCoord !== arboles ? ` Ojo: registraste ${arboles} árbol(es) en Especies y ${nCoord} con coordenadas.` : ''} Las coordenadas se guardan solo en este navegador.`,
     delta: null,
   });
   const prioritarios = censoArb.filter((a) => a.clase === 'alto').sort((a, b) => b.vol - a.vol).slice(0, 6);

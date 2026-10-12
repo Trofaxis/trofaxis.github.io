@@ -105,7 +105,7 @@ export function panelApiRadar(f, cfg, X) {
     <div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th><th class="num">Puntos que aporta</th></tr></thead><tbody>
       ${[...R.evidencia].sort((a, b) => b.puntos - a.puntos).map((v) => `<tr><td>${esc(v.nombre)}<div>${estado(v.estado, v.fuente, v.id ?? v.nombre)}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje, cfg)}</td><td class="num">${v.peso}</td><td class="num">${v.puntos}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="muted small">Es el riesgo del módulo Polinizadores; el ApiRadar solo lo ordena como diagnóstico y no agrega pesos nuevos. Puntos que aporta = peso × puntaje ÷ suma de pesos con dato; suman el riesgo. Pasa el cursor sobre ⓘ para ver la fuente. Pesos y cortes son criterio propio, por calibrar, salvo donde diga «Verificado».</p>
+    <p class="muted small">Es el mismo riesgo del módulo Polinizadores, ordenado como diagnóstico: el ApiRadar no agrega pesos nuevos. Puntos que aporta = peso × puntaje ÷ suma de pesos con dato; suman el riesgo. Pasa el cursor sobre ⓘ para ver la fuente. Pesos y cortes son criterio propio, por calibrar, salvo donde diga «Verificado».</p>
     <h3>3. Dónde están los árboles de riesgo</h3>
     ${seccionMapa(R, ubic, cfg)}
     <h3>4. Qué hacer</h3>

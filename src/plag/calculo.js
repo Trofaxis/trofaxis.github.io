@@ -24,7 +24,7 @@ export const FUENTES_PLAG = {
   muestreo: { cita: 'Clase de Protección Vegetal, Zamorano: Monitoreo en cultivos hortícolas.', url: '' },
   sag: { cita: FUENTE_SAG, url: '' },
   propio: { cita: 'Criterio propio, por validar con un especialista.', url: '' },
-  clima: { cita: 'Clima típico de la ubicación: Open-Meteo, clima histórico (ERA5 / ERA5-Land), promedio de los últimos años; límites de la clase de Protección Vegetal: Correcta aplicación.', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
+  clima: { cita: 'Clima típico de la ubicación: Open-Meteo, clima histórico (ERA5 / ERA5-Land), promedio de los últimos años; límites de la guía de Protección Vegetal de Zamorano: Correcta aplicación.', url: 'https://open-meteo.com/en/docs/historical-weather-api' },
 };
 
 const fmt = (x, d = 1) => (x == null || !Number.isFinite(x) ? '—' : x.toLocaleString('es-HN', { maximumFractionDigits: d }));
@@ -208,14 +208,14 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
   if (a.hora) {
     const h = horaNum(a.hora);
     if (!P.horario.some(([i, j]) => h >= i && h <= j)) out.push(aviso('advertencia', 'Fuera del horario de aplicación',
-      `Aplicas a las ${a.hora}; la clase indica aplicar entre 5:00 y 9:30 o entre 15:30 y 18:00.`, 'aplicacion'));
+      `Aplicas a las ${a.hora}; la guía de Zamorano indica aplicar entre 5:00 y 9:30 o entre 15:30 y 18:00.`, 'aplicacion'));
     if (enFlor.length && h >= 5 && h <= 18) out.push(aviso('advertencia', 'Con polinizadores, aplicar de noche',
-      `Hay floración visitada en ${mesesTxt(enFlor)}: en cultivos con polinizadores la clase indica aplicar de noche.`, 'aplicacion'));
+      `Hay floración visitada en ${mesesTxt(enFlor)}: en cultivos con polinizadores la guía de Zamorano indica aplicar de noche.`, 'aplicacion'));
   }
-  if (a.viento != null && a.viento > P.vientoMax) out.push(aviso('advertencia', 'Viento fuerte', `${fmt(a.viento)} km/h; la clase pide no aplicar con más de ${P.vientoMax} km/h.`, 'aplicacion'));
-  if (a.temp != null && (a.temp < P.temp[0] || a.temp > P.temp[1])) out.push(aviso('advertencia', 'Temperatura fuera de rango', `${fmt(a.temp)} °C; la clase indica entre ${P.temp[0]} y ${P.temp[1]} °C.`, 'aplicacion'));
-  if (a.hr != null && a.hr < P.hrMin) out.push(aviso('advertencia', 'Humedad relativa baja', `${fmt(a.hr, 0)} %; la clase indica más de ${P.hrMin} %.`, 'aplicacion'));
-  if (a.lluviaH != null && a.lluviaH < P.lluviaMinH) out.push(aviso('advertencia', 'Lluvia muy pronto', `Llovió ${fmt(a.lluviaH)} h después de aplicar; la clase pide al menos ${P.lluviaMinH} h sin lluvia.`, 'aplicacion'));
+  if (a.viento != null && a.viento > P.vientoMax) out.push(aviso('advertencia', 'Viento fuerte', `${fmt(a.viento)} km/h; la guía de Zamorano pide no aplicar con más de ${P.vientoMax} km/h.`, 'aplicacion'));
+  if (a.temp != null && (a.temp < P.temp[0] || a.temp > P.temp[1])) out.push(aviso('advertencia', 'Temperatura fuera de rango', `${fmt(a.temp)} °C; la guía de Zamorano indica entre ${P.temp[0]} y ${P.temp[1]} °C.`, 'aplicacion'));
+  if (a.hr != null && a.hr < P.hrMin) out.push(aviso('advertencia', 'Humedad relativa baja', `${fmt(a.hr, 0)} %; la guía de Zamorano indica más de ${P.hrMin} %.`, 'aplicacion'));
+  if (a.lluviaH != null && a.lluviaH < P.lluviaMinH) out.push(aviso('advertencia', 'Lluvia muy pronto', `Llovió ${fmt(a.lluviaH)} h después de aplicar; la guía de Zamorano pide al menos ${P.lluviaMinH} h sin lluvia.`, 'aplicacion'));
   // Sin condiciones del día: el clima típico de los meses de aplicación en la ubicación de la finca (Issue #8).
   // Es un promedio diario, no la hora de aplicación: sirve para planear, no reemplaza medir el día.
   if (a.viento == null && a.temp == null && a.hr == null) out.push(...avisosClimaTipico(a.meses, f.clima, cfg));
@@ -223,7 +223,7 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
     const etiqueta = a.phMin != null && a.phMax != null && a.phMin <= a.phMax;
     const cobre = esCobre(a);
     const [lo, hi] = etiqueta ? [a.phMin, a.phMax] : cobre ? P.phCobre : P.ph;
-    const quien = etiqueta ? 'la etiqueta indica' : cobre ? 'para cobres, la tabla SAG indica' : 'la clase indica (la tabla SAG dice 5-6)';
+    const quien = etiqueta ? 'la etiqueta indica' : cobre ? 'para cobres, la tabla SAG indica' : 'la guía de Zamorano indica (la tabla SAG dice 5-6)';
     if (a.ph < lo || a.ph > hi) out.push(aviso('advertencia', 'pH del agua fuera de rango', `pH ${fmt(a.ph)}; ${quien} ${lo}-${hi}.`, etiqueta ? 'etiquetas' : cobre ? 'sag' : 'aplicacion'));
   }
   // 4. ¿Sirve para la enfermedad? (cuadro SAG).
@@ -233,7 +233,7 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
     if (prod) {
       const ef = eficacia(prod, e.id);
       if (ef == null) out.push(aviso('error', 'El producto no sirve para esa enfermedad',
-        `En el cuadro SAG, ${prod.nombre} no tiene eficacia marcada contra ${e.nombre}. La clase señala este error como el más común: revisa el producto.`, 'sag'));
+        `En el cuadro SAG, ${prod.nombre} no tiene eficacia marcada contra ${e.nombre}. La guía de Zamorano señala este error como el más común: revisa el producto.`, 'sag'));
       else if (ef <= 2) out.push(aviso('advertencia', 'Eficacia baja', `${ef} de 5 contra ${e.nombre} en el cuadro SAG (5 excelente, 1 poco o nada).`, 'sag'));
       else out.push(aviso('ok', 'Sirve para la enfermedad', `Eficacia ${ef} de 5 contra ${e.nombre} en el cuadro SAG.`, 'sag'));
     } else if (!a.uso || a.uso === 'fungicida') out.push(aviso('criterio', 'Elige el producto en el cuadro SAG', `Así la app comprueba si sirve contra ${e.nombre}.`, 'sag'));
@@ -258,7 +258,7 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
       `${movil.map((c) => `${c.nombre} (GUS ${fmt(c.gus, 2)})`).join(' y ')} tiene lixiviación alta y lo aplicas ${a.metodo === 'riego' ? 'por el riego' : 'al suelo'}${lluvia ? ' en meses de lluvia fuerte' : ''}: un riego excesivo o la lluvia lo pueden llevar al agua subterránea. Revisa la lámina en la pestaña Riego. El umbral de lámina no está verificado.`, 'gus'));
   }
   if (f.riego === 'aspersion' && a.metodo === 'foliar') out.push(aviso('criterio', 'Riego por aspersión después de aplicar',
-    'No riegues por aspersión en las 4 horas siguientes. Es una inferencia, no verificada: la clase pide 4 horas sin lluvia y la aspersión moja el follaje igual.', 'aplicacion'));
+    'No riegues por aspersión en las 4 horas siguientes. Es una inferencia, no verificada: la guía de Zamorano pide 4 horas sin lluvia y la aspersión moja el follaje igual.', 'aplicacion'));
   if (a.metodo === 'riego') out.push(aviso('criterio', 'Aplicación por el sistema de riego',
     'Usa una válvula antirretorno para que la mezcla no regrese a la fuente de agua. Recomendación común de diseño, sin fuente verificada todavía.', null));
   const foliar = inter(a.meses, (f.fertPlan ?? []).filter((x) => x.metodo === 'foliar').map((x) => x.mes));
@@ -275,14 +275,14 @@ export function avisosClimaTipico(meses, clima, cfg = CONFIG) {
   const val = (k, ms, red = Math.max) => fmt(red(...ms.map((m) => clima.meses[m][k])), k === 'hr' || k === 'lluvia' ? 0 : 1);
   const partes = [];
   const calor = de('tmax', (x) => x > P.temp[1]);
-  if (calor.length) partes.push(`en ${mesesTxt(calor)} la máxima típica llega a ${val('tmax', calor)} °C, sobre los ${P.temp[1]} °C de la clase: aplica temprano (5:00-9:30) o al final de la tarde (15:30-18:00)`);
+  if (calor.length) partes.push(`en ${mesesTxt(calor)} la máxima típica llega a ${val('tmax', calor)} °C, sobre los ${P.temp[1]} °C de la guía de Zamorano: aplica temprano (5:00-9:30) o al final de la tarde (15:30-18:00)`);
   const seco = de('hr', (x) => x < P.hrMin);
-  if (seco.length) partes.push(`en ${mesesTxt(seco)} la humedad media típica baja a ${val('hr', seco, Math.min)} %, bajo el ${P.hrMin} % de la clase: el producto se evapora y deriva más; aplica en las horas más húmedas`);
+  if (seco.length) partes.push(`en ${mesesTxt(seco)} la humedad media típica baja a ${val('hr', seco, Math.min)} %, bajo el ${P.hrMin} % de la guía de Zamorano: el producto se evapora y deriva más; aplica en las horas más húmedas`);
   const viento = de('viento2', (x) => x > P.vientoMax);
-  if (viento.length) partes.push(`en ${mesesTxt(viento)} el viento medio típico es de ${val('viento2', viento)} km/h, sobre los ${P.vientoMax} km/h de la clase: busca las horas de calma`);
+  if (viento.length) partes.push(`en ${mesesTxt(viento)} el viento medio típico es de ${val('viento2', viento)} km/h, sobre los ${P.vientoMax} km/h de la guía de Zamorano: busca las horas de calma`);
   const lluvia = de('lluvia', (x) => x >= C.lluviaFuerteMm);
-  if (lluvia.length) partes.push(`${mesesTxt(lluvia)} ${lluvia.length > 1 ? 'son meses lluviosos' : 'es un mes lluvioso'} (${val('lluvia', lluvia)} mm): revisa el pronóstico, la clase pide ${P.lluviaMinH} h sin lluvia después de aplicar`);
-  if (!partes.length) return [aviso('ok', 'El clima típico de esos meses está dentro de lo que pide la clase', 'Temperatura máxima, humedad, viento y lluvia típicos de tu ubicación están en rango. Igual revisa las condiciones del día.', 'clima')];
+  if (lluvia.length) partes.push(`${mesesTxt(lluvia)} ${lluvia.length > 1 ? 'son meses lluviosos' : 'es un mes lluvioso'} (${val('lluvia', lluvia)} mm): revisa el pronóstico, la guía de Zamorano pide ${P.lluviaMinH} h sin lluvia después de aplicar`);
+  if (!partes.length) return [aviso('ok', 'El clima típico de esos meses está dentro de lo que pide la guía de Zamorano', 'Temperatura máxima, humedad, viento y lluvia típicos de tu ubicación están en rango. Igual revisa las condiciones del día.', 'clima')];
   return [aviso('criterio', 'Clima típico de los meses de aplicación', `${partes.join('; ')}. Es el promedio de tu ubicación: anota las condiciones del día en "Condiciones el día de la aplicación".`.replace(/^./, (x) => x.toUpperCase()), 'clima')];
 }
 
@@ -297,7 +297,7 @@ export function revisarFinca(f, cfg = CONFIG) {
       frac ? 'sag' : 'propio'));
   }
   if (lista.length && FUENTE_SUPERFICIAL.test(f.fuenteAgua ?? '')) out.push(aviso('criterio', 'Agua de fuente superficial para la mezcla',
-    `Tu fuente es "${f.fuenteAgua}": puede traer tierra, inóculo de enfermedades y un pH fuera de rango. La clase indica clorar el agua (25 ml de cloro por barril de 200 L, 30 minutos) y medir el pH antes de mezclar.`, 'aplicacion'));
+    `Tu fuente es "${f.fuenteAgua}": puede traer tierra, inóculo de enfermedades y un pH fuera de rango. La guía de Zamorano indica clorar el agua (25 ml de cloro por barril de 200 L, 30 minutos) y medir el pH antes de mezclar.`, 'aplicacion'));
   const nat = abejasSinAguijon(f);
   if (nat.length) out.push(aviso('criterio', 'Abejas sin aguijón en tu finca',
     `Registraste ${nat.map((e) => e.nombre).join(', ')}. Casi toda la toxicidad publicada es de Apis mellifera, así que la app multiplica el HQ por ${cfg.plag.factorSinAguijon}.`, 'arena'));

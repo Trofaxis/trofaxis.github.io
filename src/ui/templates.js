@@ -31,6 +31,5 @@ export function viewTemplates(){
       <div class="f"><label for="t-paste">Una fila por registro: fecha, lote, valor</label><textarea id="t-paste" data-bind="tpl.paste" placeholder="2026-08-01, Lote 3, 30">${esc(t.paste)}</textarea></div>
       <div class="row"><button class="btn" data-act="paste">Agregar filas</button><span class="muted small" id="paste-msg"></span></div>
     </div>
-    <p class="muted small">En la app real, la exportación a Excel queda siempre disponible.</p>
   </section>`;
 }
