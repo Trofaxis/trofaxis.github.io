@@ -115,6 +115,13 @@ export function crearCliente({ cfg = CONFIG, fetchFn = globalThis.fetch } = {}) 
     // La seguridad por filas limita el borrado a los casos del propio usuario.
     retirarMisCasos: (sesion) => pedir('/rest/v1/casos?id=not.is.null', { metodo: 'DELETE', sesion }),
 
+    // Respuestas de la bienvenida (cómo conoció la app y para qué la usará). Anónimas: sin sesión, nombre ni ubicación.
+    // La base solo acepta las opciones de la lista y nadie las puede leer con la clave publicable.
+    enviarBienvenida: ({ fuente, usos }) => pedir('/rest/v1/bienvenida', {
+      metodo: 'POST', extra: { Prefer: 'return=minimal' },
+      cuerpo: { fuente: fuente || null, usos: Array.isArray(usos) ? usos : [], version: VERSION_NUBE },
+    }),
+
     // Lectura pública: no necesita sesión. Lo que baja se valida antes de usarse.
     async casosComunidad() {
       const max = cfg.nube?.maxCasos ?? 500;

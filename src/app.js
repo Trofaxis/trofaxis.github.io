@@ -191,7 +191,12 @@ const accionesCuestionario = {
 
 // Bienvenida de primera vez. Al terminarla (con o sin cuestionario) queda marcada como vista.
 // Con datos propios ya cargados (si se vuelve a ver desde Ajustes), nunca se borra la finca.
-const terminarBienvenida = () => { guardarBienvenida(S.bv); S.bv.paso = 0; };
+// La primera vez, si respondió algo, las respuestas se mandan anónimas a la nube (sin esperar ni avisar si falla).
+const terminarBienvenida = () => {
+  const primera = !leerBienvenida().vista, { fuente, usos } = S.bv;
+  guardarBienvenida(S.bv); S.bv.paso = 0;
+  if (primera && nube.activo && (fuente || usos.length)) nube.enviarBienvenida({ fuente, usos }).catch(() => {});
+};
 const accionesBienvenida = {
   'bv-siguiente': () => { S.bv.paso = Math.min(PASOS_BV.length - 1, S.bv.paso + 1); },
   'bv-atras': () => { S.bv.paso = Math.max(0, S.bv.paso - 1); },

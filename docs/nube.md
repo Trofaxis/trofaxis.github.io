@@ -10,12 +10,14 @@ Proyecto `biogap` (organización personal de Diego, plan gratis, región us-east
 |---|---|---|
 | `fincas` | La finca completa (JSON validado) de cada usuario. Una por usuario: guardar reemplaza la anterior. | Solo su dueño (RLS por `auth.uid()`) |
 | `casos` | Caso anonimizado: `perfil`, `acciones`, `resultado`, fecha de `consentimiento` | Lectura pública, pero **sin la columna `user_id`**. Escribe y borra solo su dueño |
+| `bienvenida` | Respuestas de la bienvenida de primera vez: `fuente` (cómo conoció la app) y `usos` (para qué la usará), con fecha. Sin `user_id`, nombre ni ubicación. | Nadie con la clave publicable: `anon` y `authenticated` solo pueden insertar. Diego la lee en el panel de Supabase (Table Editor) |
 
 Garantías puestas en la base, no solo en la app:
 
 - `casos.perfil` solo admite las claves `cultivo, riego, pendiente, distAgua, propNativas, mesesCoincidencia, scores, overall`, y `casos.resultado` solo `ncAntes, ncDespues, laminaAntes, laminaDespues` (restricción CHECK). Un nombre o una coordenada en el perfil lo rechaza la base.
 - `anon` no puede leer `user_id` ni `consentimiento` (privilegios por columna), y no toca `fincas`.
 - Un usuario solo inserta y borra casos con su propio `user_id`.
+- `bienvenida.fuente` y `bienvenida.usos` solo admiten las opciones de `src/core/bienvenida.js` (CHECK), y una fila vacía se rechaza. Se envía una sola vez, al terminar la bienvenida la primera vez y solo si respondió algo; verla otra vez desde Ajustes no envía nada. Riesgo conocido: como no pide sesión, alguien podría insertar filas falsas a mano; los valores están acotados, pero los conteos son orientativos.
 
 ## Sesión
 
@@ -47,3 +49,24 @@ En Authentication → URL Configuration: poner como **Site URL** la dirección d
 3. Guardar la finca en la nube, borrar los datos locales, cargarla desde la nube.
 4. Marcar el consentimiento, abrir *Ver exactamente qué se enviaría*, compartir, y comprobar que aparece un caso «Comunidad». Retirarlo.
 5. Con Wi-Fi apagado: la app debe seguir funcionando y mostrar un aviso entendible.
+
+## Tabla `bienvenida` (migración `bienvenida_respuestas`, 2026-10-14)
+
+```sql
+create table public.bienvenida (
+  id bigint generated always as identity primary key,
+  creado timestamptz not null default now(),
+  fuente text check (fuente is null or fuente in ('zamorano','colega','evento','redes','buscador','otro')),
+  usos text[] not null default '{}' check (
+    cardinality(usos) <= 5 and usos <@ array['certificacion','riesgo','abejas','asesorar','estudiar']::text[]
+  ),
+  version smallint not null default 1 check (version between 1 and 100),
+  check (fuente is not null or cardinality(usos) > 0)
+);
+alter table public.bienvenida enable row level security;
+revoke all on public.bienvenida from anon, authenticated;
+grant insert (fuente, usos, version) on public.bienvenida to anon, authenticated;
+create policy "insertar respuesta anonima" on public.bienvenida for insert to anon, authenticated with check (true);
+```
+
+Si se agrega una opción en `FUENTES_BV` o `USOS_BV`, hay que agregarla también en estos CHECK; si no, la base rechaza el envío (la app no se rompe, solo no se guarda esa respuesta).

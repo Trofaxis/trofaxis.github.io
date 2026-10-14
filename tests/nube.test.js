@@ -220,3 +220,14 @@ test('si Supabase rechaza la renovación se pide volver a entrar; sin conexión 
   await assert.rejects(() => crearCliente({ cfg: cfgOk, fetchFn: simulador(new Error('red')).fn }).renovarSesion(sesion), (e) => e instanceof ErrorNube && e.estado === 0); // no es 401: la app no borra la sesión
   await assert.rejects(() => crearCliente({ cfg: cfgOk, fetchFn: simulador(respuesta({}, 500)).fn }).renovarSesion(sesion), (e) => e.estado === 500);
 });
+
+test('la bienvenida se envía anónima: sin sesión, solo fuente, usos y versión', async () => {
+  const s = simulador(respuesta(null, 201));
+  await crearCliente({ cfg: cfgOk, fetchFn: s.fn }).enviarBienvenida({ fuente: 'zamorano', usos: ['abejas'] });
+  const l = s.llamadas[0];
+  assert.equal(l.method, 'POST');
+  assert.match(l.url, /\/rest\/v1\/bienvenida$/);
+  assert.equal(l.headers.Authorization, undefined);
+  assert.equal(l.headers.Prefer, 'return=minimal'); // nadie puede leer la tabla: no se pide la fila de vuelta
+  assert.deepEqual(JSON.parse(l.body), { fuente: 'zamorano', usos: ['abejas'], version: 1 });
+});

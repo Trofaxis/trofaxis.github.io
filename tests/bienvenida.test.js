@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import { instalarDOM } from './dom-falso.js';
 
 const dom = instalarDOM();
+// La nube real queda fuera: se registran los envíos en vez de salir a internet.
+const envios = [];
+globalThis.fetch = async (url, op) => { envios.push({ url, ...op }); return { ok: true, status: 201, text: async () => '' }; };
 const { S, demoFarm } = await import('../src/core/state.js');
 const { viewBienvenida, PASOS_BV } = await import('../src/ui/bienvenida.js');
 const bvCore = await import('../src/core/bienvenida.js');
@@ -90,4 +93,18 @@ test('verla otra vez desde Ajustes nunca borra una finca propia', () => {
 test('lo guardado se valida: opciones desconocidas se descartan', () => {
   assert.deepEqual(normalizarBienvenida({ vista: 'si', fuente: 'tele', usos: ['abejas', 'x', 3] }), { vista: false, fuente: '', usos: ['abejas'] });
   assert.deepEqual(normalizarBienvenida(null), { vista: false, fuente: '', usos: [] });
+});
+
+test('la primera vez, las respuestas van a la nube una sola vez; sin respuestas o al verla otra vez, no se envía nada', async () => {
+  const deBienvenida = () => envios.filter((e) => e.url.endsWith('/rest/v1/bienvenida'));
+  envios.length = 0; dom.almacen.clear(); S.farm = demoFarm(); S.demo = true;
+  S.bv = { paso: 4, fuente: 'redes', usos: ['riesgo', 'abejas'] };
+  dom.clic('bv-saltar-cuestionario');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(deBienvenida().length, 1);
+  assert.deepEqual(JSON.parse(deBienvenida()[0].body), { fuente: 'redes', usos: ['riesgo', 'abejas'], version: 1 });
+  dom.clic('bv-ver'); S.bv.paso = 4; dom.clic('bv-saltar-cuestionario');
+  dom.almacen.clear(); S.bv = { paso: 4, fuente: '', usos: [] }; dom.clic('bv-saltar-cuestionario');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(deBienvenida().length, 1);
 });
