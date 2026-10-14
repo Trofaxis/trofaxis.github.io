@@ -42,6 +42,8 @@ export const CONFIG = {
     percentilesRiesgo: [1 / 3, 2 / 3],
     // Meses de floración de riesgo desde los que se pide registrar la fecha de las abejas muertas (solo texto de ayuda).
     topeAcciones: 6,
+    // Duración de la animación de análisis al generar el ApiRadar (solo presentación, no afecta el cálculo).
+    msAnalisis: 2600,
   },
 
   // Módulos activos, en el orden en que aparecen en el dashboard.

@@ -55,3 +55,12 @@ En el mapa de la finca, el bloque «Censo de árboles y sitios (ApiRadar)» reci
 - **No hay hábitat natural ni otras capas** en el mapa de riesgo: solo contorno, árboles y sitios. Los datos reales del censo de Zamorano (Osorio) no están en el repositorio: se cargan a mano o pegando la tabla, y se quedan en el navegador.
 - Las coordenadas del censo se muestran en grados, aunque se hayan escrito en UTM.
 - Un solo problema por ahora. Agregar otro es sumar una entrada en `PROBLEMAS` y su función de diagnóstico.
+
+## Ruta guiada, plan y descarga (2026-10-14)
+
+- El panel se lee como una ruta: riesgo hoy → con tu plan (barra), cinco pasos con su estado (riesgo, censo, sitios, cambios hechos, comprobación), el plan de acciones y «Dónde actuar». Lo técnico (datos usados, rúbrica, qué falta) queda plegado en «Cómo se calculó».
+- Cada acción medible se puede quitar del plan (`S.arExcluir`); el cálculo se repite sin ella (`apiRadar(..., excluir)`). «Ya lo hice» se guarda con las demás recomendaciones (`S.done['ar|id']`).
+- La acción de colonias y la de árboles traen dónde: el sitio propuesto más lejano que sirve o, si no hay, el punto más alejado de la finca; y los árboles de más copa con sus coordenadas.
+- «Descargar plan (imagen)» arma un PNG en el navegador (`src/ui/plan-imagen.js`): satélite si las teselas llegan con CORS, árboles, radios, sitios, coordenadas y pasos. Sin conexión sale sin satélite y lo dice. «Imprimir o guardar PDF» imprime solo el ApiRadar.
+- La animación de análisis al generar el ApiRadar es solo presentación (`CONFIG.apiradar.msAnalisis`) y se salta con «reducir movimiento».
+- Un sitio marcado sobre el ejemplo se compara con los árboles de ejemplo (antes los borraba y el botón parecía no hacer nada).

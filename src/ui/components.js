@@ -19,3 +19,9 @@ export function estadoFuente(estado,fuente,clave,abierto=false){
   if(!fuente)return `<span class="${clase}">${ESTADOS[estado]}</span>`;
   return `<details class="${clase}" data-keep="${esc(clave)}" ${abierto?'open':''}><summary aria-label="${esc(ESTADOS[estado])}: ver la fuente">${ESTADOS[estado]} <span aria-hidden="true">ⓘ</span></summary><p class="fuente">${esc(fuente)}</p></details>`;
 }
+
+// Botón «+» de una tarjeta o sección: abre un resumen corto de lo que se está viendo. Es un <details> (funciona con el teclado
+// y sin JavaScript) y recuerda si quedó abierto (data-keep). `abierto` viene de S.abiertos[`mas-${clave}`].
+export function mas(clave,titulo,cuerpo,abierto=false){
+  return `<details class="mas" data-keep="mas-${esc(clave)}" ${abierto?'open':''}><summary aria-label="Más sobre ${esc(titulo)}" title="Más sobre ${esc(titulo)}"><span aria-hidden="true">+</span></summary><div class="mas-caja">${cuerpo}</div></details>`;
+}

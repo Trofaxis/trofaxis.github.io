@@ -47,7 +47,7 @@ test('cada clase de utilidad que usan las vistas está definida en styles.css', 
   const nuevas = ['stack', 'nowrap', 'basis-100', 'maxw-110', 'w-auto', 'mt-8', 'pl-18', 'block', 'inline', 'rel', 'pointer', 't-der', 't-centro',
     'fw-400', 'fw-700', 'fs-125', 'txt-crit', 'txt-warn', 'txt-good', 'txt-ink', 'tenue', 'sprite', 'grafico', 'grafico-centrado',
     'grafico-480', 'grafico-340', 'grafico-min480', 'leyenda', 'plan-compacto', 'notice-col', 'editando', 'lista-nota', 'campo-coord',
-    'nc-criterio', 'nc-dias', 'meta-objetivo', 'apiradar-acciones', 'minw-0', 'minw-120', 'minw-260'];
+    'nc-criterio', 'nc-dias', 'meta-objetivo', 'minw-0', 'minw-120', 'minw-260'];
   for (const gap of [4, 8, 10, 12]) nuevas.push(`gap-${gap}`);
   const faltan = nuevas.filter((c) => !definidas.has(c));
   assert.deepEqual(faltan, []);
@@ -59,7 +59,7 @@ test('cada clase de utilidad que usan las vistas está definida en styles.css', 
 
 test('el nivel del ApiRadar usa una clase de color que existe (txt-crit, txt-warn o txt-good)', () => {
   const ar = leer('src/ui/apiradar.js');
-  const niveles = [...ar.matchAll(/const nivelC = [^;]*;/g)][0][0];
-  for (const n of ['crit', 'warn', 'good']) assert.ok(niveles.includes(`'${n}'`), `nivelC debería poder valer ${n}`);
+  const niveles = [...ar.matchAll(/const tono = [^;]*;/g)][0][0];
+  for (const n of ['crit', 'warn', 'good']) assert.ok(niveles.includes(`'${n}'`), `tono debería poder valer ${n}`);
   for (const n of ['crit', 'warn', 'good']) assert.match(css, new RegExp(`\\.txt-${n}\\{color:var\\(--${n}\\)\\}`));
 });

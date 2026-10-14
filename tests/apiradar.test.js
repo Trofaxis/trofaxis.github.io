@@ -141,7 +141,8 @@ test('apiRadarAplica coincide con apiRadar(...).aplica en todos los casos', () =
 test('el panel cerrado no arma el diagnóstico: apiRadar solo se llama al abrirlo', async () => {
   const { readFileSync } = await import('node:fs');
   const ui = readFileSync(new URL('../src/ui/apiradar.js', import.meta.url), 'utf8');
-  assert.match(ui, /const R = abierto \? apiRadar\(/);
-  assert.match(ui, /abierto \? R\.aplica : apiRadarAplica\(f, cfg\)/);
+  const cerrado = ui.indexOf('if (!abierto)'), llamada = ui.indexOf('const R = apiRadar(');
+  assert.ok(cerrado > 0 && llamada > cerrado, 'el panel cerrado debe volver antes de llamar a apiRadar');
+  assert.match(ui.slice(cerrado, llamada), /apiRadarAplica\(f, cfg\)/);
   assert.doesNotMatch(ui, /apiRadar\([^)]*'spathodea'/);
 });
