@@ -89,8 +89,6 @@ p{margin:0}
 @media (max-width:700px){.hero{grid-template-columns:minmax(0,1fr)}}
 .hero.ar{grid-template-columns:minmax(0,1fr) minmax(0,400px)}
 @media (max-width:700px){.hero.ar{grid-template-columns:minmax(0,1fr)}}
-.primero{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 14px;margin:14px 0}
-.primero h3,.primero p{margin:0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 20px}
 .stats .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .stats .v{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.3}
@@ -343,7 +341,7 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .grafico-480{max-width:480px} .grafico-340{max-width:340px}
 .grafico-min480{min-width:480px}
 .leyenda{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-.apiradar-acciones li{flex-direction:column;align-items:stretch;gap:6px}
+
 .plan-compacto{gap:4px}
 .plan-compacto li{border:none;padding:0}
 .notice-col{flex-direction:column;align-items:flex-start;gap:4px}
@@ -353,3 +351,97 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .nc-criterio{flex:2;min-width:160px}
 .nc-dias{flex:1;min-width:80px}
 .meta-objetivo{position:absolute;left:66.66666666666667%;top:-3px;bottom:-3px;border-left:2px solid var(--ink)}
+
+/* Sección «+»: botón redondo en la esquina de una tarjeta o sección; al abrirlo muestra un resumen. Es un <details>. */
+.mas>summary{list-style:none;cursor:pointer;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 20px/1 var(--f-display);color:var(--accent);background:var(--chip);border:1px solid var(--line);transition:transform .2s,background .2s}
+.mas>summary::-webkit-details-marker{display:none}
+.mas>summary:hover{background:var(--accent-soft)}
+.mas[open]>summary{transform:rotate(45deg)}
+.mas-caja{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);font-size:14px;line-height:1.5;box-shadow:var(--shadow)}
+.mas-caja p{margin:0 0 8px}.mas-caja ul{margin:0 0 8px;padding-left:18px}.mas-caja li{margin:2px 0}.mas-caja>:last-child{margin-bottom:0}
+@media (prefers-reduced-motion:no-preference){.mas[open] .mas-caja{animation:aparecer .25s ease-out}}
+@keyframes aparecer{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.con-mas{position:relative;display:flex;flex-wrap:wrap;gap:0 12px;padding-right:42px}
+.con-mas>div:first-child{flex:1;min-width:0}
+.con-mas>.mas{flex-basis:100%}
+.con-mas>.mas>summary{position:absolute;top:0;right:0}
+/* Tarjetas KPI: el «+» va arriba a la derecha; abierta, la tarjeta ocupa todo el ancho. */
+.stats>.kpi{position:relative;padding-right:46px}
+.kpi>.mas>summary{position:absolute;top:10px;right:10px;width:26px;height:26px;font-size:18px;color:var(--side-ink);background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25)}
+.kpi>.mas>summary:hover{background:rgba(255,255,255,.26)}
+.stats>.kpi:has(.mas[open]){grid-column:1/-1}
+@media (max-width:560px){.stats>.kpi{padding-right:40px}}
+
+/* ApiRadar: ruta guiada. */
+.ar-panel h3{margin:6px 0 0}
+.ar-resultado{display:grid;grid-template-columns:auto auto auto minmax(0,1fr);gap:8px 22px;align-items:center;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),var(--surface));border:1px solid var(--line)}
+.ar-num{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.ar-num b{font:800 52px/1 var(--f-display);letter-spacing:-.02em}
+.ar-flecha{font-size:30px;color:var(--muted)}
+.ar-barra{grid-column:1/-1;position:relative;height:12px;border-radius:99px;background:var(--chip);overflow:hidden}
+.ar-barra span{position:absolute;inset:0 auto 0 0;border-radius:99px}
+.ar-barra .hoy{background:var(--crit);opacity:.28}
+.ar-barra .plan{background:linear-gradient(90deg,var(--good),var(--accent))}
+.ar-frase{grid-column:1/-1;margin:0}
+@media (max-width:700px){.ar-resultado{grid-template-columns:1fr auto 1fr}.ar-num b{font-size:44px}.ar-frase,.ar-barra{grid-column:1/-1}}
+@media (prefers-reduced-motion:no-preference){.ar-barra .plan{animation:crecer 1s ease-out}}
+@keyframes crecer{from{width:0}}
+.ar-ruta{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.ar-ruta li{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.ar-ruta li>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ar-ruta li>div .btn{align-self:flex-start;margin-top:4px}
+.ar-ruta .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--chip);color:var(--muted)}
+.ar-ruta li.hecho{border-color:var(--good);background:var(--accent-soft)}
+.ar-ruta li.hecho .n{background:var(--good);color:#fff}
+.ar-plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ar-accion{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:14px;border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--surface)}
+.ar-accion p{margin:0}
+.ar-accion.fuera{border-left-color:var(--line);opacity:.75}
+.ar-accion.hecha{border-left-color:var(--good);background:var(--accent-soft)}
+.ar-accion-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ar-accion-top b{flex:1;min-width:180px}
+.ar-accion-top .n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--accent);color:var(--accent-ink)}
+.ar-accion-ctrl{align-items:center}
+.chip-delta{font:600 13px var(--f-mono);padding:3px 10px;border-radius:99px;background:var(--chip);white-space:nowrap}
+.chip-delta.down{color:var(--good);background:var(--accent-soft)}
+.chip-delta.up{color:var(--crit)}
+.chip-delta.zero,.chip-delta.nulo,.chip-delta.fuera{color:var(--muted)}
+.ar-donde{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.mono{font-family:var(--f-mono);font-size:13px}
+.ar-descargas{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:14px;background:var(--pollen-soft);border:1px solid var(--line)}
+.ar-descargas h3{margin:0}.ar-descargas p{margin:4px 0 0}
+.ar-calculo>summary{font-weight:600;font-size:15px;color:var(--ink);padding:8px 0}
+.ar-calculo h4{margin:14px 0 6px}
+/* Animación de análisis al generar el ApiRadar (referencia de diseño: pantallas de carga de Astra AI). */
+.ar-cargando{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 12px;border-radius:16px;background:radial-gradient(circle at 50% 30%,var(--side-2),var(--side) 70%);color:var(--side-ink)}
+.ar-cargando-t{margin:0;font:600 18px var(--f-display)}
+.esfera{width:150px;height:150px}
+.esfera circle{fill:var(--side-hi)}
+.esfera .meridiano{transform-box:fill-box;transform-origin:center}
+.esfera .m0{transform:scaleX(1)}.esfera .m1{transform:scaleX(.87)}.esfera .m2{transform:scaleX(.5)}.esfera .m3{transform:scaleX(.05)}.esfera .m4{transform:scaleX(-.5)}.esfera .m5{transform:scaleX(-.87)}
+@media (prefers-reduced-motion:no-preference){
+  .esfera .meridiano{animation:girar 2.4s linear infinite}
+  .esfera .m1{animation-delay:-.2s}.esfera .m2{animation-delay:-.4s}.esfera .m3{animation-delay:-.6s}.esfera .m4{animation-delay:-.8s}.esfera .m5{animation-delay:-1s}
+}
+@keyframes girar{0%{transform:scaleX(1);opacity:1}25%{opacity:.75}50%{transform:scaleX(-1);opacity:.35}75%{opacity:.75}100%{transform:scaleX(1);opacity:1}}
+.ar-pasos-carga{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.ar-pasos-carga li{display:flex;align-items:center;gap:10px;opacity:.45}
+.ar-pasos-carga .tick{width:18px;height:18px;border-radius:50%;border:2px dashed currentColor;flex:none}
+@media (prefers-reduced-motion:no-preference){
+  .ar-pasos-carga li{animation:paso-listo .3s forwards}
+  .ar-pasos-carga li .tick{animation:tick-listo .3s forwards}
+  .ar-pasos-carga li:nth-child(1),.ar-pasos-carga li:nth-child(1) .tick{animation-delay:.3s}
+  .ar-pasos-carga li:nth-child(2),.ar-pasos-carga li:nth-child(2) .tick{animation-delay:.75s}
+  .ar-pasos-carga li:nth-child(3),.ar-pasos-carga li:nth-child(3) .tick{animation-delay:1.2s}
+  .ar-pasos-carga li:nth-child(4),.ar-pasos-carga li:nth-child(4) .tick{animation-delay:1.65s}
+  .ar-pasos-carga li:nth-child(5),.ar-pasos-carga li:nth-child(5) .tick{animation-delay:2.1s}
+}
+@keyframes paso-listo{to{opacity:1}}
+@keyframes tick-listo{to{border-style:solid;background:var(--side-hi);border-color:var(--side-hi)}}
+/* Imprimir o guardar en PDF solo el ApiRadar. */
+@media print{
+  body.imprimir-ar .side,body.imprimir-ar #app>:not(#apiradar){display:none!important}
+  body.imprimir-ar #apiradar{box-shadow:none;border:none}
+  body.imprimir-ar #apiradar .btn,body.imprimir-ar #apiradar .mas{display:none}
+  body.imprimir-ar #apiradar details>*{display:block}
+}

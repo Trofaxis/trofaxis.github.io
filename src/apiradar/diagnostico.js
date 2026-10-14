@@ -46,7 +46,8 @@ export function apiRadarAplica(f0, cfg = CONFIG) {
   return modulosDe(f0, cfg).includes('poli') && f0.especies.some((e) => e.riesgo);
 }
 
-export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', ubic = null) {
+// excluir: { [idAccion]: true } con las acciones medibles que el usuario sacó de su plan (no se aplican al recalcular).
+export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', ubic = null, excluir = {}) {
   const f = conPlan(f0);
   const base = evaluar(f, cfg, extra);
   const mod = base.mods.find((m) => m.id === 'poli');
@@ -92,9 +93,10 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
   const acciones = [];
   let g = structuredClone(f), previo = mod.score;
   const medir = (clave) => {
+    if (excluir[clave]) return { de: null, a: null, delta: null, incluida: false };
     CAMBIOS[clave](g, f, cfg, { ...ctx, sinAlt });
     const despues = polin(g, cfg, extra).score;
-    const r = { de: previo, a: despues, delta: despues - previo };
+    const r = { de: previo, a: despues, delta: despues - previo, incluida: true };
     previo = despues;
     return r;
   };
@@ -150,17 +152,21 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     const lejos = sitios.filter((x) => x.veredicto === 'lejos');
     detalleRefugio = `Sitios que propusiste: ${lista}. ${lejos.length ? `Sirve${lejos.length > 1 ? 'n' : ''} ${lejos.map(nombreSitio).join(' y ')} (fuera de ${rMax} m); confirma que tenga${lejos.length > 1 ? 'n' : ''} floración alternativa cerca.` : `Ninguno queda fuera de ${rMax} m: prueba otro punto o reduce los árboles de riesgo.`} ${detalleRefugio}`;
   }
+  // Dónde actuar: el sitio propuesto que queda más lejos (si alguno sirve) o, si no, el punto más alejado dentro de la finca.
+  const lejosOrden = sitios.filter((x) => x.veredicto === 'lejos').sort((a, b) => b.distanciaM - a.distanciaM);
+  const donde = lejosOrden.length ? { punto: [lejosOrden[0].lat, lejosOrden[0].lon], distanciaM: lejosOrden[0].distanciaM, nombre: nombreSitio(lejosOrden[0]), cumple: true }
+    : sitio && sitio.fraccionMin > 0 ? { punto: sitio.mejor.punto, distanciaM: sitio.mejor.distanciaM, nombre: 'Punto más alejado', cumple: sitio.mejor.distanciaM >= rMin } : null;
   acciones.push({
-    id: 'refugio', titulo: 'Ubicar colonias y refugios fuera del radio de los árboles de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la próxima floración',
+    id: 'refugio', titulo: 'Poner meliponarios u hoteles de insectos lejos de los árboles de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la próxima floración',
     detalle: detalleRefugio,
     estado: radio.hayTrigona ? 'verificado' : 'criterio propio',
     nota: `Radio: ${FUENTES.barrantes.corta} (rango de vuelo de Trigona fulviventris en Guanacaste, Costa Rica; cifra tomada del resumen del artículo). ${radio.hayTrigona ? '' : 'No registraste Trigona fulviventris: el radio es una referencia. '}Para Plebeia melanica no hay una cifra publicada en las fuentes revisadas; se usa el mismo radio como referencia (criterio propio). La app no sabe dónde hay floración alternativa: eso lo decides tú.${nCoord && arboles && nCoord !== arboles ? ` Ojo: registraste ${arboles} árbol(es) en Especies y ${nCoord} con coordenadas.` : ''} Las coordenadas se guardan solo en este navegador.`,
-    delta: null,
+    delta: null, donde,
   });
   const prioritarios = censoArb.filter((a) => a.clase === 'alto').sort((a, b) => b.vol - a.vol).slice(0, 6);
   if (riesgo.length) {
     acciones.push({
-      id: 'arbol', titulo: 'Reducir la flor disponible de la especie de riesgo', cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la floración',
+      id: 'arbol', titulo: 'Reducir la flor disponible de la especie de riesgo', donde: prioritarios.length ? { arboles: prioritarios.map((a) => ({ id: a.id, punto: [a.lat, a.lon] })) } : null, cuando: ctx.riesgoFlor.length ? `antes de ${M[inicio(ctx.riesgoFlor)]}` : 'antes de la floración',
       detalle: `No sembrar más individuos de ${riesgo[0].nombre}; podar o controlar rebrotes reduce las flores disponibles.${prioritarios.length ? ` Empieza por los árboles ${prioritarios.map((a) => a.id).join(', ')}: son ${prioritarios.length === 1 ? 'el de' : 'los de'} más volumen de copa del censo (${Math.round((prioritarios.reduce((t, a) => t + a.vol, 0) / rc.volumen) * 100)} % del volumen total).` : ''}`,
       estado: 'criterio propio', nota: 'La rúbrica mide la abundancia con el volumen de copa; no mide cuánto baja el riesgo por una poda parcial, por eso no se da una cifra.', delta: null,
     });

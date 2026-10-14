@@ -3,12 +3,15 @@ import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
 import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes, respaldoDemasiadoGrande, MENSAJE_RESPALDO_GRANDE } from './core/storage.js';
 import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
-import { viewDashboard } from './ui/dashboard.js';
+import { viewDashboard, extraRiego } from './ui/dashboard.js';
+import { CONFIG } from './core/config.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewCasos } from './ui/casos.js';
-import { montarMapa, reiniciarMapa } from './ui/mapa.js';
+import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual } from './ui/mapa.js';
+import { descargarImagenPlan } from './ui/plan-imagen.js';
+import { apiRadar } from './apiradar/diagnostico.js';
 import { marcarManual } from './ui/clima.js';
 import { llenarRiego } from './clima/normales.js';
 import { producto, UNIDADES } from './fert/catalogo.js';
@@ -200,7 +203,28 @@ const accionesPlantillas = {
 };
 
 const accionesApiRadar = {
-  'apiradar': (a) => { S.problema = a.dataset.p; },
+  'apiradar': (a) => {
+    S.problema = a.dataset.p;
+    // Animación de análisis (referencia: Astra AI). Con «reducir movimiento» se salta.
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    S.arCargando = true;
+    setTimeout(() => { S.arCargando = false; render(); }, CONFIG.apiradar.msAnalisis);
+    queueMicrotask(() => document.getElementById('apiradar')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  },
+  'apiradar-sitio': () => { marcarSitioEnMapa(); return false; },
+  'apiradar-ir': (a) => { centrarMapa([+a.dataset.lat, +a.dataset.lon]); return false; },
+  'apiradar-imagen': () => {
+    const cfg = configEfectiva(normalizarAjustes(S.ajustes));
+    const R = apiRadar(S.farm, cfg, extraRiego(), S.problema || 'spathodea', ubicacionActual(), S.arExcluir);
+    descargarImagenPlan({ R, finca: S.farm, ubic: ubicacionActual(), cfg, hechas: S.done }).then((m) => { S.msg = m; render(); });
+    return false;
+  },
+  'apiradar-imprimir': () => {
+    document.body.classList.add('imprimir-ar');
+    window.addEventListener('afterprint', () => document.body.classList.remove('imprimir-ar'), { once: true });
+    window.print();
+    return false;
+  },
   'apiradar-cerrar': () => { S.problema = ''; },
   'apiradar-censo': () => {
     S.abiertos['mapa-arboles'] = true;
@@ -305,6 +329,7 @@ document.addEventListener('click',e=>{
   const su=e.target.closest('summary');if(su&&su.parentElement.dataset.keep){S.abiertos[su.parentElement.dataset.keep]=!su.parentElement.open;return;}
   const v=e.target.closest('[data-view]');if(v){if(S.climaUI.estado==='ok')S.climaUI={estado:'',msg:'',llenos:[]};S.view=v.dataset.view;render();window.scrollTo(0,0);return;}
   const st=e.target.closest('[data-step]');if(st){S.step=+st.dataset.step;render();return;}
+  const ap=e.target.closest('[data-arplan]');if(ap){S.arExcluir[ap.dataset.arplan]=!S.arExcluir[ap.dataset.arplan];render();return;}
   const sm=e.target.closest('[data-sim]');if(sm&&!sm.disabled){S.sim[sm.dataset.sim]=!S.sim[sm.dataset.sim];render();return;}
   const mb=e.target.closest('[data-month]');if(mb){S.plagMsg=null;const[o,k]=getRef(mb.dataset.path);const i=+mb.dataset.month;o[k]=o[k].includes(i)?o[k].filter(x=>x!==i):uniq([...o[k],i]);render();return;}
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;

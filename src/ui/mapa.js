@@ -11,6 +11,7 @@ import { marcarGuardado } from '../core/aviso-guardado.js';
 import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia, exportarUbicacion, importarUbicacion, hayDatosPropios } from '../mapa/ubicacion.js';
 import { pedirClima } from './clima.js';
 import { mapaRiesgoDe } from './mapariesgo.js';
+import { descargarImagenPlan } from './plan-imagen.js';
 
 const C = CONFIG.mapa, C_AR = CONFIG.apiradar;
 let U = cargarUbicacion();
@@ -31,7 +32,7 @@ const fmt = (x) => x.toFixed(5);
 export function panelMapa() {
   const b = (m, t, extra = '', cls = '') => `<button type="button" class="btn sm${cls}" data-mapa="${m}" ${extra}>${t}</button>`;
   return `<div class="mapa-bloque">
-    <div><h3>Mapa de la finca</h3><p class="muted small">Imagen satelital Sentinel-2 (~10 m por píxel): sirve para ubicar la finca y dibujar su contorno, no para medir con precisión. Las coordenadas se guardan solo en este navegador: no van en el archivo exportado ni en la memoria de casos.</p></div>
+    <div><h3>Mapa de la finca</h3><p class="muted small">Imagen satelital Sentinel-2 (~10 m por píxel): sirve para ubicar la finca y dibujar su contorno, no para medir con precisión. Las coordenadas se guardan en este dispositivo (en este navegador) y no se suben a internet: no van en el archivo exportado ni en la memoria de casos.</p></div>
     ${S.demo ? '<p class="muted small"><b>Ejemplo:</b> la finca demostrativa es ficticia y no tiene ubicación. Puedes probar el mapa con cualquier punto.</p>' : ''}
     <div class="mapa" id="mapa-finca" tabindex="0" role="application" aria-label="Mapa satelital. Flechas para mover, + y − para acercar o alejar." data-modo="${modo}"></div>
     <div class="row mapa-ctrl">
@@ -46,12 +47,14 @@ export function panelMapa() {
       <input id="mapa-coord" aria-label="Coordenadas en grados decimales" placeholder="Latitud, longitud (ej. 14.0108, -87.0044)" class="campo-coord">
       ${b('ir', 'Ir')}
     </div>
+    <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
     <details class="arboles" id="censo" data-keep="mapa-arboles" ${(S.abiertos['mapa-arboles'] ?? U.arboles.length > 0) ? 'open' : ''}>
       <summary>Censo de árboles y sitios (ApiRadar)${U.arboles.length ? ` · ${U.arboles.length} árbol(es)` : ''}${U.sitios.length ? ` · ${U.sitios.length} sitio(s)` : ''}</summary>
-      <p class="muted small">Coordenadas en UTM («este norte», 501177 1547784) o en grados («latitud, longitud», 14.0108, -87.0044), con punto decimal. DAP, diámetro y altura de copa son opcionales, pero sin diámetro y altura el árbol no se clasifica por riesgo. La altura es la de la copa (H de la Ec. 3 de Osorio 2025). El riesgo de cada árbol sale de su volumen de copa: con solo las coordenadas la app ubica el árbol, pero no puede decir cuál pesa más. Todo se guarda solo en este navegador.</p>
+      <p class="muted small">Coordenadas en UTM («este norte», 501177 1547784) o en grados («latitud, longitud», 14.0108, -87.0044), con punto decimal. DAP, diámetro y altura de copa son opcionales, pero sin diámetro y altura el árbol no se clasifica por riesgo. La altura es la de la copa (H de la Ec. 3 de Osorio 2025). El riesgo de cada árbol sale de su volumen de copa: con solo las coordenadas la app ubica el árbol, pero no puede decir cuál pesa más.</p>
+      <p class="mapa-aviso"><b>¿Dónde se guarda?</b> En este dispositivo, dentro de este navegador. No se sube a internet ni a la nube. Si abres la app en otro equipo o borras los datos del navegador, no lo verás: usa «Guardar mapa y censo» (abajo) para tener una copia.</p>
       <h4>Mapa de riesgo</h4>
       ${mapaRiesgoDe(U, C_AR.radioExclusionM)}
-      ${U.ejemplo ? '<p class="mapa-aviso">Estás viendo datos de ejemplo (ficticios). Al agregar un árbol o un sitio, el ejemplo se borra.</p>' : ''}
+      ${U.ejemplo ? '<p class="mapa-aviso">Estás viendo datos de ejemplo (ficticios). Puedes probar sitios sobre el ejemplo; al agregar tu primer árbol, el ejemplo se borra.</p>' : ''}
       <div class="row"><div class="f w-150"><label for="mapa-zona">Zona UTM (si usas UTM)</label><select id="mapa-zona"><option value="16" ${zonaUtm === 16 ? 'selected' : ''}>16 N (oeste)</option><option value="17" ${zonaUtm === 17 ? 'selected' : ''}>17 N (este)</option></select></div></div>
       <h4>Agregar un árbol</h4>
       <div class="censo-form">
@@ -70,19 +73,19 @@ export function panelMapa() {
         <div class="f cx"><label for="sitio-xy">Coordenadas</label><input id="sitio-xy" placeholder="501700 1547900" inputmode="decimal"></div>
         ${b('sitio-agregar', 'Agregar sitio', '', ' primary')}
       </div>
-      <p class="muted small">También puedes marcar el sitio sobre el mapa con «Marcar sitio candidato». El veredicto de cada uno está en el ApiRadar.</p>
+      <p class="muted small">También puedes pulsar «Marcar sitio candidato» y tocar el mapa. La app te dice al instante si el sitio queda lejos o cerca de los árboles de riesgo; el detalle está en el ApiRadar.</p>
     </details>
     <div class="respaldo-mapa">
       <h4>Respaldo del mapa y del censo</h4>
       <p class="muted small">El mapa, el contorno y el censo solo están en este navegador: si borras los datos del sitio o cambias de equipo, se pierden. El archivo lleva las coordenadas exactas de tu finca y de sus árboles: guárdalo en un lugar privado y no lo compartas. No viaja con el archivo de la finca ni a la nube.</p>
-      <div class="row">${b('respaldo-bajar', 'Guardar mapa y censo (archivo)', hayDatosPropios(U) ? '' : 'disabled')}${b('respaldo-subir', 'Cargar mapa y censo')}</div>
+      <div class="row">${b('imagen', 'Descargar mapa (imagen)', U.arboles.length || U.contorno.length >= 3 || U.sitios.length ? '' : 'disabled')}${b('respaldo-bajar', 'Guardar mapa y censo (respaldo para la app)', hayDatosPropios(U) ? '' : 'disabled')}${b('respaldo-subir', 'Cargar mapa y censo')}</div>
+      <p class="muted small">La imagen es para mirar, imprimir o compartir. El respaldo es un archivo de datos que solo sirve para volver a cargarlo en Trofaxis.</p>
     </div>
-    <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
   </div>`;
 }
 
 function infoHtml() {
-  const ayuda = { punto: 'Toca el mapa donde está la finca.', sitio: 'Toca el mapa donde estaría el sitio candidato.', contorno: 'Toca cada esquina de la finca en orden. Pulsa Terminar al acabar.', ver: 'Arrastra para moverte. Ctrl + rueda o los botones + y − para acercar.' }[modo];
+  const ayuda = { punto: 'Toca el mapa donde está la finca.', sitio: 'Toca el mapa donde pondrías un meliponario o un hotel de insectos. La app te dirá si queda lejos de los árboles de riesgo.', contorno: 'Toca cada esquina de la finca en orden. Pulsa Terminar al acabar.', ver: 'Arrastra para moverte. Ctrl + rueda o los botones + y − para acercar.' }[modo];
   const a = areaHa(U.contorno);
   const avisos = avisosMapa(U, S.farm.area);
   return `<p class="muted">${ayuda}</p>
@@ -131,7 +134,8 @@ function dibujar(el) {
 // Árboles del censo (color por riesgo) con su radio de exclusión (mínimo continuo, conservador punteado), los sitios candidatos
 // (rombo con el color de su veredicto) y el punto más alejado de todos los árboles.
 function arbolesSvg(xy, lat, zoom) {
-  if (!U.arboles.length) return '';
+  if (!U.arboles.length) return U.sitios.map((v) => { const [x, y] = xy([v.lat, v.lon]);
+    return `<g class="mapa-candidato sin" transform="translate(${x},${y})"><path d="M0 -9L9 0L0 9L-9 0Z"/><text x="13" y="4">${esc(nombreSitio(v))}</text><title>${esc(nombreSitio(v))}: sin árboles para comparar</title></g>`; }).join('');
   const [rMin, rMax] = CONFIG.apiradar.radioExclusionM;
   const mPorPx = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
   const arb = clasificarArboles(U.arboles);
@@ -179,9 +183,37 @@ function tocar(el, ox, oy) {
   const p = [+g.lat.toFixed(6), +g.lon.toFixed(6)];
   msg = '';
   if (modo === 'punto') { U.punto = p; modo = 'ver'; guardar(); rerender(); pedirClima(p[0], p[1]); }
-  else if (modo === 'sitio') { quitarEjemplo(); U.sitios.push({ id: siguienteSitio(), lat: p[0], lon: p[1] }); modo = 'ver'; guardar(); document.dispatchEvent(new Event('biogap:render')); return; }
+  else if (modo === 'sitio') {
+    // Un sitio marcado sobre el ejemplo se prueba contra los árboles de ejemplo (no los borra): así se ve qué hace el botón.
+    const nuevo = { id: siguienteSitio(), lat: p[0], lon: p[1] };
+    U.sitios.push(nuevo); modo = 'ver'; msg = veredictoDe(nuevo);
+    S.abiertos['mapa-arboles'] = true; guardar(); document.dispatchEvent(new Event('biogap:render')); return;
+  }
   else { U.contorno.push(p); dibujar(el); actualizarInfo(); }
   guardar();
+}
+
+// Qué significa el sitio recién marcado, en una frase.
+function veredictoDe(sitio) {
+  const [v] = evaluarSitios(clasificarArboles(U.arboles), [sitio]);
+  if (!v.veredicto) return `${nombreSitio(sitio)} guardado en ${fmt(sitio.lat)}, ${fmt(sitio.lon)}. Para saber si sirve, carga los árboles de riesgo en «Censo de árboles y sitios».`;
+  const r = C_AR.radioExclusionM;
+  const que = { cerca: `está a ${v.distanciaM} m del árbol ${v.arbol.id}, dentro de ${r[0]} m: no sirve, prueba más lejos.`, revisar: `está a ${v.distanciaM} m del árbol ${v.arbol.id}, entre ${r[0]} y ${r[1]} m: sirve con reservas.`, lejos: `está a ${v.distanciaM} m del árbol más cercano (${v.arbol.id}): sirve para colonias o refugios.` }[v.veredicto];
+  return `${nombreSitio(sitio)} ${que}${U.ejemplo ? ' (comparado con los árboles de ejemplo)' : ''}`;
+}
+
+// Desde el ApiRadar: activa «Marcar sitio candidato» y lleva al mapa.
+export function marcarSitioEnMapa() {
+  modo = 'sitio'; msg = '';
+  rerender();
+  const el = document.getElementById('mapa-finca');
+  el?.scrollIntoView({ block: 'center', behavior: 'smooth' }); el?.focus({ preventScroll: true });
+}
+// Desde el ApiRadar: centra el mapa en un punto (p. ej. el sitio para las colonias).
+export function centrarMapa(p) {
+  if (!p.every(Number.isFinite)) return;
+  U.vista = { lat: p[0], lon: p[1], zoom: Math.max(U.vista.zoom, 15) }; guardar(); rerender();
+  document.getElementById('mapa-finca')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
 // Al agregar datos propios, el ejemplo ficticio (árboles, sitios y contorno) se borra para no mezclarlo.
@@ -264,6 +296,7 @@ document.addEventListener('click', (e) => {
   msg = '';
   if (a === 'respaldo-bajar') { bajarRespaldo(); return; }
   if (a === 'respaldo-subir') { subirRespaldo(); return; }
+  if (a === 'imagen') { descargarImagenPlan({ R: null, finca: S.farm, ubic: U, cfg: CONFIG }).then((m) => { msg = m; rerender(); }); return; }
   if (a === 'modo-punto') modo = modo === 'punto' ? 'ver' : 'punto';
   else if (a === 'modo-sitio') modo = modo === 'sitio' ? 'ver' : 'sitio';
   else if (a === 'modo-contorno') { if (modo !== 'contorno') U.contorno = []; modo = modo === 'contorno' ? 'ver' : 'contorno'; }
@@ -307,10 +340,10 @@ document.addEventListener('click', (e) => {
     const p = xy.length === 2 ? puntoDe(Number(xy[0]), Number(xy[1]), zonaUtm) : null;
     if (!p) { msg = 'Escribe las coordenadas del sitio: dos números, «este norte» (UTM) o «latitud, longitud».'; actualizarInfo(); return; }
     const id = valor('sitio-id') || siguienteSitio();
-    if (!U.ejemplo && U.sitios.some((x) => x.id === id)) { msg = `Ya hay un sitio con el nombre ${id}.`; actualizarInfo(); return; }
-    quitarEjemplo();
-    U.sitios.push({ id, lat: p[0], lon: p[1] });
-    msg = `${nombreSitio({ id })} agregado.`; S.abiertos['mapa-arboles'] = true;
+    if (U.sitios.some((x) => x.id === id)) { msg = `Ya hay un sitio con el nombre ${id}.`; actualizarInfo(); return; }
+    const nuevo = { id, lat: p[0], lon: p[1] };
+    U.sitios.push(nuevo);
+    msg = veredictoDe(nuevo); S.abiertos['mapa-arboles'] = true;
     guardar(); document.dispatchEvent(new Event('biogap:render')); return;
   } else if (a === 'sitio-quitar') {
     U.sitios.splice(+b.dataset.i, 1);

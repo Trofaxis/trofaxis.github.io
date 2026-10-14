@@ -1,4 +1,4 @@
-// Panel ApiRadar: la acción prioritaria va justo bajo el resultado, sin jerga en el primer nivel (issue 45).
+// Panel ApiRadar: se lee como una ruta guiada (riesgo hoy y con el plan, pasos, plan, dónde) y lo técnico va plegado al final.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -13,47 +13,78 @@ const { PROBLEMAS } = await import('../src/apiradar/diagnostico.js');
 const JERGA = /percentil|\bHQ\b|rúbrica|rubrica|\bpesos?\b/i;
 const sinEtiquetas = (h) => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-function panel({ abierto = true } = {}) {
-  const previo = { farm: S.farm, problema: S.problema };
+function panel({ abierto = true, excluir = {}, cargando = false } = {}) {
+  const previo = { farm: S.farm, problema: S.problema, arExcluir: S.arExcluir, arCargando: S.arCargando };
   try {
     S.farm = demoFarm();
     S.problema = abierto ? 'spathodea' : '';
-    const m = viewDashboard().match(/<section class="panel" id="apiradar">[\s\S]*?<\/section>/);
+    S.arExcluir = excluir; S.arCargando = cargando;
+    const m = viewDashboard().match(/<section class="panel ar-panel[^"]*" id="apiradar">[\s\S]*?<\/section>/);
     assert.ok(m, 'el tablero no trae el panel ApiRadar');
     return m[0];
   } finally { Object.assign(S, previo); }
 }
 
-test('«Qué hacer primero» va justo bajo el resultado y antes de las tablas de evidencia', () => {
+test('el panel se lee en orden: riesgo hoy y con el plan, ruta, plan, dónde, descarga y al final cómo se calculó', () => {
   const h = panel();
-  const resultado = h.indexOf('para las abejas:');
-  const primero = h.indexOf('Qué hacer primero');
-  const datos = h.indexOf('1. Qué datos usó');
-  assert.ok(resultado >= 0 && primero > resultado && datos > primero, `orden: resultado ${resultado}, primero ${primero}, datos ${datos}`);
-  for (const t of ['1. Qué datos usó', '2. Por qué sale este riesgo', '3. Dónde están los árboles de riesgo', '4. Qué hacer', 'Cómo saber si funcionó']) {
-    assert.ok(h.includes(t), `la sección «${t}» debe seguir en el panel`);
+  const orden = ['Riesgo hoy', 'Con tu plan', '<h3>Tu ruta', '<h3>Tu plan', '<h3>Dónde actuar', 'Descargar plan (imagen)', 'Cómo se calculó', 'Qué datos usó', 'Por qué sale este riesgo', 'Cómo saber si funcionó'];
+  const pos = orden.map((t) => h.indexOf(t));
+  pos.forEach((p, i) => assert.ok(p >= 0, `falta «${orden[i]}»`));
+  for (let i = 1; i < pos.length; i++) assert.ok(pos[i] > pos[i - 1], `«${orden[i]}» debe ir después de «${orden[i - 1]}»`);
+  // Lo técnico va plegado.
+  assert.match(h, /<details class="ar-calculo"[^>]*><summary>Cómo se calculó/);
+});
+
+test('«con tu plan» es el total de las acciones medibles y baja el riesgo en la finca de ejemplo', () => {
+  const h = panel();
+  const hoy = +h.match(/Riesgo hoy<\/span><b[^>]*>(\d+)/)[1];
+  const plan = +h.match(/Con tu plan<\/span><b[^>]*>(\d+)/)[1];
+  assert.ok(plan < hoy, `${plan} < ${hoy}`);
+  assert.match(h, new RegExp(`Tu plan baja el riesgo para las abejas <b>${hoy - plan} puntos</b>`));
+});
+
+test('quitar una acción del plan la deja fuera del cálculo y sube el riesgo con el plan', () => {
+  const con = panel(), sin = panel({ excluir: { mover: true } });
+  const plan = (h) => +h.match(/Con tu plan<\/span><b[^>]*>(\d+)/)[1];
+  assert.ok(plan(sin) > plan(con));
+  assert.match(sin, /Fuera de tu plan/);
+  assert.match(sin, /data-arplan="mover" aria-pressed="false">Agregar a mi plan/);
+});
+
+test('cada acción trae «Ya lo hice» y la de colonias dice dónde, con coordenadas, cuando hay censo', () => {
+  const h = panel();
+  assert.match(h, /data-done="ar\|refugio"/);
+  assert.match(h, /Poner meliponarios u hoteles de insectos lejos de los árboles de riesgo/);
+});
+
+test('la ruta marca los pasos y ofrece cargar el censo cuando falta', () => {
+  const h = panel();
+  assert.match(h, /<ol class="ar-ruta">/);
+  assert.match(h, /Ubica los árboles de riesgo[\s\S]*data-act="apiradar-censo"/);
+  assert.match(h, /data-act="apiradar-sitio"/);
+});
+
+test('el primer nivel (encabezado, resultado, ruta y plan) no usa jerga', () => {
+  const h = panel();
+  const primerNivel = sinEtiquetas(h.slice(0, h.indexOf('Dónde actuar'))).replace(/Cómo hacerlo.*?(?=\d+ ?\.|$)/g, '');
+  assert.ok(primerNivel.length > 200);
+  assert.doesNotMatch(sinEtiquetas(h.slice(0, h.indexOf('Tu ruta'))), JERGA);
+  const detalle = sinEtiquetas(h.slice(h.indexOf('Cómo se calculó')));
+  assert.match(detalle, /no agrega pesos nuevos/);
+});
+
+test('el «+» explica qué es el ApiRadar, qué resuelve y que es un caso de Zamorano', () => {
+  for (const h of [panel(), panel({ abierto: false })]) {
+    const caja = h.slice(h.indexOf('class="mas"'), h.indexOf('</details>', h.indexOf('class="mas"')));
+    assert.match(caja, /Qué es/); assert.match(caja, /Qué resuelve/); assert.match(caja, /Zamorano/);
   }
 });
 
-test('el bloque trae la primera acción de la lista completa y cuánto baja el riesgo', () => {
-  const h = panel();
-  const bloque = h.slice(h.indexOf('id="apiradar-primero"'), h.indexOf('1. Qué datos usó'));
-  const lista = h.slice(h.indexOf('class="plan apiradar-acciones"'));
-  const titulo = lista.match(/<b>([^<]+)<\/b>/)[1];
-  assert.ok(bloque.includes(`<b>${titulo}</b>`), `el bloque debe nombrar «${titulo}»`);
-  const [, de, a] = bloque.match(/baja de <b>(\d+)<\/b> a <b>(\d+)<\/b>/);
-  assert.ok(lista.includes(`(${de} → ${a})`), 'el bloque y la lista deben decir lo mismo');
-  assert.ok(Number(a) < Number(de));
-});
-
-test('el primer nivel (encabezado, resultado y primer paso) no usa jerga', () => {
-  const h = panel();
-  const primerNivel = sinEtiquetas(h.slice(0, h.indexOf('1. Qué datos usó')));
-  assert.ok(primerNivel.length > 200);
-  assert.doesNotMatch(primerNivel, JERGA);
-  // La explicación técnica no se perdió: pasó al detalle de «Por qué sale este riesgo».
-  const detalle = sinEtiquetas(h.slice(h.indexOf('2. Por qué sale este riesgo'), h.indexOf('3. Dónde están')));
-  assert.match(detalle, /no agrega pesos nuevos/);
+test('mientras analiza, muestra los pasos del análisis y no el resultado', () => {
+  const h = panel({ cargando: true });
+  assert.match(h, /Preparando tu ApiRadar/);
+  assert.match(h, /Armando tu plan/);
+  assert.doesNotMatch(h, /Riesgo hoy/);
 });
 
 test('con un solo problema no hay selector: se nombra el problema y basta el botón', () => {

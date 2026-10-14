@@ -11,7 +11,8 @@ import { conPlan } from '../fert/calculo.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
-import { pastillaPuntaje, estadoFuente } from './components.js';
+import { pastillaPuntaje, estadoFuente, mas } from './components.js';
+import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDatos, masGlobalgap, masPerfil } from './explicaciones.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 
@@ -28,6 +29,9 @@ function tablaRubrica(m,cfg){
   </tbody></table></div>
   <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar.</p>`;
 }
+
+// Tarjeta del resumen con su «+» en la esquina: al abrirlo, la tarjeta ocupa todo el ancho y muestra el resumen.
+const kpi=(clave,k,v,cuerpo)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div>${mas(clave,k.toLowerCase(),cuerpo,S.abiertos[`mas-${clave}`])}</div>`;
 
 export function viewDashboard(){
   const cfg=configEfectiva(normalizarAjustes(S.ajustes));
@@ -59,19 +63,19 @@ export function viewDashboard(){
     </div>
     <div class="hero">
       <div class="stats">
-        <div><div class="k">Mayor riesgo</div><div class="v">${top?`${top.nombre} · ${top.score}`:'Sin datos suficientes'}</div></div>
-        <div><div class="k">Módulos en alto</div><div class="v">${conDatos.filter(m=>m.level==='Alto').length} de ${conDatos.length}</div></div>
-        <div><div class="k">Mes más cargado</div><div class="v">${hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno'}</div></div>
-        <div><div class="k">Meses con coincidencias</div><div class="v">${hotM.length} de 12</div></div>
-        <div><div class="k">Datos completos</div><div class="v">${Math.round(R.conf*100)} %</div></div>
-        <div><div class="k">GLOBALG.A.P.</div><div class="v">${f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica'}</div></div>
+        ${kpi('mayor','Mayor riesgo',top?`${top.nombre} · ${top.score}`:'Sin datos suficientes',masMayorRiesgo(R,cfg))}
+        ${kpi('alto','Módulos en alto',`${conDatos.filter(m=>m.level==='Alto').length} de ${conDatos.length}`,masModulosAlto(R))}
+        ${kpi('mes','Mes más cargado',hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno',masMesCargado(R))}
+        ${kpi('coinc','Meses con coincidencias',`${hotM.length} de 12`,masCoincidencias(R))}
+        ${kpi('datos','Datos completos',`${Math.round(R.conf*100)} %`,masDatos(R))}
+        ${kpi('gg','GLOBALG.A.P.',f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica',masGlobalgap(f))}
       </div>
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
     <p class="muted small">El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}</p>
   </section>
   <div class="grid2">
-    <section class="panel"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${conDatos.length>=3?radar(conDatos):'<p class="muted small">El perfil se dibuja cuando al menos 3 módulos tienen datos suficientes.</p>'}${panelMapa()}${panelClima()}</section>
+    <section class="panel"><div class="con-mas"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${mas('perfil','el perfil de riesgo',masPerfil(R,cfg),S.abiertos['mas-perfil'])}</div>${conDatos.length>=3?radar(conDatos):'<p class="muted small">El perfil se dibuja cuando al menos 3 módulos tienen datos suficientes.</p>'}${panelMapa()}${panelClima()}</section>
     <section class="panel"><h2>Riesgo por módulo</h2><div class="cards">
       ${mods.map(m=>`<article class="card">
         <div class="top"><h3>${m.nombre}</h3>${m.suficiente?`<span class="pill ${m.level}">${m.level}</span>`:'<span class="pill sin-datos" title="Sin datos suficientes">Sin datos</span>'}</div>
