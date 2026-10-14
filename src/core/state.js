@@ -91,6 +91,7 @@ export const S = {
   theme: 'system', // tema visual: system | light | dark
   problema: '', // problema abierto en el ApiRadar del dashboard: '' | spathodea
   arCargando: false, // animación de análisis al generar el ApiRadar
+  bv: { paso: 0, fuente: '', usos: [] }, // bienvenida de primera vez (src/ui/bienvenida.js)
   arExcluir: {}, // acciones medibles del ApiRadar que el usuario sacó de su plan: { mover: true, … }
   done: {}, // recomendaciones del plan de acción marcadas como hechas
   sim: { n: false, pol: false, riego: false, suelo: false, selec: false }, // cambios activos en el simulador

@@ -6,6 +6,8 @@ import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
 import { viewDashboard, extraRiego } from './ui/dashboard.js';
 import { CONFIG } from './core/config.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
+import { viewBienvenida, PASOS_BV } from './ui/bienvenida.js';
+import { mostrarBienvenida, guardarBienvenida, leerBienvenida } from './core/bienvenida.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewCasos } from './ui/casos.js';
@@ -33,6 +35,8 @@ import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 const previo = cargarLocal(S.tpl);
 if (previo) Object.assign(S, previo);
 S.casos = cargarCasos();
+// Primera vez en este navegador: la bienvenida va antes del dashboard (solo una vez).
+if (mostrarBienvenida(!!previo)) S.view = 'bienvenida';
 
 // Nube (opcional): si falta la configuración o la conexión, todo sigue en local.
 const nube = crearCliente();
@@ -63,7 +67,7 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
-const VISTAS={dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
+const VISTAS={bienvenida:viewBienvenida,dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
 const cargador=crearCargador({
   riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
   fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),
@@ -82,6 +86,7 @@ function render(){
   try{html=vista?vista():htmlCargando(cargador.fallo(S.view));}catch(e){console.error(e);html=htmlErrorVista(S.view,e);}
   app.innerHTML=html;
   const msg=S.msg;S.msg='';
+  document.body.classList.toggle('en-bienvenida',S.view==='bienvenida');
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
@@ -95,7 +100,8 @@ const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.co
 // Acciones de los botones con data-act. Cada una recibe el botón pulsado `a` y la finca `f`.
 // Al terminar, el manejador de clics vuelve a dibujar la pantalla; una acción que devuelve `false`
 // (porque no cambió nada o porque ya dibujó o delega en otra función) evita ese dibujo.
-const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'start-empty', 'load-demo', 'reset-yes']);
+const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'start-empty', 'load-demo', 'reset-yes',
+  'bv-siguiente', 'bv-atras', 'bv-saltar', 'bv-cuestionario', 'bv-saltar-cuestionario', 'bv-ver']);
 
 const accionesGenerales = {
   'theme': () => { S.theme = { system: 'light', light: 'dark', dark: 'system' }[S.theme]; },
@@ -181,6 +187,27 @@ const accionesCuestionario = {
     f.nc.push({ criterio: S.draftNC.criterio, dias: Number(S.draftNC.dias) || 0 }); S.draftNC = blankDrafts().draftNC;
   },
   'rm-nc': (a, f) => { f.nc.splice(+a.dataset.i, 1); },
+};
+
+// Bienvenida de primera vez. Al terminarla (con o sin cuestionario) queda marcada como vista.
+// Con datos propios ya cargados (si se vuelve a ver desde Ajustes), nunca se borra la finca.
+const terminarBienvenida = () => { guardarBienvenida(S.bv); S.bv.paso = 0; };
+const accionesBienvenida = {
+  'bv-siguiente': () => { S.bv.paso = Math.min(PASOS_BV.length - 1, S.bv.paso + 1); },
+  'bv-atras': () => { S.bv.paso = Math.max(0, S.bv.paso - 1); },
+  'bv-saltar': () => { S.bv.paso = PASOS_BV.length - 1; },
+  'bv-fuente': (a) => { S.bv.fuente = S.bv.fuente === a.dataset.id ? '' : a.dataset.id; },
+  'bv-uso': (a) => { const id = a.dataset.id, u = S.bv.usos; S.bv.usos = u.includes(id) ? u.filter((x) => x !== id) : [...u, id]; },
+  'bv-cuestionario': () => {
+    terminarBienvenida();
+    if (S.demo) { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; }
+    S.view = 'wizard'; S.step = 0;
+  },
+  'bv-saltar-cuestionario': () => {
+    terminarBienvenida(); S.view = 'dashboard';
+    S.msg = S.demo ? 'Estás viendo una finca de ejemplo. Cuando quieras, llena tus datos en la pestaña Cuestionario.' : '';
+  },
+  'bv-ver': () => { S.bv = { ...leerBienvenida(), paso: 0 }; S.view = 'bienvenida'; },
 };
 
 const accionesPlantillas = {
@@ -320,7 +347,7 @@ const accionesRiego = {
 };
 
 const ACCIONES = {
-  ...accionesGenerales, ...accionesCuestionario, ...accionesApiRadar, ...accionesPlaguicidas,
+  ...accionesGenerales, ...accionesBienvenida, ...accionesCuestionario, ...accionesApiRadar, ...accionesPlaguicidas,
   ...accionesFertilizacion, ...accionesCasos, ...accionesRiego, ...accionesPlantillas,
 };
 
