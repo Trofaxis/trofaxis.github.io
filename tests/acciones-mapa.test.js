@@ -54,5 +54,6 @@ test('una acción desconocida solo vuelve a dibujar y no toca los datos', () => 
 test('las acciones que suben al inicio de la página siguen siendo las mismas', () => {
   const m = app.match(/ACCIONES_QUE_SUBEN = new Set\(\[([^\]]+)\]\)/);
   assert.ok(m);
-  assert.deepEqual([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort(), ['finish', 'load-demo', 'next', 'prev', 'reset-yes', 'start-empty']);
+  assert.deepEqual([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort(), ['bv-atras', 'bv-cuestionario', 'bv-saltar', 'bv-saltar-cuestionario', 'bv-siguiente', 'bv-ver',
+    'finish', 'load-demo', 'next', 'prev', 'reset-yes', 'start-empty']);
 });

@@ -21,7 +21,7 @@ export const claveHecha = (id) => `ar|${id}`;
 export const PASOS_ANALISIS = ['Leyendo tu finca', 'Ubicando los árboles de riesgo', 'Cruzando floración y aplicaciones', 'Midiendo cuánto baja cada cambio', 'Armando tu plan'];
 
 // Esfera de puntos animada (solo CSS; con «reducir movimiento» queda quieta).
-const esfera = () => `<svg class="esfera" viewBox="-60 -60 120 120" aria-hidden="true">${[0, 1, 2, 3, 4, 5].map((i) => `<g class="meridiano m${i}">${Array.from({ length: 24 }, (_, k) => { const a = (k * 15) * Math.PI / 180; return `<circle cx="${(50 * Math.cos(a)).toFixed(1)}" cy="${(50 * Math.sin(a)).toFixed(1)}" r="1.8"/>`; }).join('')}</g>`).join('')}</svg>`;
+export const esfera = () => `<svg class="esfera" viewBox="-60 -60 120 120" aria-hidden="true">${[0, 1, 2, 3, 4, 5].map((i) => `<g class="meridiano m${i}">${Array.from({ length: 24 }, (_, k) => { const a = (k * 15) * Math.PI / 180; return `<circle cx="${(50 * Math.cos(a)).toFixed(1)}" cy="${(50 * Math.sin(a)).toFixed(1)}" r="1.8"/>`; }).join('')}</g>`).join('')}</svg>`;
 
 function analizando() {
   return `<div class="ar-cargando" role="status" aria-live="polite">

@@ -21,7 +21,7 @@ export function viewSettings() {
       <div class="f"><label for="s-medio">Riesgo medio desde</label><input id="s-medio" type="number" min="0" max="99" data-bind="ajustes.niveles.medio" data-rerender value="${medio}"><span class="hint">Debe ser menor que el umbral alto</span></div>
     </div>
     ${invalido ? '<p class="txt-crit">El umbral medio debe ser menor que el alto, y el alto no puede pasar de 100. Mientras tanto se usan los valores por defecto.</p>' : ''}
-    <div class="row"><button class="btn" data-act="reset-ajustes">Restablecer ajustes</button><button class="btn" data-act="load-demo">Cargar finca de ejemplo</button></div>
+    <div class="row"><button class="btn" data-act="reset-ajustes">Restablecer ajustes</button><button class="btn" data-act="load-demo">Cargar finca de ejemplo</button><button class="btn" data-act="bv-ver">Ver la bienvenida otra vez</button></div>
     <p class="muted small">Tus datos se guardan en este navegador. Solo salen de él si inicias sesión en la pestaña Casos y decides guardar tu finca en la nube o compartir un caso anónimo. Para pasarlos a otro equipo sin la nube, usa Exportar finca en el dashboard.</p>
   </section>`;
 }
