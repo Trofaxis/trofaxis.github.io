@@ -73,8 +73,11 @@ test('el panel de administración muestra el resumen, la búsqueda, la descarga 
 test('el cerebro no está en la app: vive aparte en admin/, sin indexar y sin servicios externos', () => {
   const app = fs.readFileSync('index.html', 'utf8') + fs.readFileSync('src/app.js', 'utf8');
   assert.ok(!/cerebro/i.test(app), 'la app no debe enlazar ni cargar el cerebro');
+  // admin/ quedó como aviso de mudanza al panel aparte: sin scripts y sin indexar.
+  // src/admin/cerebro.js y cerebro.css siguen aquí porque el panel los importa desde la app publicada.
   const admin = fs.readFileSync('admin/index.html', 'utf8');
   assert.match(admin, /<meta name="robots" content="noindex, nofollow">/);
-  assert.match(admin, /connect-src 'self';/);
-  assert.match(admin, /script-src 'self';/);
+  assert.match(admin, /default-src 'none';/);
+  assert.ok(!/<script/i.test(admin), 'el aviso de mudanza no carga scripts');
+  assert.match(admin, /trofaxis-admin\//);
 });
