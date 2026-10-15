@@ -485,3 +485,4 @@ body.en-bienvenida main{padding-block:0;background:radial-gradient(circle at 100
   .bv-puntos span{transition:width .4s,background .4s}
 }
 @keyframes bv-entrar{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
