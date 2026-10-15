@@ -1,8 +1,9 @@
-// Vista: Cerebro. Grafo interactivo de todo lo que la app sabe, al estilo del de Obsidian:
+// Panel de administración: Cerebro. Grafo interactivo de todo lo que la app sabe, al estilo del de Obsidian:
 // arrastrar, acercar con la rueda o con dos dedos y tocar un punto para ver el hecho y su fuente.
 // Funciona sin conexión y sin IA: dibuja los hechos de src/cerebro/ en un <canvas>.
 import { esc } from '../core/utils.js';
 import { HECHOS, TEMAS, PENDIENTES } from '../cerebro/hechos.js';
+import { CONSULTA_PPDB } from '../plag/catalogo.js';
 import { buscar, resumen } from '../cerebro/consulta.js';
 import { armarGrafo, posicionesIniciales, paso, vecinos } from '../cerebro/grafo.js';
 import { notasObsidian, zip } from '../cerebro/obsidian.js';
@@ -45,10 +46,26 @@ function resultados() {
   return `<ul class="cb-vecinos">${r.map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button> <span class="muted small">${esc(h.valor)} ${esc(h.unidad)}</span></li>`).join('')}</ul>`;
 }
 
+// Lista de trabajo del administrador: lo que falta validar, agrupado por tema.
+function pendientes(hoy = new Date()) {
+  const grupo = (estado) => Object.entries(TEMAS).map(([t, nombre]) => {
+    const hs = HECHOS.filter((h) => h.tema === t && h.estado === estado);
+    return hs.length ? `<li><b>${esc(nombre)}</b> (${hs.length}): ${hs.map((h) => `<button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button>`).join(' ')}</li>` : '';
+  }).join('');
+  const dias = Math.floor((hoy - new Date(CONSULTA_PPDB)) / 86400000);
+  return `<section class="card cb-pendientes"><h2>Pendientes del administrador</h2>
+    <p class="muted small">Revisión sugerida una vez al mes. Los valores se cambian en el repo, con un PR, no aquí.</p>
+    <p class="small"><b>Fichas PPDB/BPDB:</b> consultadas el ${esc(CONSULTA_PPDB)} (hace ${dias} días).</p>
+    <details><summary>Por validar con un especialista (${HECHOS.filter((h) => h.estado === 'por validar').length})</summary><ul class="cb-grupos">${grupo('por validar')}</ul></details>
+    <details><summary>Criterio propio por calibrar (${HECHOS.filter((h) => h.estado === 'criterio propio').length})</summary><ul class="cb-grupos">${grupo('criterio propio')}</ul></details>
+  </section>`;
+}
+
 export function viewCerebro() {
   const r = resumen(HECHOS);
   const sel = G.sel ? porId(G.sel) : null;
-  return `<section class="card cerebro">
+  return `<header class="admin-cab"><b>Trofaxis</b> · Administración <a class="btn sm" href="../">Ir a la app</a></header>
+  <section class="card cerebro">
     <div><h2>Cerebro de Trofaxis</h2>
       <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho, un tema o una fuente; las líneas son relaciones reales: el tema al que pertenece, la fuente de donde sale y las fórmulas que usan dos valores juntos. Funciona sin conexión y sin inteligencia artificial.</p></div>
     <div class="row">
@@ -71,7 +88,8 @@ export function viewCerebro() {
     </div>
     <details><summary>Lo que el cerebro todavía no sabe</summary><ul>${PENDIENTES.map((p) => `<li><b>${esc(p.fuente)}:</b> ${esc(p.falta)}</li>`).join('')}</ul>
       <p class="muted small">Sin IA, el cerebro no responde preguntas libres, no razona sobre casos sin regla escrita y no lee documentos por sí solo: cada dato entra a mano con su fuente.</p></details>
-  </section>`;
+  </section>
+  ${pendientes()}`;
 }
 
 // --- Dibujo e interacción (se monta después de cada render de la vista) ----------------------------------------
@@ -150,7 +168,7 @@ export function montarCerebro(raiz = document) {
   }
   function seleccionar(id, centrar = false) {
     G.sel = id; detalleEl.innerHTML = detalle(id ? porId(id) : null);
-    if (centrar && id) { const n = porId(id); G.vista.x = -n.x; G.vista.y = -n.y; G.vista.k = Math.max(G.vista.k, 1.6); }
+    if (centrar && id) { const n = porId(id); G.vista.x = -n.x; G.vista.y = -n.y; G.vista.k = Math.max(G.vista.k, 1.6); canvas.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     dibujar();
   }
 
@@ -203,7 +221,7 @@ export function montarCerebro(raiz = document) {
     G.filtro = G.texto.trim() ? new Set(r.map((x) => x.id)) : null;
     res.innerHTML = resultados(); dibujar();
   });
-  raiz.querySelector('.cerebro')?.addEventListener('click', (e) => {
+  (raiz.querySelector('#app') ?? raiz.querySelector('.cerebro')?.parentElement)?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-cb-ir]'); if (b) seleccionar(b.dataset.cbIr, true);
   });
   raiz.querySelector('#cb-centrar')?.addEventListener('click', () => { encuadrar(); seleccionar(null); });

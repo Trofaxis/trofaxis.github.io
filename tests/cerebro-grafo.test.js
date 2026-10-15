@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { armarGrafo, posicionesIniciales, paso, vecinos } from '../src/cerebro/grafo.js';
 import { notasObsidian, zip, crc32 } from '../src/cerebro/obsidian.js';
-import { viewCerebro } from '../src/ui/cerebro.js';
+import fs from 'node:fs';
+import { viewCerebro } from '../src/admin/cerebro.js';
 import { HECHOS } from '../src/cerebro/hechos.js';
 
 const g = armarGrafo();
@@ -60,10 +61,20 @@ test('el .zip es válido: firmas, número de archivos y CRC32', () => {
   assert.equal(dv.getUint32(14, true), crc32(new TextEncoder().encode('hola')));
 });
 
-test('la vista muestra el resumen, la búsqueda y la descarga para Obsidian', () => {
+test('el panel de administración muestra el resumen, la búsqueda, la descarga y los pendientes', () => {
   const html = viewCerebro();
   assert.match(html, new RegExp(`${HECHOS.length} hechos`));
   assert.match(html, /id="cb-canvas"/);
   assert.match(html, /Descargar para Obsidian/);
   assert.match(html, /sin inteligencia artificial/);
+  assert.match(html, /Pendientes del administrador/);
+});
+
+test('el cerebro no está en la app: vive aparte en admin/, sin indexar y sin servicios externos', () => {
+  const app = fs.readFileSync('index.html', 'utf8') + fs.readFileSync('src/app.js', 'utf8');
+  assert.ok(!/cerebro/i.test(app), 'la app no debe enlazar ni cargar el cerebro');
+  const admin = fs.readFileSync('admin/index.html', 'utf8');
+  assert.match(admin, /<meta name="robots" content="noindex, nofollow">/);
+  assert.match(admin, /connect-src 'self';/);
+  assert.match(admin, /script-src 'self';/);
 });

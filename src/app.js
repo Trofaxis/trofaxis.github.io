@@ -68,13 +68,10 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
 const VISTAS={bienvenida:viewBienvenida,dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
-// El grafo del cerebro se monta después de dibujar su vista (canvas y eventos propios).
-let montarCerebro=null;
 const cargador=crearCargador({
   riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
   fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),
   plaguicidas:(i)=>import(conIntento('./ui/plaguicidas.js',i)).then(m=>m.viewPlaguicidas),
-  cerebro:(i)=>import(conIntento('./ui/cerebro.js',i)).then(m=>{montarCerebro=m.montarCerebro;return m.viewCerebro;}),
 },{alCambiar:(nombre)=>{if(S.view===nombre)render();}});
 const htmlCargando=(fallo)=>fallo
   ?'<div class="notice" role="alert"><span>No se pudo descargar esta pestaña. Revisa la conexión.</span><button class="btn sm" data-act="reintentar-vista">Reintentar</button></div>'
@@ -91,7 +88,7 @@ function render(){
   const msg=S.msg;S.msg='';
   document.body.classList.toggle('en-bienvenida',S.view==='bienvenida');
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
-  montarMapa();applyTheme();if(S.view==='cerebro')montarCerebro?.(app);guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
+  montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
