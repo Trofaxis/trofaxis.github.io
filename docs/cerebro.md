@@ -12,6 +12,13 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
 - Cada hecho dice su estado: **con fuente** (cita y enlace), **criterio propio** (por validar) o **por validar** (sugerido, no puntúa).
   Una prueba falla si un hecho no trae ninguno de los tres.
 
+- `src/cerebro/grafo.js`: el grafo, como el de Obsidian. Nodos = hechos, temas y fuentes. Líneas solo de relaciones reales:
+  el tema del hecho, su fuente y las fórmulas que usan dos valores juntos (cada regla nombra el archivo de la fórmula).
+- `src/ui/cerebro.js`: pestaña **Cerebro**. Arrastrar puntos o el fondo, acercar con la rueda o dos dedos, tocar un punto
+  para ver el hecho, su fuente y sus vecinos. La búsqueda resalta los puntos que coinciden.
+- `src/cerebro/obsidian.js`: botón «Descargar para Obsidian (.zip)»: una nota .md por nodo con [[enlaces]]. Obsidian es
+  opcional; editar esas notas no cambia la app.
+
 Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por validar.
 
 ## Qué no puede hacer sin IA
@@ -31,4 +38,3 @@ Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por valida
 
 - Datos de Osorio (2025) y Kuniyoshi (2025): se cargarán como hechos con su página cuando estén en el repo.
 - Tejeda et al. (2025): no está en los archivos del proyecto; no se cita.
-- Pantalla para consultar el cerebro dentro de la app.
