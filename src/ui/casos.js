@@ -99,7 +99,7 @@ function panelNube() {
          <button class="btn sm" data-act="nube-cargar" ${dis}>Cargar mi finca desde la nube</button>
          <button class="btn sm" data-act="nube-salir" ${dis}>Cerrar sesión</button>
        </div>
-       <p class="muted small">Tu finca completa (con nombre y todos sus datos) queda <b>privada</b>: solo tú la ves, con tu sesión. Guardar reemplaza la copia anterior de la nube.</p>`
+       <p class="muted small">Tu finca guardada en la nube <b>no es pública</b>. La ves tú con tu sesión y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas (esas nunca salen de este navegador). Cada consulta del administrador queda registrada. Guardar reemplaza la copia anterior de la nube.</p>`
     : `<div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
        <div class="row"><button class="btn primary" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div>`;
   const compartir = n.sesion ? `
