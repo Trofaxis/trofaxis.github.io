@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Trofaxis · Administración</title>
@@ -10,8 +10,12 @@
   <link rel="stylesheet" href="../src/styles.css">
   <link rel="stylesheet" href="../src/admin/cerebro.css">
 </head>
-<body class="admin">
-  <main id="app" class="admin-main"><p class="muted">Cargando el cerebro…</p></main>
-  <script type="module" src="../src/admin/main.js"></script>
+<body>
+  <main class="admin-main"><section class="card">
+    <h1>La administración se mudó</h1>
+    <p>El panel de administración de Trofaxis ahora vive en un sitio aparte, con inicio de sesión.</p>
+    <p><a class="btn primary" href="https://diegoguevara912-pixel.github.io/trofaxis-admin/">Ir al panel de administración</a></p>
+    <p class="muted small"><a href="../">Volver a la app</a></p>
+  </section></main>
 </body>
 </html>
