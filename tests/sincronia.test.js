@@ -39,3 +39,11 @@ test('Continuar con Google: va a Supabase y vuelve a la app', () => {
   assert.match(t, /data-act="nube-google"/);
   assert.match(t, /se guarda sola en la nube/);
 });
+
+test('la política de privacidad existe, sin scripts, y dice qué ve el administrador', () => {
+  const h = readFileSync(new URL('../privacidad/index.html', import.meta.url), 'utf8');
+  assert.ok(!/<script/i.test(h));
+  assert.match(h, /sin el nombre de la finca, sin tu correo y sin coordenadas/);
+  assert.match(h, /se guarda sola en la nube/);
+  assert.match(readFileSync(new URL('../src/ui/settings.js', import.meta.url), 'utf8'), /href="privacidad\/"/);
+});
