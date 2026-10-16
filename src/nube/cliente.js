@@ -23,7 +23,8 @@ export function cargarSesion(ahora = Date.now()) {
     if (!o || typeof o.token !== 'string' || typeof o.uid !== 'string' || !Number.isFinite(o.expira)) return null;
     const refresh = typeof o.refresh === 'string' && o.refresh ? o.refresh.slice(0, 500) : '';
     if (!refresh && !(o.expira * 1000 > ahora)) return null;
-    return { token: o.token, refresh, uid: o.uid, email: typeof o.email === 'string' ? o.email.slice(0, 200) : '', expira: o.expira };
+    return { token: o.token, refresh, uid: o.uid, email: typeof o.email === 'string' ? o.email.slice(0, 200) : '', expira: o.expira,
+      ...(o.proveedor === 'google' || o.proveedor === 'email' ? { proveedor: o.proveedor } : {}) };
   } catch { return null; }
 }
 
@@ -44,7 +45,8 @@ export function sesionDeHash(hash, ahora = Date.now()) {
   const dur = Number(q.get('expires_in'));
   const expira = Number.isFinite(dur) && dur > 0 ? Math.floor(ahora / 1000) + dur : Number(carga.exp);
   if (!(expira * 1000 > ahora)) return null;
-  return { token, refresh: (q.get('refresh_token') || '').slice(0, 500), uid: carga.sub, email: typeof carga.email === 'string' ? carga.email : '', expira };
+  const proveedor = carga.app_metadata?.provider === 'google' ? 'google' : 'email';
+  return { token, refresh: (q.get('refresh_token') || '').slice(0, 500), uid: carga.sub, email: typeof carga.email === 'string' ? carga.email : '', expira, proveedor };
 }
 
 export function crearCliente({ cfg = CONFIG, fetchFn = globalThis.fetch } = {}) {
@@ -89,11 +91,13 @@ export function crearCliente({ cfg = CONFIG, fetchFn = globalThis.fetch } = {}) 
       return {
         token: r.access_token, refresh: r.refresh_token.slice(0, 500), uid: typeof r.user?.id === 'string' ? r.user.id : sesion.uid,
         email: typeof r.user?.email === 'string' ? r.user.email.slice(0, 200) : sesion.email, expira: Math.floor(ahora / 1000) + dur,
+        ...(sesion.proveedor ? { proveedor: sesion.proveedor } : {}),
       };
     },
     // Entrar con Google: Supabase vuelve a `volverA` con la sesión en el hash (la lee sesionDeHash).
     // Si el correo de Google es el mismo de una cuenta por enlace, Supabase la reconoce como la misma cuenta.
-    urlGoogle: (volverA) => `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(volverA)}`,
+    // prompt=select_account: Google siempre deja elegir la cuenta, como en la pantalla de entrada.
+    urlGoogle: (volverA) => `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(volverA)}&prompt=select_account`,
     // Envía el enlace mágico al correo. No crea contraseñas.
     enviarEnlace: (email, volverA) => pedir(`/auth/v1/otp?redirect_to=${encodeURIComponent(volverA)}`, { metodo: 'POST', cuerpo: { email, create_user: true } }),
 
