@@ -34,7 +34,7 @@ test('solo sube con sesión, ya comparada, sin conflicto y si cambió', () => {
 
 test('Continuar con Google: va a Supabase y vuelve a la app', () => {
   const c = crearCliente({ cfg: { nube: { url: 'https://x.supabase.co', clavePublicable: 'sb_publishable_x' } }, fetchFn: () => {} });
-  assert.equal(c.urlGoogle('https://trofaxis.github.io/'), 'https://x.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Ftrofaxis.github.io%2F');
+  assert.equal(c.urlGoogle('https://trofaxis.github.io/'), 'https://x.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Ftrofaxis.github.io%2F&prompt=select_account');
   const t = readFileSync(new URL('../src/ui/casos.js', import.meta.url), 'utf8');
   assert.match(t, /data-act="nube-google"/);
   assert.match(t, /se guarda sola en la nube/);

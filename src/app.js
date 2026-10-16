@@ -7,6 +7,8 @@ import { viewDashboard, extraRiego } from './ui/dashboard.js';
 import { CONFIG } from './core/config.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { viewBienvenida, PASOS_BV } from './ui/bienvenida.js';
+import { viewEntrar, htmlCuenta } from './ui/entrar.js';
+import { leerCuenta, guardarCuenta, mostrarEntrada } from './core/cuenta.js';
 import { mostrarBienvenida, guardarBienvenida, leerBienvenida } from './core/bienvenida.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
@@ -44,6 +46,16 @@ const nube = crearCliente();
 const delHash = sesionDeHash(location.hash); // al volver del enlace del correo
 if (delHash) { guardarSesion(delHash); history.replaceState(null, '', location.pathname + location.search); }
 S.nube.sesion = delHash || cargarSesion();
+// Pantalla de entrada: al volver de Google o del correo se va directo al tablero y se recuerda la cuenta.
+S.cuenta = leerCuenta();
+if (delHash) {
+  S.cuenta = { email: delHash.email, proveedor: delHash.proveedor, sinCuenta: false }; guardarCuenta(S.cuenta);
+  if (S.view !== 'bienvenida') S.view = 'dashboard';
+  S.msg = `Sesión iniciada como ${delHash.email || 'tu cuenta'}.`;
+} else if (S.nube.sesion && !S.cuenta.email) {
+  // Sesiones abiertas antes de esta pantalla: se recuerda la cuenta para la próxima entrada.
+  S.cuenta = { email: S.nube.sesion.email || '', proveedor: S.nube.sesion.proveedor || '', sinCuenta: false }; guardarCuenta(S.cuenta);
+} else if (mostrarEntrada({ nubeActiva: nube.activo, sesion: S.nube.sesion, vista: S.view, cuenta: S.cuenta })) S.view = 'entrar';
 // Sesión lista para usarse: si el token está por vencer, se renueva con el de renovación (una sola renovación a la vez).
 let renovando = null;
 function sesionLista() {
@@ -54,7 +66,7 @@ function sesionLista() {
 }
 
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
-  const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
+}
 // Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
 const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());if(S.nube.sesion)subidor.pedir();});
 // Con sesión iniciada, la finca también se sube sola a la nube unos segundos después del último cambio.
@@ -92,7 +104,7 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
-const VISTAS={bienvenida:viewBienvenida,dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
+const VISTAS={bienvenida:viewBienvenida,entrar:viewEntrar,dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
 const cargador=crearCargador({
   riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
   fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),
@@ -111,7 +123,8 @@ function render(){
   try{html=vista?vista():htmlCargando(cargador.fallo(S.view));}catch(e){console.error(e);html=htmlErrorVista(S.view,e);}
   app.innerHTML=html;
   const msg=S.msg;S.msg='';
-  document.body.classList.toggle('en-bienvenida',S.view==='bienvenida');
+  document.body.classList.toggle('en-bienvenida',S.view==='bienvenida'||S.view==='entrar');
+  const cta=document.getElementById('cuenta');if(cta)cta.innerHTML=htmlCuenta();
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
@@ -129,7 +142,6 @@ const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'start-empty', 'lo
   'bv-siguiente', 'bv-atras', 'bv-saltar', 'bv-cuestionario', 'bv-saltar-cuestionario', 'bv-ver']);
 
 const accionesGenerales = {
-  'theme': () => { S.theme = { system: 'light', light: 'dark', dark: 'system' }[S.theme]; },
   'guardado-ok': () => { guardado.descartado = true; },
   'reintentar-vista': () => { cargador.reintentar(S.view); },
   'reset-ajustes': () => { S.ajustes = configBase(); },
@@ -217,6 +229,22 @@ const accionesCuestionario = {
 // Bienvenida de primera vez. Al terminarla (con o sin cuestionario) queda marcada como vista.
 // Con datos propios ya cargados (si se vuelve a ver desde Ajustes), nunca se borra la finca.
 const terminarBienvenida = () => { guardarBienvenida(S.bv); S.bv.paso = 0; };
+// Pantalla de entrada y menú de cuenta (src/ui/entrar.js).
+const accionesCuenta = {
+  'cuenta-menu': () => { S.cuentaMenu = !S.cuentaMenu; },
+  'cuenta-entrar': () => { S.cuentaMenu = false; S.entrarCorreo = false; S.view = 'entrar'; },
+  'tema-set': (a) => { S.theme = ['system', 'light', 'dark'].includes(a.dataset.tema) ? a.dataset.tema : 'system'; },
+  'entrar-cuenta': () => {
+    if (S.cuenta.proveedor === 'google') { nubeAccion('nube-google'); return false; }
+    S.nube.email = S.cuenta.email; S.entrarCorreo = true;
+  },
+  'entrar-olvidar': () => { S.cuenta = { ...S.cuenta, email: '', proveedor: '' }; guardarCuenta(S.cuenta); },
+  'entrar-correo': () => { S.entrarCorreo = true; },
+  'entrar-sin-cuenta': () => { S.cuenta = { ...S.cuenta, sinCuenta: true }; guardarCuenta(S.cuenta); S.entrarCorreo = false; S.view = 'dashboard'; },
+  'cuenta-salir': () => { S.cuentaMenu = false; S.confirmarSalir = true; },
+  'salir-cancelar': () => { S.confirmarSalir = false; },
+  'salir-confirmar': () => { S.confirmarSalir = false; nubeAccion('nube-salir'); return false; },
+};
 const accionesBienvenida = {
   'bv-siguiente': () => { S.bv.paso = Math.min(PASOS_BV.length - 1, S.bv.paso + 1); },
   'bv-atras': () => { S.bv.paso = Math.max(0, S.bv.paso - 1); },
@@ -373,10 +401,12 @@ const accionesRiego = {
 
 const ACCIONES = {
   ...accionesGenerales, ...accionesBienvenida, ...accionesCuestionario, ...accionesApiRadar, ...accionesPlaguicidas,
-  ...accionesFertilizacion, ...accionesCasos, ...accionesRiego, ...accionesPlantillas,
+  ...accionesFertilizacion, ...accionesCasos, ...accionesRiego, ...accionesPlantillas, ...accionesCuenta,
 };
 
 document.addEventListener('click',e=>{
+  // El menú de cuenta se cierra al tocar fuera de él o al elegir algo (menos el tema, que se ve al instante).
+  if(S.cuentaMenu&&!e.target.closest('[data-act="cuenta-menu"],[data-act="tema-set"]')){S.cuentaMenu=false;if(!e.target.closest('[data-act],[data-view]')){render();return;}}
   // Secciones plegables con data-keep: se recuerda lo que el usuario abrió o cerró (el navegador hace el cambio).
   const su=e.target.closest('summary');if(su&&su.parentElement.dataset.keep){S.abiertos[su.parentElement.dataset.keep]=!su.parentElement.open;return;}
   const v=e.target.closest('[data-view]');if(v){if(S.climaUI.estado==='ok')S.climaUI={estado:'',msg:'',llenos:[]};S.view=v.dataset.view;render();window.scrollTo(0,0);return;}
@@ -391,6 +421,7 @@ document.addEventListener('click',e=>{
   if(Object.hasOwn(ACCIONES,act)&&ACCIONES[act](a,S.farm)===false)return;
   render();if(ACCIONES_QUE_SUBEN.has(act))window.scrollTo(0,0);
 });
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.cuentaMenu||S.confirmarSalir)){S.cuentaMenu=false;S.confirmarSalir=false;render();}});
 function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else if(el.tagName==='SELECT'&&el.value===''&&'nullable' in el.dataset)o[k]=null;else o[k]=el.value;
@@ -523,7 +554,7 @@ async function nubeAccion(act,silenciosa=false){
     if(act==='nube-enlace'){
       const email=n.email.trim();if(!/^\S+@\S+\.\S+$/.test(email))throw new ErrorNube('Escribe un correo válido.');
       await nube.enviarEnlace(email,location.origin+location.pathname);S.msg=`Te enviamos un enlace a ${email}. Ábrelo en este navegador para iniciar sesión.`;}
-    else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;n.listo=false;n.conflicto=false;n.ultima='';n.estado='';S.msg='Sesión cerrada.';}
+    else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;n.listo=false;n.conflicto=false;n.ultima='';n.estado='';S.entrarCorreo=false;S.view='entrar';S.msg='Sesión cerrada.';}
     else if(act==='nube-guardar'){const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.conflicto=false;n.listo=true;S.msg='Tu finca quedó guardada en la nube (privada).';}
     else if(act==='nube-cargar'){const f=await nube.cargarFinca(ses);
       if(!f)S.msg='Todavía no hay una finca tuya en la nube.';
