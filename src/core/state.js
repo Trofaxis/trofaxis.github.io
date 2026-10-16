@@ -102,7 +102,7 @@ export const S = {
   casos: [],
   espSeccion: '', // sección de especies con el formulario abierto: fauna | arboles | malezas
   // Nube (Supabase): sesión por enlace al correo, casos de la comunidad y consentimiento de la sesión actual.
-  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false },
+  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false, listo: false, conflicto: false, ultima: '', estado: '' },
   fertImport: null, // último archivo de fertilización cargado: { archivo, hoja, omitidas, avisos }
   fertUnidad: 'kgha', // unidad de dosis en la pestaña Fertilización: kgha | qqmz // casos guardados por el usuario en este navegador (memoria de casos)
   plagEdit: null, // índice de la aplicación de plaguicida que se está editando (null: agregando una nueva)

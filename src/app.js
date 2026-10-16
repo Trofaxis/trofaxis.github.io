@@ -19,6 +19,7 @@ import { llenarRiego } from './clima/normales.js';
 import { producto, UNIDADES } from './fert/catalogo.js';
 import { nombreCultivoPrincipal } from './casos/perfil.js';
 import { casoAnonimo } from './casos/anonimo.js';
+import { decidirAlEntrar, debeSubir, huella } from './nube/sincronia.js';
 import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
 import { riegoVacio } from './riego/calculo.js';
 import { riegoInicial } from './riego/guardado.js';
@@ -55,7 +56,31 @@ function sesionLista() {
 function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
   const b=document.getElementById('theme-btn');if(b)b.textContent='Tema: '+({system:'sistema',light:'claro',dark:'oscuro'}[S.theme]);}
 // Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
-const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());});
+const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());if(S.nube.sesion)subidor.pedir();});
+// Con sesión iniciada, la finca también se sube sola a la nube unos segundos después del último cambio.
+const subidor=crearGuardado(()=>{subirSola();},{espera:4000});
+async function subirSola(){
+  const n=S.nube;
+  if(!nube.activo||!debeSubir({sesion:n.sesion,listo:n.listo,local:S.farm,demo:S.demo,conflicto:n.conflicto,ultima:n.ultima}))return;
+  try{const ses=await sesionLista();if(!ses)return;const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.estado='Guardada en la nube.';}
+  catch(err){if(err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}n.estado='No se pudo subir a la nube; se reintentará con el próximo cambio.';}
+  if(S.view==='casos')render();
+}
+// Al entrar (o abrir la app con sesión) se compara la finca de este navegador con la de la nube.
+async function sincronizarAlEntrar(){
+  const n=S.nube;
+  try{
+    const ses=await sesionLista();if(!ses)return;
+    const enNube=await nube.cargarFinca(ses);
+    const paso=decidirAlEntrar({local:S.farm,demo:S.demo,enNube});
+    if(paso==='cargar'){S.farm=enNube;S.demo=false;S.done={};n.ultima=huella(enNube);S.msg=`Se cargó tu finca "${enNube.nombre||'sin nombre'}" desde la nube.`;}
+    else if(paso==='conflicto'){n.conflicto=true;n.ultima=huella(enNube);}
+    else if(paso==='nada'&&enNube)n.ultima=huella(enNube);
+    n.listo=true;
+    if(paso==='subir')subidor.pedir();
+  }catch(err){if(err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}}
+  render();
+}
 addEventListener('pagehide',()=>guardador.ahora());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')guardador.ahora();});
 // Aviso fijo arriba de la vista mientras el navegador no deje guardar (el último intento manda).
@@ -395,7 +420,7 @@ function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaU
 // La descarga del clima y el mapa piden volver a dibujar cuando terminan.
 document.addEventListener('biogap:render',()=>render());
 applyTheme();render();
-if(nube.activo&&S.nube.sesion)sesionLista().then(()=>render(),(err)=>{if(err.estado===401){borrarSesion();S.nube.sesion=null;render();}}); // renueva la sesión al abrir
+if(nube.activo&&S.nube.sesion)sincronizarAlEntrar(); // renueva la sesión al abrir y compara la finca con la de la nube
 if(nube.activo)nubeAccion('nube-comunidad',true); // casos de la comunidad: lectura pública, sin sesión
 
 // Exportar e importar la finca como archivo JSON.
@@ -494,14 +519,15 @@ async function nubeAccion(act,silenciosa=false){
   try{
     const ses=['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)?await sesionLista():null;
     if(['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)&&!ses)throw new ErrorNube('Inicia sesión para usar la nube.');
+    if(act==='nube-google'){n.ocupado=false;location.assign(nube.urlGoogle(location.origin+location.pathname));return;}
     if(act==='nube-enlace'){
       const email=n.email.trim();if(!/^\S+@\S+\.\S+$/.test(email))throw new ErrorNube('Escribe un correo válido.');
       await nube.enviarEnlace(email,location.origin+location.pathname);S.msg=`Te enviamos un enlace a ${email}. Ábrelo en este navegador para iniciar sesión.`;}
-    else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;S.msg='Sesión cerrada.';}
-    else if(act==='nube-guardar'){await nube.guardarFinca(S.farm,ses);S.msg='Tu finca quedó guardada en la nube (privada).';}
+    else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;n.listo=false;n.conflicto=false;n.ultima='';n.estado='';S.msg='Sesión cerrada.';}
+    else if(act==='nube-guardar'){const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.conflicto=false;n.listo=true;S.msg='Tu finca quedó guardada en la nube (privada).';}
     else if(act==='nube-cargar'){const f=await nube.cargarFinca(ses);
       if(!f)S.msg='Todavía no hay una finca tuya en la nube.';
-      else{S.farm=f;S.demo=false;S.done={};S.msg=`Se cargó la finca "${f.nombre||'sin nombre'}" desde la nube.`;}}
+      else{S.farm=f;S.demo=false;S.done={};n.ultima=huella(f);n.conflicto=false;n.listo=true;S.msg=`Se cargó la finca "${f.nombre||'sin nombre'}" desde la nube.`;}}
     else if(act==='nube-compartir'){
       if(!n.consentimiento||S.demo)throw new ErrorNube('Marca el consentimiento con tu finca real para compartir.');
       await nube.compartirCaso(casoAnonimo(S.farm,configEfectiva(normalizarAjustes(S.ajustes))),ses);

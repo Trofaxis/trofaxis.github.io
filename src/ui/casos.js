@@ -93,15 +93,19 @@ function panelNube() {
   }
   const dis = n.ocupado ? 'disabled' : '';
   const cuenta = n.sesion
-    ? `<p class="small">Sesión iniciada como <b>${esc(n.sesion.email || 'tu correo')}</b>.</p>
+    ? `<p class="small">Sesión iniciada como <b>${esc(n.sesion.email || 'tu correo')}</b>.${n.estado ? ` <span class="muted">${esc(n.estado)}</span>` : ''}</p>
+       ${n.conflicto ? `<div class="notice"><span>La finca de este navegador es distinta a la que tienes en la nube. No se cambió ninguna de las dos: elige cuál quieres conservar. «Guardar» reemplaza la de la nube con la de este navegador; «Cargar» trae la de la nube.</span></div>` : ''}
        <div class="row">
          <button class="btn sm" data-act="nube-guardar" ${dis}>Guardar mi finca en la nube</button>
          <button class="btn sm" data-act="nube-cargar" ${dis}>Cargar mi finca desde la nube</button>
          <button class="btn sm" data-act="nube-salir" ${dis}>Cerrar sesión</button>
        </div>
-       <p class="muted small">Tu finca guardada en la nube <b>no es pública</b>. La ves tú con tu sesión y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas (esas nunca salen de este navegador). Cada consulta del administrador queda registrada. Guardar reemplaza la copia anterior de la nube.</p>`
-    : `<div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
-       <div class="row"><button class="btn primary" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div>`;
+       <p class="muted small">Mientras tengas la sesión iniciada, tu finca se guarda sola en la nube unos segundos después de cada cambio (la finca de ejemplo nunca se sube). Al entrar desde otro equipo se carga tu finca. Tu finca en la nube <b>no es pública</b>. La ves tú con tu sesión y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas (esas nunca salen de este navegador). Cada consulta del administrador queda registrada. Si no quieres que se suba, cierra la sesión.</p>`
+    : `<div class="row"><button class="btn primary" data-act="nube-google" ${dis}>Continuar con Google</button></div>
+       <p class="muted small">Al iniciar sesión, tu finca se guarda sola en la nube mientras la sesión esté abierta (privada: solo tú y el administrador, sin nombre de la finca, correo ni coordenadas).</p>
+       <details><summary>Entrar con un enlace a tu correo</summary>
+       <div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
+       <div class="row"><button class="btn" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div></details>`;
   const compartir = n.sesion ? `
     <div class="f"><label class="item pointer"><input type="checkbox" class="w-auto" data-bind="nube.consentimiento" data-rerender ${n.consentimiento ? 'checked' : ''}>
       <span class="grow">Acepto compartir de forma anónima el caso de abajo con la comunidad de Trofaxis</span></label>

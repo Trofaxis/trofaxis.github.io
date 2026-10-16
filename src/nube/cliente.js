@@ -91,6 +91,9 @@ export function crearCliente({ cfg = CONFIG, fetchFn = globalThis.fetch } = {}) 
         email: typeof r.user?.email === 'string' ? r.user.email.slice(0, 200) : sesion.email, expira: Math.floor(ahora / 1000) + dur,
       };
     },
+    // Entrar con Google: Supabase vuelve a `volverA` con la sesión en el hash (la lee sesionDeHash).
+    // Si el correo de Google es el mismo de una cuenta por enlace, Supabase la reconoce como la misma cuenta.
+    urlGoogle: (volverA) => `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(volverA)}`,
     // Envía el enlace mágico al correo. No crea contraseñas.
     enviarEnlace: (email, volverA) => pedir(`/auth/v1/otp?redirect_to=${encodeURIComponent(volverA)}`, { metodo: 'POST', cuerpo: { email, create_user: true } }),
 
