@@ -14,8 +14,8 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
 
 - `src/cerebro/grafo.js`: el grafo, como el de Obsidian. Nodos = hechos, temas y fuentes. Líneas solo de relaciones reales:
   el tema del hecho, su fuente y las fórmulas que usan dos valores juntos (cada regla nombra el archivo de la fórmula).
-- `admin/index.html` + `src/admin/cerebro.js`: **panel de administración**, fuera de la app (no está en su menú).
-  Se abre en `https://trofaxis.github.io/admin/`. Arrastrar puntos o el fondo, acercar con la rueda o dos dedos, tocar un punto
+- `src/admin/cerebro.js`: vista del cerebro para el **panel de administración**, que vive en un sitio aparte con inicio
+  de sesión (`https://diegoguevara912-pixel.github.io/trofaxis-admin/`) y la importa desde la app publicada. Arrastrar puntos o el fondo, acercar con la rueda o dos dedos, tocar un punto
   para ver el hecho, su fuente y sus vecinos. La búsqueda resalta los puntos que coinciden.
 - `src/cerebro/obsidian.js`: botón «Descargar para Obsidian (.zip)»: una nota .md por nodo con [[enlaces]]. Obsidian es
   opcional; editar esas notas no cambia la app.
@@ -25,9 +25,8 @@ Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por valida
 - Pendientes del administrador: lo que está por validar y lo que es criterio propio, por tema, y la fecha de consulta
   de las fichas PPDB. Revisión sugerida una vez al mes; los valores se cambian en el repo con un PR.
 
-**Acceso:** GitHub Pages es público. `/admin/` no está enlazado ni indexado, pero cualquiera con el enlace lo puede abrir.
-Hoy está bien porque solo muestra datos que ya son públicos en el repo. Si entran datos privados (tesis sin publicar,
-respuestas de bienvenida, fincas), hará falta inicio de sesión de administrador con Supabase y esos datos no van en el repo.
+**Acceso:** el panel pide inicio de sesión y solo entran las cuentas de la tabla `admins` de Supabase. La app ya no
+tiene `/admin/`.
 
 ## Qué no puede hacer sin IA
 
