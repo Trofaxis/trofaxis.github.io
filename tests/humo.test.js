@@ -65,11 +65,18 @@ for (const [fincaNombre, preparar] of Object.entries(FINCAS)) {
   test(`los ${STEPS.length} pasos del cuestionario con ${fincaNombre}`, () => {
     preparar();
     assert.equal(STEPS.length, 6);
+    S.wizModo = 'completo';
     STEPS.forEach((paso, i) => {
       S.step = i;
       revisar(`cuestionario, paso ${i + 1} (${paso}) con ${fincaNombre}`, () => viewWizard());
     });
-    S.step = 0;
+    S.step = 0; S.wizModo = 'rapido';
+  });
+  test(`las preguntas rápidas con ${fincaNombre}`, () => {
+    preparar();
+    revisar(`preguntas rápidas con ${fincaNombre}`, () => viewWizard());
+    S.rapido = { ...S.rapido, spathodea: 'si', insect: 'si' };
+    revisar(`preguntas rápidas abiertas con ${fincaNombre}`, () => viewWizard());
   });
 }
 

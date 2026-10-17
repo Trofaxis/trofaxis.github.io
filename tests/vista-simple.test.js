@@ -82,3 +82,11 @@ test('la elección de vista se guarda en este navegador', () => {
     assert.equal(cargarLocal(S.tpl).vistaTecnica, false);
   } finally { S.vistaTecnica = p; }
 });
+
+test('la vista simple dice qué parte de los datos usa y ofrece mejorar el resultado', () => {
+  conFinca(emptyFarm(), () => {
+    const R = evaluacion(), h = viewDashboard();
+    assert.match(h, new RegExp(`${Math.round(R.conf * 100)} % de los datos</b>`));
+    assert.match(h, /data-act="wiz-modo" data-v="completo">Mejora tu resultado/);
+  });
+});
