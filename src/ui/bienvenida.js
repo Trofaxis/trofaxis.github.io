@@ -51,6 +51,6 @@ export function viewBienvenida() {
       ${ultimo ? '<span></span>' : '<button class="btn sm bv-fantasma" data-act="bv-saltar">Saltar</button>'}</div>
     <div class="bv-paso" data-paso="${PASOS_BV[p]}">${cuerpo(p, bv)}</div>
     <div class="bv-abajo">${puntos(p)}${principal}${secundario}
-      <p class="muted small t-centro">Esta bienvenida sale solo la primera vez. Tus respuestas se quedan en este dispositivo.</p></div>
+      <p class="muted small t-centro">Esta bienvenida sale solo la primera vez. Tus respuestas se envían sin tu nombre ni ubicación, solo para mejorar Trofaxis.</p></div>
   </section>`;
 }
