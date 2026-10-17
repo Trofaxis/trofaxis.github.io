@@ -152,7 +152,7 @@ export function importarTexto(texto) {
 // Autoguardado en el navegador. Devuelve si pudo guardar; si no, la app muestra el aviso (src/core/aviso-guardado.js).
 export function guardarLocal(S) {
   try {
-    localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, riego: riegoAGuardar(S.riego) }));
+    localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ farm: S.farm, ajustes: S.ajustes, demo: S.demo, tpl: { ...S.tpl, paste: '' }, done: S.done, theme: S.theme, vistaTecnica: S.vistaTecnica === true, riego: riegoAGuardar(S.riego) }));
     return marcarGuardado(true);
   } catch { return marcarGuardado(false); }
 }
@@ -165,7 +165,7 @@ export function cargarLocal(tplBase) {
     const riego = normalizarRiego(o.riego); // sin datos propios guardados, S.riego se queda con el ejemplo
     return {
       farm: normalizarFinca(o.farm), ajustes: normalizarAjustes(o.ajustes), demo: o.demo === true,
-      tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'system'),
+      tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'system'), vistaTecnica: o.vistaTecnica === true,
       ...(riego ? { riego } : {}),
     };
   } catch { return null; }

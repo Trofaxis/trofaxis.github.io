@@ -149,6 +149,7 @@ const accionesGenerales = {
     const id = a.dataset.id, on = S.ajustes.modulosActivos;
     S.ajustes.modulosActivos = on.includes(id) ? on.filter((x) => x !== id) : [...on, id];
   },
+  'vista-tecnica': () => { S.vistaTecnica = !S.vistaTecnica; },
   'sim-reset': () => { Object.keys(S.sim).forEach((k) => { S.sim[k] = false; }); },
   'reset': () => { S.confirmReset = true; },
   'reset-no': () => { S.confirmReset = false; },

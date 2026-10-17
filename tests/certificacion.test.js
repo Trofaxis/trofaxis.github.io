@@ -10,17 +10,19 @@ const { S } = await import('../src/core/state.js');
 const { viewDashboard } = await import('../src/ui/dashboard.js');
 const { viewWizard } = await import('../src/ui/wizard.js');
 
-const kpi = () => viewDashboard().match(/<div class="k">GLOBALG\.A\.P\.<\/div><div class="v">([^<]*)<\/div>/)[1];
+// El KPI está en la vista técnica del dashboard.
+const kpi = () => { const v = S.vistaTecnica; S.vistaTecnica = true; try { return viewDashboard(); } finally { S.vistaTecnica = v; } };
+const kpiTexto = () => kpi().match(/<div class="k">GLOBALG\.A\.P\.<\/div><div class="v">([^<]*)<\/div>/);
 
 test('el KPI dice que la certificación es declarada, no verificada', () => {
   const previo = S.farm.gg;
   try {
     S.farm.gg = 'si';
-    assert.equal(kpi(), 'Declarado: certificado');
+    assert.equal(kpiTexto()[1], 'Declarado: certificado');
     S.farm.gg = 'quiero';
-    assert.equal(kpi(), 'Declarado: en camino');
+    assert.equal(kpiTexto()[1], 'Declarado: en camino');
     S.farm.gg = 'no';
-    assert.equal(kpi(), 'No aplica');
+    assert.equal(kpiTexto()[1], 'No aplica');
   } finally { S.farm.gg = previo; }
 });
 

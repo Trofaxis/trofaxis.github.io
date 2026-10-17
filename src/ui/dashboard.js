@@ -1,5 +1,8 @@
-// Vista: Dashboard de riesgo. Lectura de arriba abajo: índice global, perfil por módulo,
-// presión por mes, calendario, simulador, plan de acción, GLOBALG.A.P. y respaldo de datos.
+// Vista: Dashboard de riesgo. Tiene dos capas:
+// - Vista simple (por defecto): semáforo por tema, las 3 acciones más urgentes y lo que coincide este mes;
+//   cada respuesta trae un «¿Por qué?» con el detalle técnico (rúbrica, puntaje, fuente).
+// - Vista técnica: índice global, perfil por módulo, presión por mes, calendario, simulador, plan de acción,
+//   GLOBALG.A.P. y respaldo de datos. Ninguna capa calcula distinto: las dos leen la misma evaluación.
 import { M, MFULL, esc, inter } from '../core/utils.js';
 import { S } from '../core/state.js';
 import { CONFIG } from '../core/config.js';
@@ -31,6 +34,50 @@ function tablaRubrica(m,cfg){
 }
 
 // Tarjeta del resumen con su «+» en la esquina: al abrirlo, la tarjeta ocupa todo el ancho y muestra el resumen.
+// Texto llano de cada nivel del semáforo (los cortes de nivel vienen de config.js).
+export const TEXTO_NIVEL={Alto:'Riesgo alto: atiéndelo primero',Medio:'Riesgo medio: revísalo pronto',Bajo:'Riesgo bajo: vas bien','Sin datos':'Faltan datos para calificarlo'};
+const ORDEN_NIVEL={Alto:0,Medio:1,Bajo:2,'Sin datos':3};
+
+// Fila de una acción del plan, con su casilla de «hecha» (misma clave que el plan completo).
+const filaAccion=(x,i,pref,porQue='')=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="${pref}-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><div class="txt"><span class="tag">${x.m} · ${x.lv}</span> <label for="${pref}-${i}">${esc(x.r)}</label>${porQue}</div></li>`;
+
+// Botón que cambia entre la vista simple y la técnica; la elección se guarda en este navegador.
+const botonVista=()=>`<button class="btn" data-act="vista-tecnica" aria-pressed="${!!S.vistaTecnica}">${S.vistaTecnica?'Ver vista simple':'Ver detalle técnico'}</button>`;
+
+// Capa simple del dashboard: responde «¿cómo está mi finca y qué hago?» sin jerga; lo técnico va en «¿Por qué?».
+function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
+  const sem=[...mods].sort((a,b)=>ORDEN_NIVEL[a.suficiente?a.level:'Sin datos']-ORDEN_NIVEL[b.suficiente?b.level:'Sin datos']);
+  const pendientes=recs.filter(x=>!S.done[x.k]);
+  const top=pendientes.slice(0,3),resto=recs.filter(x=>!top.includes(x));
+  const mes=new Date().getMonth(),coinc=R.mh[mes]||[];
+  const nombreMes=MFULL[mes];
+  return `
+  <section class="panel">
+    <div class="resumen-simple">
+      <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}
+        <details><summary>¿Cómo se calcula?</summary><p class="muted small">${notaIndice}</p></details></div>
+      <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema. Abre «¿Por qué?» para ver de dónde sale.</p>
+        <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
+          <div class="row between"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${TEXTO_NIVEL[lv]}</span></div>
+          <details><summary>¿Por qué?</summary>${m.suficiente
+            ?`<p class="small">Puntaje ${m.score} de 100. Causa principal: ${esc(m.driver)}. Confianza de los datos: ${Math.round(m.conf*100)} %.</p>${tablaRubrica(m,cfg)}`
+            :`<p class="small">Con lo que respondiste todavía no alcanza para calificar este tema (confianza ${Math.round(m.conf*100)} %).</p><button class="btn sm" data-view="wizard">Completar respuestas</button>`}</details>
+        </li>`;}).join('')}</ul></div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="row between"><div><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
+    ${top.length?`<ul class="plan urgentes">${top.map((x,i)=>filaAccion(x,i,'urg',`<details><summary>¿Por qué?</summary><p class="small">Sale del tema ${esc(x.m)}${x.score!=null?`, con riesgo ${x.lv.toLowerCase()} (${x.score} de 100)`:''}.${x.driver?` Causa principal: ${esc(x.driver)}.`:''}</p></details>`)).join('')}</ul>`
+      :`<p class="muted">${recs.length?'Ya marcaste todas las acciones como hechas.':'No hay acciones pendientes con los datos actuales.'}</p>`}
+    ${resto.length?`<details><summary>Ver las otras ${resto.length} acciones</summary><ul class="plan">${resto.map((x,i)=>filaAccion(x,i,'resto')).join('')}</ul></details>`:''}
+  </section>
+  <section class="panel">
+    <h2>Este mes: ${nombreMes}</h2>
+    ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul>${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
+      :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
+  </section>`;
+}
+
 const kpi=(clave,k,v,cuerpo)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div>${mas(clave,k.toLowerCase(),cuerpo,S.abiertos[`mas-${clave}`])}</div>`;
 
 export function viewDashboard(){
@@ -40,7 +87,7 @@ export function viewDashboard(){
   const conDatos=mods.filter(m=>m.suficiente);
   const top=[...conDatos].sort((a,b)=>b.score-a.score)[0];
   const hotM=R.mh.map((a,i)=>[i,a.length]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
-  const recs=mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',r}))).sort((a,b)=>({Alto:0,Medio:1,Bajo:2,'Sin datos':3}[a.lv]-{Alto:0,Medio:1,Bajo:2,'Sin datos':3}[b.lv]));
+  const recs=mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',score:m.suficiente?m.score:null,driver:m.suficiente?m.driver:'',r}))).sort((a,b)=>ORDEN_NIVEL[a.lv]-ORDEN_NIVEL[b.lv]);
   const doneN=recs.filter(x=>S.done[x.k]).length;
   const gg=f.gg!=='no';
   const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
@@ -48,19 +95,22 @@ export function viewDashboard(){
   const lvO=nivel(R.overall,cfg);
   const pesoTotal=mods.reduce((s,m)=>s+(cfg.pesos[m.id]??0),0);
   const pesosTxt=mods.map(m=>`${m.nombre.toLowerCase()} ${Math.round((cfg.pesos[m.id]??0)/pesoTotal*100)} %`).join(', ');
+  const notaIndice=`El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}`;
   const simOpts=[['n','Ajustar el nitrógeno al objetivo',f.nObjetivo>0&&f.nAplicado>f.nObjetivo?`De ${f.nAplicado} a ${f.nObjetivo} kg N/ha; el fósforo y el potasio no cambian`:'La dosis ya está en el objetivo',!(f.nObjetivo>0&&f.nAplicado>f.nObjetivo)],
     ['pol','Aplicar fuera de la floración','Quita las aplicaciones de los meses con polinizadores',!R.ov1.length],
     ['selec','Cambiar amplio espectro por selectivo','Reduce la presión sobre enemigos naturales',!f.plaguicidas.some(p=>p.clase==='amplio')],
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
     ['suelo','Cubrir el suelo en lluvias','Cobertura y labranza mínima',!(f.sueloDesnudoMeses.length||f.labranza==='convencional')]];
-  return `
-  ${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
-  ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
-  <section class="panel">
-    <div class="row between">
+  const avisos=`${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
+  ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}`;
+  const cabecera=`<div class="row between">
       <div class="minw-0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
-      <div class="row"><button class="btn" data-view="wizard">Editar respuestas</button><button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button></div>
-    </div>
+      <div class="row"><button class="btn" data-view="wizard">Editar respuestas</button><button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${botonVista()}</div>
+    </div>`;
+  if(!S.vistaTecnica)return `${avisos}<section class="panel flat">${cabecera}</section>${vistaSimple(R,cfg,mods,recs,lvO,notaIndice)}${panelApiRadar(f,cfg,X)}${panelDatos()}`;
+  return `${avisos}
+  <section class="panel">
+    ${cabecera}
     <div class="hero">
       <div class="stats">
         ${kpi('mayor','Mayor riesgo',top?`${top.nombre} · ${top.score}`:'Sin datos suficientes',masMayorRiesgo(R,cfg))}
@@ -72,7 +122,7 @@ export function viewDashboard(){
       </div>
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>
     </div>
-    <p class="muted small">El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}</p>
+    <p class="muted small">${notaIndice}</p>
   </section>
   <div class="grid2">
     <section class="panel"><div class="con-mas"><div><h2>Perfil de riesgo ambiental</h2><p class="muted">Índice de 0 a 100 por módulo. Más lejos del centro, más riesgo.</p></div>${mas('perfil','el perfil de riesgo',masPerfil(R,cfg),S.abiertos['mas-perfil'])}</div>${conDatos.length>=3?radar(conDatos):'<p class="muted small">El perfil se dibuja cuando al menos 3 módulos tienen datos suficientes.</p>'}${panelMapa()}${panelClima()}</section>
@@ -153,6 +203,12 @@ export function viewDashboard(){
     </tbody></table></div>
     <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>
   </section>`:''}
+  ${panelDatos()}`;
+}
+
+// Respaldo y borrado de los datos: está en las dos vistas.
+function panelDatos(){
+  return `
   <section class="panel flat">
     <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador (la nube es opcional, en la pestaña Casos). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
     <div class="f"><label for="io-box">Respaldo en texto (JSON)</label><textarea id="io-box" data-bind="io" placeholder="Pega aquí un respaldo y pulsa Cargar">${esc(S.io)}</textarea></div>
