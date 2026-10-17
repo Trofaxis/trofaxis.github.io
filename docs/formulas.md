@@ -14,14 +14,14 @@ Cortes [a, b]: valor ≤ a → 0; ≤ b → 50; mayor → 100. Inverso: valor �
 
 ## Polinizadores
 
-Basado en Kuniyoshi (2025) y Osorio (2025), PEG de Zamorano. Kuniyoshi encontró una relación positiva pero débil entre la abundancia floral de *Spathodea campanulata* y las abejas muertas (R² = 0.21, no significativa), y señaló como factores **no medidos** la exposición a agroquímicos, la disponibilidad de otras especies en floración, la disponibilidad de agua, el clima y la condición de las flores. Las variables basadas en esos factores son **hipótesis** y se marcan "No verificado".
+Basado en Kuniyoshi (2026) y Osorio (2025), PEG de Zamorano. Kuniyoshi encontró una relación positiva pero débil entre las flores visibles de *Spathodea campanulata* en árboles cercanos y las abejas muertas (R² = 0.21; Spearman no significativa, p > 0.05), sin medir volumen de copa. Osorio espera más floración con más volumen de copa, pero no lo midió (pág. 27). Kuniyoshi también señaló como factores **no medidos** la exposición a agroquímicos, la disponibilidad de otras especies en floración, la disponibilidad de agua, el clima y la condición de las flores. Las variables basadas en esos factores son **hipótesis** y se marcan "No verificado".
 
 | Variable | Peso | Puntaje | Estado |
 |---|---|---|---|
 | Meses con aplicación que expone a los polinizadores en floración visitada (lo biológico cuenta solo si su HQ supera el umbral o la etiqueta advierte por abejas) | 25 | ≤ 0 → 0 · ≤ 1 → 50 · mayor → 100 | Criterio propio |
 | Peligro del producto aplicado en floración (el peor de los aplicados en floración; ver [Plaguicidas](#plaguicidas-pestaña-plaguicidas)) | 15 | HQ supera el umbral 100 · no lo supera 0 · sin resolver 50; etiqueta con aviso por abejas 100; sin ingrediente o dosis: ninguno/biológico 0 · selectivo 50 · amplio 100 | HQ y umbral: verificado (FAO). El 50 de "sin resolver" y la escala por clase: criterio propio |
 | Meses de floración de especies de riesgo | 10 | ≤ 0 → 0 · ≤ 2 → 50 · mayor → 100 | Criterio propio |
-| Abundancia de la especie de riesgo: volumen de copa V = 4/3·π·(D/2)²·(H/2) (Osorio, Ec. 3); sin medidas, n.º de árboles | 15 | m³: ≤ 0 → 0 · ≤ 1 000 → 50 · mayor → 100 (árboles: 0 / 1 / más) | Verificado (relación débil); corte criterio propio |
+| Abundancia de la especie de riesgo: volumen de copa V = 4/3·π·(D/2)²·(H/2) (Osorio, Ec. 3); sin medidas, n.º de árboles | 15 | m³: ≤ 0 → 0 · ≤ 1 000 → 50 · mayor → 100 (árboles: 0 / 1 / más) | Fórmula verificada (Osorio, pág. 15). Que más copa dé más riesgo: no verificado (hipótesis). Corte criterio propio |
 | Meses de floración de riesgo sin otra floración segura (fracción) | 15 | ≤ 0 → 0 · ≤ 0.5 → 50 · mayor → 100 | No verificado (hipótesis) |
 | Meses de floración de riesgo sin lluvia (fracción) | 10 | ≤ 0 → 0 · ≤ 0.5 → 50 · mayor → 100 | No verificado (hipótesis) |
 | **Vínculo con Fertilización:** aplicación foliar en floración visitada (solo con plan) | 5 | ninguna 0 · alguna 100 | No verificado (hipótesis) |
@@ -147,14 +147,14 @@ Con el punto de la finca (mapa, coordenadas o GPS) la app descarga el clima y el
   - Riego: ETo de cada mes, temperatura y radiación del reservorio, y ETo de diseño = mayor percentil 90 de la ETo diaria (criterio propio: un día exigente, no el promedio). El caso de ejemplo del Lab no se mezcla con el clima de otra ubicación salvo que el usuario lo pida.
 - **Dónde más se usa:**
   - Plaguicidas: si no se anotaron las condiciones del día, avisa con el clima típico de los meses de aplicación contra los límites de la clase (máx. > 25 °C, HR < 50 %, viento > 10 km/h, mes lluvioso). Es nivel "criterio": un promedio diario no es la hora de aplicación.
-  - Polinizadores: variable "Clima en la floración de riesgo" con **peso 0** (no verificado). Kuniyoshi (2025) menciona temperatura, humedad y precipitación como factores no medidos; no suma al riesgo hasta que se mida su efecto.
+  - Polinizadores: variable "Clima en la floración de riesgo" con **peso 0** (no verificado). Kuniyoshi (2026) menciona temperatura, humedad y precipitación como factores no medidos; no suma al riesgo hasta que se mida su efecto.
 - **Límites:** es una celda de ~11 km, no una estación en la finca; en montaña puede diferir varios grados. Son 10 años, no una normal de 30 años de la OMM. Todo valor se puede corregir a mano (queda marcado), y sin internet se usa la última descarga o se escribe la tabla a mano.
 - **Privacidad:** se envían a Open-Meteo las coordenadas redondeadas a 2 decimales (~1 km). La finca guarda el clima por mes, no las coordenadas; la caché del punto vive solo en el navegador.
 
 ## Fuentes de los vínculos ecológicos
 
-- Kuniyoshi Aguilar, A. S. (2025; publicado en 2026). *Fenología de Spathodea campanulata en el campus de la Universidad Zamorano y presencia de abejas muertas asociadas a sus flores.* PEG, Zamorano.
-- Osorio Banegas, N. E. (2025). *Evaluación de la distribución de Spathodea campanulata en el campus de la Universidad Zamorano.* PEG, Zamorano.
+- Kuniyoshi Aguilar, A. S. (2026). *Fenología de Spathodea campanulata en el campus de la Universidad Zamorano, Honduras, y presencia de abejas muertas asociadas a sus flores.* Proyecto Especial de Graduación, Universidad Zamorano.
+- Osorio Banegas, N. E. (2025). *Evaluación de la distribución de Spathodea campanulata P. Beauv. (Bignoniaceae) en el campus de la Universidad Zamorano, Honduras.* Proyecto Especial de Graduación, Universidad Zamorano. https://bdigital.zamorano.edu/items/8d53e565-4559-43ab-833e-b0e58ae2f6f3
 
 ## Relación entre módulos (gráficos de dispersión)
 

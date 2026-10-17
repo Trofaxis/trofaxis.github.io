@@ -8,6 +8,8 @@ import { plagVacio, plagBorrador } from '../plag/modelo.js';
 // laminaAntes/laminaDespues: lámina aplicada / lámina requerida (ideal 0.9-1.2, rúbrica de agua v0.2).
 export const resultadoVacio = () => ({ ncAntes: null, ncDespues: null, laminaAntes: null, laminaDespues: null });
 
+// Finca demostrativa: 100 % ficticia. No lleva ningún valor de una tesis ni de una hoja real (esos viven en
+// src/casos/referencia.js); una prueba lo revisa. Las especies se nombran, pero sus meses y medidas son inventados.
 export function demoFarm() {
   return {
     nombre: 'Finca demostrativa', depto: 'Francisco Morazán', area: 45, areaProd: 28, altitud: 800, pendiente: 'ondulada',
@@ -102,7 +104,9 @@ export const S = {
   casos: [],
   espSeccion: '', // sección de especies con el formulario abierto: fauna | arboles | malezas
   // Nube (Supabase): sesión por enlace al correo, casos de la comunidad y consentimiento de la sesión actual.
-  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false },
+  cuenta: { email: '', proveedor: '', sinCuenta: false }, // cuenta recordada en este navegador (src/core/cuenta.js)
+  cuentaMenu: false, confirmarSalir: false, entrarCorreo: false, // menú de cuenta, confirmación de cierre y correo en la entrada
+  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false, listo: false, conflicto: false, ultima: '', estado: '' },
   fertImport: null, // último archivo de fertilización cargado: { archivo, hoja, omitidas, avisos }
   fertUnidad: 'kgha', // unidad de dosis en la pestaña Fertilización: kgha | qqmz // casos guardados por el usuario en este navegador (memoria de casos)
   plagEdit: null, // índice de la aplicación de plaguicida que se está editando (null: agregando una nueva)

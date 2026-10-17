@@ -1,5 +1,5 @@
 // Módulo: Polinizadores. Origen del proyecto: abejas muertas en flores de Spathodea campanulata.
-// Las variables siguen los factores que señalan Kuniyoshi (2025) y Osorio (2025):
+// Las variables siguen los factores que señalan Kuniyoshi (2026) y Osorio (2025):
 // abundancia floral de la especie de riesgo, exposición a agroquímicos, otras especies en floración
 // y disponibilidad de agua. Kuniyoshi no midió estos tres últimos: son hipótesis, y así se marcan.
 import { M } from '../core/utils.js';
@@ -69,7 +69,7 @@ export default {
         'criterio propio', `${K}: en Zamorano la floración de Spathodea se concentró de septiembre a enero, con asincronía entre árboles.`),
       variable('abundanciaRiesgo', 'Abundancia de la especie de riesgo', R.abundanciaRiesgo.peso, abund,
         !hayEspecies ? 'Sin dato' : !riesgo.length ? 'Sin especies de riesgo' : conMedidas.length ? `${Math.round(vol).toLocaleString('es-HN')} m³ de copa` : arboles ? `${arboles} árbol(es), sin medidas de copa` : 'Falta el número de árboles',
-        'verificado', `${K}: relación positiva pero débil entre flores y abejas muertas (R² = 0.21, no significativa). Volumen de copa: ${O}, Ec. 3; la mayoría de copas ≤ 1 000 m³. El corte es criterio propio.`),
+        'no verificado', `Hipótesis: ${K} halló una relación positiva pero débil y no significativa entre flores visibles y abejas muertas (R² = 0.21; Spearman p > 0.05), sin medir volumen de copa. Que más copa dé más flores es una expectativa de ${O}, no un dato. El volumen sale de ${O}, Ec. 3; la mayoría de copas mide ≤ 1 000 m³. El corte es criterio propio.`),
       { ...variable('alternativas', 'Floración de riesgo sin otras flores disponibles', R.alternativas.peso,
         porCortes(riesgoFlor.length ? sinAlt.length / riesgoFlor.length : null, R.alternativas),
         `${sinAlt.length} de ${riesgoFlor.length} mes(es)${sinAlt.length ? `: ${sinAlt.map((m) => M[m]).join(', ')}` : ''}`,

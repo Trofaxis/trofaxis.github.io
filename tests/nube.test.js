@@ -231,3 +231,13 @@ test('la bienvenida se envía anónima: sin sesión, solo fuente, usos y versió
   assert.equal(l.headers.Prefer, 'return=minimal'); // nadie puede leer la tabla: no se pide la fila de vuelta
   assert.deepEqual(JSON.parse(l.body), { fuente: 'zamorano', usos: ['abejas'], version: 1 });
 });
+
+// El aviso de la nube debe decir que el administrador ve la finca, y en qué condiciones (panel de administración aparte).
+test('aviso de privacidad de la nube: menciona al administrador, sin nombre, correo ni coordenadas', async () => {
+  const { readFileSync } = await import('node:fs');
+  const t = readFileSync(new URL('../src/ui/casos.js', import.meta.url), 'utf8');
+  assert.ok(!t.includes('solo tú la ves'));
+  assert.match(t, /administrador de Trofaxis/);
+  assert.match(t, /sin el nombre de la finca, sin tu correo y sin coordenadas/);
+  assert.match(t, /queda registrada/);
+});

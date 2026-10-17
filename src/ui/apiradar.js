@@ -152,7 +152,7 @@ export function panelApiRadar(f, cfg, X) {
   const abierto = S.problema && PROBLEMAS[S.problema];
   const lista = Object.values(PROBLEMAS);
   const masAr = mas('apiradar', 'el ApiRadar', masApiRadar(cfg), S.abiertos['mas-apiradar']);
-  const titulo = `<div class="con-mas"><div><p class="label">ApiRadar · caso Zamorano</p><h2>Abejas nativas y Spathodea</h2></div>${masAr}</div>`;
+  const titulo = `<div class="con-mas"><div><p class="label">ApiRadar</p><h2>Abejas nativas y Spathodea</h2></div>${masAr}</div>`;
   if (!abierto) {
     const sugerido = apiRadarAplica(f, cfg);
     const control = lista.length === 1 ? `<p><b>Problema:</b> ${esc(lista[0].nombre)}</p>`

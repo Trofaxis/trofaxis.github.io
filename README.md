@@ -146,4 +146,4 @@ Versión actual: **0.10.0** (`package.json`). El README numera solo los hitos ha
 
 ## Fuentes
 
-El caso de origen se apoya en Osorio (2025), Kuniyoshi (2025) y Tejeda et al. (2025), del proyecto CADS. La app no usa todavía datos de esas tesis. Las secciones de IFA v6 citadas en el panel deben verificarse con el checklist oficial.
+El caso de origen se apoya en Osorio (2025), Kuniyoshi (2026) y Tejeda et al. (2025), del proyecto CADS. Las cifras de Osorio y Kuniyoshi están en `src/core/fuentes.js` con su página; Tejeda está con embargo y no se cita. Las secciones de IFA v6 citadas en el panel deben verificarse con el checklist oficial.

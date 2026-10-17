@@ -39,8 +39,6 @@ nav.tabs button .ic{padding:8px;width:36px;height:36px;border-radius:50%;backgro
 nav.tabs button:hover{background:rgba(255,255,255,.08);color:#fff}
 nav.tabs button[aria-current="page"]{background:var(--side-hi);color:var(--side-hi-ink);font-weight:600;box-shadow:0 6px 16px rgba(123,220,147,.3)}
 nav.tabs button[aria-current="page"] .ic{background:var(--side-hi-ink);color:var(--side-hi)}
-.side .btn.theme{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff}
-.side .btn.theme:hover{border-color:var(--side-hi)}
 .side :focus-visible{outline-color:var(--side-hi)}
 .shell>main.wrap{flex:1;min-width:0;max-width:1180px;margin:0 auto;padding-inline:20px}
 @media (max-width:900px){
@@ -57,7 +55,6 @@ nav.tabs button[aria-current="page"] .ic{background:var(--side-hi-ink);color:var
   nav.tabs button:not([aria-current="page"]){padding:4px}
   nav.tabs button:not([aria-current="page"]) span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   nav.tabs button{position:relative}
-  .side .btn.theme{flex:none;font-size:12px;padding:4px 8px}
   .shell>main.wrap{padding-inline:16px}
 }
 @media (max-width:560px){.brand>div{display:none}}
@@ -188,6 +185,9 @@ svg text{font-family:var(--f-body)}
 .badge.ejemplo{background:var(--pollen-soft);color:var(--pollen)}
 .badge.propio{background:var(--accent-soft);color:var(--ink)}
 .badge.nube{background:var(--accent-soft);color:var(--ink);border-style:dashed}
+.badge.referencia{background:var(--chip);color:var(--accent);border-color:var(--accent)}
+.ref-caso{border-top:1px solid var(--line);padding:10px 0}
+.ref-caso>summary{cursor:pointer}
 pre.formula{white-space:pre-wrap;overflow-x:auto}
 .caso ul.acc{margin:4px 0 0;padding-left:18px}
 .caso .resultado{border-top:1px solid var(--line);padding-top:8px}
@@ -310,7 +310,6 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
   .plan input,.check input[type=checkbox]{width:24px;height:24px}
   nav.tabs button{min-height:44px}
   nav.tabs button:not([aria-current="page"]){padding:7px}
-  .side .btn.theme{min-height:44px}
   .mapa-zoom button{width:44px;height:44px}
 }
 
@@ -485,3 +484,50 @@ body.en-bienvenida main{padding-block:0;background:radial-gradient(circle at 100
   .bv-puntos span{transition:width .4s,background .4s}
 }
 @keyframes bv-entrar{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+
+/* Entrada y cuenta (src/ui/entrar.js): pantalla como la de OpenAI Platform y menú de cuenta en la barra lateral. */
+.cta-centro{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:12px;text-align:center}
+.cta-centro .bv-logo{align-self:center}
+.cta-centro h1{font-size:30px;margin:6px 0 0}
+.cta-centro .f{text-align:left}
+.cta-tarjeta{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:6px 8px 6px 6px;box-shadow:var(--shadow)}
+.cta-tarjeta.cta-fija{padding:12px 14px;gap:12px}
+.cta-elegir{flex:1;display:flex;align-items:center;gap:12px;text-align:left;border:none;background:transparent;color:var(--ink);padding:8px;border-radius:14px;cursor:pointer;font:inherit}
+.cta-elegir:hover{background:var(--accent-soft)}
+.cta-x{flex:none;width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--muted);font-size:22px;cursor:pointer}
+.cta-x:hover{background:var(--accent-soft);color:var(--ink)}
+.cta-avatar{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font:700 17px var(--f-display)}
+.cta-avatar.cta-vacio{background:rgba(255,255,255,.18)}
+.cta-quien{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.cta-quien>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cta-o{display:flex;align-items:center;gap:12px;color:var(--muted);font-weight:600}
+.cta-o::before,.cta-o::after{content:"";flex:1;border-top:1px solid var(--line)}
+.cta-pie{position:relative}
+.cta-boton{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:16px;padding:8px;cursor:pointer;font:inherit}
+.cta-boton:hover,.cta-boton[aria-expanded="true"]{border-color:var(--side-hi)}
+.cta-boton .cta-avatar{width:34px;height:34px;font-size:15px;background:var(--side-hi);color:var(--side-hi-ink)}
+.cta-boton .cta-avatar.cta-vacio{background:rgba(255,255,255,.18);color:#fff}
+.cta-boton .small{color:rgba(255,255,255,.72)}
+.cta-menu{position:absolute;left:0;right:0;bottom:calc(100% + 8px);z-index:30;display:flex;flex-direction:column;gap:2px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 18px 40px rgba(0,0,0,.25);min-width:220px}
+.cta-menu-email{margin:4px 8px 6px;overflow-wrap:anywhere}
+.cta-menu hr{border:none;border-top:1px solid var(--line);margin:6px 0;width:100%}
+.cta-menu [role="menuitem"]{display:block;text-align:left;border:none;background:transparent;color:var(--ink);font:500 14px var(--f-body);padding:9px 10px;border-radius:10px;cursor:pointer;text-decoration:none}
+.cta-menu [role="menuitem"]:hover{background:var(--accent-soft)}
+.cta-temas{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin:0 4px}
+.cta-temas button{flex:1;border:none;background:transparent;color:var(--muted);font:600 12px var(--f-body);padding:6px;border-radius:9px;cursor:pointer}
+.cta-temas button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.bv.cta a{color:var(--accent);font-weight:600}
+.side:has(.cta-dialogo){z-index:60}
+.cta-fondo{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.5)}
+.cta-dialogo{position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:12px}
+.cta-dialogo h2{margin:0;font-size:21px}
+.cta-dialogo p{margin:0}
+.cta-acciones{justify-content:flex-end;gap:8px}
+.btn.danger-solido{background:var(--crit);border-color:var(--crit);color:#fff}
+@media (max-width:900px){
+  .cta-pie{flex:none}
+  .cta-boton{padding:4px;border-radius:50%;width:auto}
+  .cta-boton .cta-quien{display:none}
+  .cta-menu{left:auto;right:0;bottom:auto;top:calc(100% + 8px)}
+}

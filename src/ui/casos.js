@@ -5,6 +5,7 @@ import { S } from '../core/state.js';
 import { configEfectiva, normalizarAjustes, normalizarFinca } from '../core/storage.js';
 import { nivel } from '../core/engine.js';
 import { CASOS_EJEMPLO } from '../casos/ejemplos.js';
+import { CASOS_REFERENCIA } from '../casos/referencia.js';
 import { vecinos, resumenResultado, accionesDe, resultadoDe } from '../casos/memoria.js';
 import { casoAnonimo } from '../casos/anonimo.js';
 import { nubeConfigurada } from '../nube/cliente.js';
@@ -14,7 +15,7 @@ import { relaciones, frase } from '../casos/relaciones.js';
 const NOMBRE_RASGO = { cultivo: 'cultivo', riego: 'riego', pendiente: 'pendiente', distAgua: 'distancia al agua', propNativas: 'especies nativas', mesesCoincidencia: 'meses con coincidencias', scores: 'riesgo por módulo' };
 import { dispersion, leyendaDispersion } from './charts.js';
 
-const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad' };
+const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad', referencia: 'Datos reales' };
 
 // Todos los casos disponibles, sin la finca que se está evaluando (no se compara consigo misma).
 export function memoria() {
@@ -93,15 +94,19 @@ function panelNube() {
   }
   const dis = n.ocupado ? 'disabled' : '';
   const cuenta = n.sesion
-    ? `<p class="small">Sesión iniciada como <b>${esc(n.sesion.email || 'tu correo')}</b>.</p>
+    ? `<p class="small">Sesión iniciada como <b>${esc(n.sesion.email || 'tu correo')}</b>.${n.estado ? ` <span class="muted">${esc(n.estado)}</span>` : ''}</p>
+       ${n.conflicto ? `<div class="notice"><span>La finca de este navegador es distinta a la que tienes en la nube. No se cambió ninguna de las dos: elige cuál quieres conservar. «Guardar» reemplaza la de la nube con la de este navegador; «Cargar» trae la de la nube.</span></div>` : ''}
        <div class="row">
          <button class="btn sm" data-act="nube-guardar" ${dis}>Guardar mi finca en la nube</button>
          <button class="btn sm" data-act="nube-cargar" ${dis}>Cargar mi finca desde la nube</button>
          <button class="btn sm" data-act="nube-salir" ${dis}>Cerrar sesión</button>
        </div>
-       <p class="muted small">Tu finca completa (con nombre y todos sus datos) queda <b>privada</b>: solo tú la ves, con tu sesión. Guardar reemplaza la copia anterior de la nube.</p>`
-    : `<div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
-       <div class="row"><button class="btn primary" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div>`;
+       <p class="muted small">Mientras tengas la sesión iniciada, tu finca se guarda sola en la nube unos segundos después de cada cambio (la finca de ejemplo nunca se sube). Al entrar desde otro equipo se carga tu finca. Tu finca en la nube <b>no es pública</b>. La ves tú con tu sesión y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas (esas nunca salen de este navegador). Cada consulta del administrador queda registrada. Si no quieres que se suba, cierra la sesión.</p>`
+    : `<div class="row"><button class="btn primary" data-act="nube-google" ${dis}>Continuar con Google</button></div>
+       <p class="muted small">Al iniciar sesión, tu finca se guarda sola en la nube mientras la sesión esté abierta (privada: solo tú y el administrador, sin nombre de la finca, correo ni coordenadas).</p>
+       <details><summary>Entrar con un enlace a tu correo</summary>
+       <div class="f"><label for="n-email">Correo para iniciar sesión</label><input id="n-email" type="email" autocomplete="email" data-bind="nube.email" value="${esc(n.email)}" placeholder="tucorreo@ejemplo.com"><span class="hint">Te enviamos un enlace de un solo uso. No hay contraseñas.</span></div>
+       <div class="row"><button class="btn" data-act="nube-enlace" ${dis}>Enviarme el enlace</button></div></details>`;
   const compartir = n.sesion ? `
     <div class="f"><label class="item pointer"><input type="checkbox" class="w-auto" data-bind="nube.consentimiento" data-rerender ${n.consentimiento ? 'checked' : ''}>
       <span class="grow">Acepto compartir de forma anónima el caso de abajo con la comunidad de Trofaxis</span></label>
@@ -120,6 +125,22 @@ function panelNube() {
   </section>`;
 }
 
+// Casos de referencia: datos reales con su fuente y página. No son fincas: no entran a la búsqueda de parecidas.
+export function panelReferencia() {
+  return `<section class="panel" id="casos-referencia">
+    <div><h2>Casos de referencia: datos reales</h2><p class="muted">Lo que midieron estudios reales, cada dato con su fuente y su página. No se editan ni se mezclan con la finca de ejemplo, y no llevan coordenadas.</p></div>
+    ${CASOS_REFERENCIA.map((c) => `<details class="ref-caso">
+      <summary><span class="badge referencia">${ORIGEN.referencia}</span> <b>${esc(c.etiqueta)}</b> <span class="muted small">· ${c.datos.length} datos</span></summary>
+      <p class="small">${esc(c.resumen)} <span class="muted">${esc(c.lugar)}.</span></p>
+      <div class="scroll"><table class="data"><thead><tr><th>Dato</th><th>Valor</th><th>Fuente</th></tr></thead><tbody>
+        ${c.datos.map((d) => `<tr><td>${esc(d.titulo)}${d.nota ? `<div class="muted small">${esc(d.nota)}</div>` : ''}</td><td>${esc(String(d.valor))}${d.unidad && /^[\d.,\s·×]+$/.test(String(d.valor)) ? ` ${esc(d.unidad)}` : ''}</td><td class="small">${esc(d.fuente)}, ${esc(d.donde)}</td></tr>`).join('')}
+      </tbody></table></div>
+      ${c.pendientes.length ? `<p class="muted small"><b>Falta:</b> ${c.pendientes.map(esc).join(' ')}</p>` : ''}
+      <p class="muted small">${c.citas.map(esc).join(' ')}</p>
+    </details>`).join('')}
+  </section>`;
+}
+
 export function viewCasos() {
   const { cfg, lista } = vecinosActuales();
   const f = S.farm, r = f.resultado;
@@ -133,11 +154,13 @@ export function viewCasos() {
     <div class="stats">
       <div><div class="k">Casos en memoria</div><div class="v">${todos.length}</div></div>
       <div><div class="k">De ejemplo</div><div class="v">${CASOS_EJEMPLO.length}</div></div>
+      <div><div class="k">De referencia (reales)</div><div class="v">${CASOS_REFERENCIA.length}</div></div>
       <div><div class="k">Guardados por ti</div><div class="v">${propios}</div></div>
       <div><div class="k">De la comunidad</div><div class="v">${S.nube.comunidad.length}</div></div>
       <div><div class="k">Vecinos mostrados</div><div class="v">${cfg.casos.k}</div></div>
     </div>
   </section>
+  ${panelReferencia()}
   <section class="panel">
     <div><h2>Las fincas más parecidas a «${esc(f.nombre || 'tu finca')}»</h2><p class="muted">Ordenadas por similitud. Cada tarjeta dice en qué se parecen, qué hicieron y cómo les fue.</p></div>
     ${tarjetasVecinos(lista, cfg)}

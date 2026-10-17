@@ -112,7 +112,7 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     acciones.push({
       id: 'alternativa', titulo: 'Tener otras flores cuando florece la especie de riesgo', cuando: sinAlt.map((m) => M[m]).join(', '),
       detalle: `En ${sinAlt.map((m) => M[m]).join(', ')} no hay otra floración registrada. Sembrar o conservar nativas que florezcan en esos meses y estén lejos de los árboles de riesgo. Confirma en tu zona en qué meses florece la especie que elijas.`,
-      estado: 'no verificado', nota: 'Hipótesis: Kuniyoshi (2025) cita la disponibilidad de otras especies en floración como factor no medido, no como causa probada.', ...medir('alternativa'),
+      estado: 'no verificado', nota: 'Hipótesis: Kuniyoshi (2026) cita la disponibilidad de otras especies en floración como factor no medido, no como causa probada.', ...medir('alternativa'),
     });
   }
   const foliar = (f.fertPlan ?? []).filter((a) => a.metodo === 'foliar' && ctx.atraeFlor.includes(a.mes));
@@ -120,7 +120,7 @@ export function apiRadar(f0, cfg = CONFIG, extra = {}, problema = 'spathodea', u
     acciones.push({
       id: 'foliar', titulo: 'Pasar los fertilizantes foliares fuera de la floración', cuando: uniq(foliar.map((a) => a.mes)).map((m) => M[m]).join(', '),
       detalle: 'Aplica la fertilización al suelo en esos meses o muévela a un mes sin floración visitada.', estado: 'no verificado',
-      nota: 'Hipótesis: la exposición a agroquímicos es un factor no medido por Kuniyoshi (2025).', ...medir('foliar'),
+      nota: 'Hipótesis: la exposición a agroquímicos es un factor no medido por Kuniyoshi (2026).', ...medir('foliar'),
     });
   }
   // Ubicación del refugio: sin coordenadas de cada árbol, la app no puede decir el punto exacto. Da el radio y lo que implica.
