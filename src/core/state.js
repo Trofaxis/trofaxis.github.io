@@ -8,6 +8,8 @@ import { plagVacio, plagBorrador } from '../plag/modelo.js';
 // laminaAntes/laminaDespues: lámina aplicada / lámina requerida (ideal 0.9-1.2, rúbrica de agua v0.2).
 export const resultadoVacio = () => ({ ncAntes: null, ncDespues: null, laminaAntes: null, laminaDespues: null });
 
+// Finca demostrativa: 100 % ficticia. No lleva ningún valor de una tesis ni de una hoja real (esos viven en
+// src/casos/referencia.js); una prueba lo revisa. Las especies se nombran, pero sus meses y medidas son inventados.
 export function demoFarm() {
   return {
     nombre: 'Finca demostrativa', depto: 'Francisco Morazán', area: 45, areaProd: 28, altitud: 800, pendiente: 'ondulada',

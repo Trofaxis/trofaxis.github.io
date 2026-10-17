@@ -55,7 +55,7 @@ export function viewDashboard(){
     ['suelo','Cubrir el suelo en lluvias','Cobertura y labranza mínima',!(f.sueloDesnudoMeses.length||f.labranza==='convencional')]];
   return `
   ${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
-  ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis y especies sirven para mostrar cómo funciona la app, no son mediciones.</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
+  ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}
   <section class="panel">
     <div class="row between">
       <div class="minw-0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>

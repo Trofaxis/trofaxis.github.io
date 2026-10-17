@@ -5,6 +5,7 @@ import { S } from '../core/state.js';
 import { configEfectiva, normalizarAjustes, normalizarFinca } from '../core/storage.js';
 import { nivel } from '../core/engine.js';
 import { CASOS_EJEMPLO } from '../casos/ejemplos.js';
+import { CASOS_REFERENCIA } from '../casos/referencia.js';
 import { vecinos, resumenResultado, accionesDe, resultadoDe } from '../casos/memoria.js';
 import { casoAnonimo } from '../casos/anonimo.js';
 import { nubeConfigurada } from '../nube/cliente.js';
@@ -14,7 +15,7 @@ import { relaciones, frase } from '../casos/relaciones.js';
 const NOMBRE_RASGO = { cultivo: 'cultivo', riego: 'riego', pendiente: 'pendiente', distAgua: 'distancia al agua', propNativas: 'especies nativas', mesesCoincidencia: 'meses con coincidencias', scores: 'riesgo por módulo' };
 import { dispersion, leyendaDispersion } from './charts.js';
 
-const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad' };
+const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad', referencia: 'Datos reales' };
 
 // Todos los casos disponibles, sin la finca que se está evaluando (no se compara consigo misma).
 export function memoria() {
@@ -124,6 +125,22 @@ function panelNube() {
   </section>`;
 }
 
+// Casos de referencia: datos reales con su fuente y página. No son fincas: no entran a la búsqueda de parecidas.
+export function panelReferencia() {
+  return `<section class="panel" id="casos-referencia">
+    <div><h2>Casos de referencia: datos reales</h2><p class="muted">Lo que midieron estudios reales, cada dato con su fuente y su página. No se editan ni se mezclan con la finca de ejemplo, y no llevan coordenadas.</p></div>
+    ${CASOS_REFERENCIA.map((c) => `<details class="ref-caso">
+      <summary><span class="badge referencia">${ORIGEN.referencia}</span> <b>${esc(c.etiqueta)}</b> <span class="muted small">· ${c.datos.length} datos</span></summary>
+      <p class="small">${esc(c.resumen)} <span class="muted">${esc(c.lugar)}.</span></p>
+      <div class="scroll"><table class="data"><thead><tr><th>Dato</th><th>Valor</th><th>Fuente</th></tr></thead><tbody>
+        ${c.datos.map((d) => `<tr><td>${esc(d.titulo)}${d.nota ? `<div class="muted small">${esc(d.nota)}</div>` : ''}</td><td>${esc(String(d.valor))}${d.unidad && /^[\d.,\s·×]+$/.test(String(d.valor)) ? ` ${esc(d.unidad)}` : ''}</td><td class="small">${esc(d.fuente)}, ${esc(d.donde)}</td></tr>`).join('')}
+      </tbody></table></div>
+      ${c.pendientes.length ? `<p class="muted small"><b>Falta:</b> ${c.pendientes.map(esc).join(' ')}</p>` : ''}
+      <p class="muted small">${c.citas.map(esc).join(' ')}</p>
+    </details>`).join('')}
+  </section>`;
+}
+
 export function viewCasos() {
   const { cfg, lista } = vecinosActuales();
   const f = S.farm, r = f.resultado;
@@ -137,11 +154,13 @@ export function viewCasos() {
     <div class="stats">
       <div><div class="k">Casos en memoria</div><div class="v">${todos.length}</div></div>
       <div><div class="k">De ejemplo</div><div class="v">${CASOS_EJEMPLO.length}</div></div>
+      <div><div class="k">De referencia (reales)</div><div class="v">${CASOS_REFERENCIA.length}</div></div>
       <div><div class="k">Guardados por ti</div><div class="v">${propios}</div></div>
       <div><div class="k">De la comunidad</div><div class="v">${S.nube.comunidad.length}</div></div>
       <div><div class="k">Vecinos mostrados</div><div class="v">${cfg.casos.k}</div></div>
     </div>
   </section>
+  ${panelReferencia()}
   <section class="panel">
     <div><h2>Las fincas más parecidas a «${esc(f.nombre || 'tu finca')}»</h2><p class="muted">Ordenadas por similitud. Cada tarjeta dice en qué se parecen, qué hicieron y cómo les fue.</p></div>
     ${tarjetasVecinos(lista, cfg)}

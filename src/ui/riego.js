@@ -39,7 +39,7 @@ export function viewRiego() {
     : '<p class="muted small">¿No tienes la ETo, la temperatura o la radiación? Pon la ubicación de la finca (cuestionario, paso Finca, o el mapa del dashboard) y se llenan solas con el clima de los últimos años.</p>';
 
   const aviso = R.fuente === 'ejemplo'
-    ? `<b>Caso real de ejemplo.</b> Diseño agronómico de maíz del Lab de Riego, Zamorano (Anner Almendárez, 2025), publicado con autorización del autor.`
+    ? `<b>Caso de referencia, datos reales.</b> Diseño agronómico de maíz por goteo del Lab de Riego, Zamorano (Anner Almendárez, 2025), publicado con autorización del autor. No es tu finca ni la finca de ejemplo: está en Memoria de casos, «Casos de referencia».`
     : R.fuente === 'archivo'
       ? `<b>Datos leídos de ${esc(R.archivo)}.</b> Revisa abajo qué se detectó y de qué celda salió; corrige lo que haga falta.`
       : `<b>Datos ingresados a mano.</b> Los campos vacíos usan valores de referencia cuando existen.`;
@@ -52,7 +52,7 @@ export function viewRiego() {
       <p class="muted">Sube tu Excel o CSV, o escribe tus datos. La app recalcula el diseño y revisa cada valor contra referencias con fuente.</p></div>
       <div class="row">
         <button class="btn primary" data-act="riego-import">Cargar Excel o CSV</button>
-        <button class="btn" data-act="riego-ejemplo">Caso de ejemplo</button>
+        <button class="btn" data-act="riego-ejemplo">Caso real del Lab de Riego</button>
         <button class="btn" data-act="riego-blanco">En blanco</button>
       </div>
     </div>
