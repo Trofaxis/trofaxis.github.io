@@ -119,7 +119,7 @@ export function viewDashboard(){
   ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}`;
   const cabecera=`<div class="row between">
       <div class="minw-0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
-      <div class="row"><button class="btn" data-view="wizard">Editar respuestas</button><button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${botonVista()}</div>
+      <div class="row">${S.demo?'<button class="btn primary" data-act="start-empty">Empezar con mi finca</button>':'<button class="btn" data-view="wizard">Editar respuestas</button>'}<button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${botonVista()}</div>
     </div>`;
   if(!S.vistaTecnica)return `${avisos}<section class="panel flat">${cabecera}</section>${vistaSimple(R,cfg,mods,recs,lvO,notaIndice)}${panelApiRadar(f,cfg,X)}${panelDatos()}`;
   return `${avisos}
