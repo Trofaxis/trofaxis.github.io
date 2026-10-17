@@ -90,3 +90,14 @@ test('la vista simple dice qué parte de los datos usa y ofrece mejorar el resul
     assert.match(h, /data-act="wiz-modo" data-v="completo">Mejora tu resultado/);
   });
 });
+
+test('con la finca de ejemplo, el botón de arriba es «Empezar con mi finca»; con la propia, «Editar respuestas»', () => {
+  const p = { farm: S.farm, demo: S.demo };
+  try {
+    S.farm = demoFarm(); S.demo = true;
+    const cab = () => viewDashboard().match(/<div class="row">(<button class="btn[^"]*" data-(?:act|view)="[^"]*">[^<]*<\/button>)/)[1];
+    assert.match(cab(), /data-act="start-empty">Empezar con mi finca/);
+    S.demo = false;
+    assert.match(cab(), /data-view="wizard">Editar respuestas/);
+  } finally { S.farm = p.farm; S.demo = p.demo; }
+});
