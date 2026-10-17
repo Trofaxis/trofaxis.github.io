@@ -55,7 +55,7 @@ export function normalizarFinca(o) {
     fertMeses: meses(o.fertMeses), lluviaMeses: meses(o.lluviaMeses),
     // Aplicaciones de plaguicidas (pestaña Plaguicidas). Un archivo viejo con { producto, clase, meses } se carga igual.
     plaguicidas: lista(o.plaguicidas, normalizarPlag).slice(0, 200),
-    sueloDesnudoMeses: meses(o.sueloDesnudoMeses),
+    sueloDesnudoMeses: meses(o.sueloDesnudoMeses), sinPlaguicidas: bool(o.sinPlaguicidas),
     labranza: opcion(o.labranza, ['convencional', 'minima', 'cero'], v.labranza),
     plagas: lista(o.plagas, (p) => p && { nombre: txt(p.nombre), meses: meses(p.meses), severidad: opcion(p.severidad, ['baja', 'media', 'alta'], 'media'),
       ...(txt(p.cultivo) ? { cultivo: txt(p.cultivo) } : {}), ...(PRESENCIA.includes(p.presencia) ? { presencia: p.presencia } : {}) }),

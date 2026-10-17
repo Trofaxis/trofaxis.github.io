@@ -26,6 +26,7 @@ export function rapidoDeFinca(f) {
   const q = (f.plaguicidas ?? []).find(esRapido);
   if (q) Object.assign(r, { insect: 'si', insectClase: q.clase, insectMeses: [...q.meses] });
   else if ((f.plaguicidas ?? []).length) r.insect = 'si';
+  else if (f.sinPlaguicidas) r.insect = 'no';
   return r;
 }
 
@@ -53,5 +54,6 @@ export function aplicarRapido(f0, r) {
     f.plaguicidas = [q];
   }
   if (r.insect === 'no') f.plaguicidas = detalladas;
+  if (r.insect) f.sinPlaguicidas = r.insect === 'no' && !f.plaguicidas.length;
   return f;
 }

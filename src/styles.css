@@ -347,6 +347,13 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .completo{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .pregunta{border-top:1px solid var(--line);padding-top:14px}
 .pregunta h3 .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;margin-right:4px}
+.completar{border-color:var(--warn)}
+.pasos{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.pasos li{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.pasos li.hecho{opacity:.65}
+.pasos .grow{flex:1;min-width:0}
+.pasos .marca{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);font-size:13px;font-weight:700}
+.pasos li.hecho .marca{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .semaforo{display:flex;flex-direction:column;gap:8px;margin:12px 0 0;padding:0;list-style:none}
 .semaforo li{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .semaforo details,.urgentes details{margin-top:6px}

@@ -18,6 +18,7 @@ import { pastillaPuntaje, estadoFuente, mas } from './components.js';
 import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDatos, masGlobalgap, masPerfil } from './explicaciones.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
+import { pasosFinca } from '../core/completitud.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -44,6 +45,9 @@ const filaAccion=(x,i,pref,porQue='')=>`<li class="${S.done[x.k]?'done':''}"><in
 // Botón que cambia entre la vista simple y la técnica; la elección se guarda en este navegador.
 const botonVista=()=>`<button class="btn" data-act="vista-tecnica" aria-pressed="${!!S.vistaTecnica}">${S.vistaTecnica?'Ver vista simple':'Ver detalle técnico'}</button>`;
 
+// Un paso para completar la finca (src/core/completitud.js), con el botón que lleva a donde se llena.
+const filaPaso=(p)=>`<li class="${p.hecho?'hecho':''}"><span class="marca" aria-hidden="true">${p.hecho?'✓':''}</span><div class="grow"><b>${p.titulo}</b>${p.hecho?'':`<span class="muted small block">${p.pista}</span>`}</div>${p.hecho?'<span class="sr-only">Hecho</span>':p.vista?`<button class="btn sm" data-view="${p.vista}">Completar</button>`:`<button class="btn sm" data-act="wiz-paso" data-step="${p.paso}">Completar</button>`}</li>`;
+
 // Capa simple del dashboard: responde «¿cómo está mi finca y qué hago?» sin jerga; lo técnico va en «¿Por qué?».
 function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
   const sem=[...mods].sort((a,b)=>ORDEN_NIVEL[a.suficiente?a.level:'Sin datos']-ORDEN_NIVEL[b.suficiente?b.level:'Sin datos']);
@@ -51,7 +55,15 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
   const top=pendientes.slice(0,3),resto=recs.filter(x=>!top.includes(x));
   const mes=new Date().getMonth(),coinc=R.mh[mes]||[];
   const nombreMes=MFULL[mes];
+  const pasos=pasosFinca(S.farm),hechos=pasos.filter(p=>p.hecho).length,faltan=pasos.length-hechos;
   return `
+  ${faltan&&!S.demo?`<section class="panel completar" id="completar">
+    <div class="row between"><h2>Te faltan ${faltan} de ${pasos.length} pasos para completar tu finca</h2><span class="pill sin-datos txt-ink">${hechos} de ${pasos.length} hechos</span></div>
+    <div class="conf" aria-hidden="true"><span style="width:${hechos/pasos.length*100}%"></span></div>
+    <p><b>Este resultado es preliminar:</b> todavía no representa el riesgo real de tu finca. Completa los pasos que faltan para que sea preciso.</p>
+    <ul class="pasos">${pasos.filter(p=>!p.hecho).slice(0,3).map(filaPaso).join('')}</ul>
+    <details><summary>Ver los ${pasos.length} pasos</summary><ul class="pasos">${pasos.map(filaPaso).join('')}</ul></details>
+  </section>`:''}
   <section class="panel">
     <div class="resumen-simple">
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}
