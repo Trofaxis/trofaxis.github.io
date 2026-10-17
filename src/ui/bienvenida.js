@@ -37,7 +37,7 @@ function cuerpo(p, bv) {
   return `<p class="label">Último paso</p><h1 id="bv-titulo">Ahora, tu finca</h1>
     <p class="muted">El cuestionario tiene ${STEPS.length} partes: ${STEPS.map((s) => s.toLowerCase()).join(', ')}. Puedes dejarlo a medias y volver cuando quieras.</p>
     ${abejas || gg ? `<p class="bv-nota">${abejas ? 'En la parte de especies anota los árboles de riesgo, como Spathodea, para que el ApiRadar te diga dónde actuar.' : 'En la parte de certificación anota tus Minor Musts y no conformidades para ver tu margen en IFA v6.'}</p>` : ''}
-    <p class="muted small">Si lo saltas, verás una finca de ejemplo para recorrer la app. Tus datos los llenas después en la pestaña Cuestionario.</p>`;
+    <p class="muted small">Si lo saltas, verás una finca de ejemplo para recorrer la app. Tus datos los llenas después en Mi finca.</p>`;
 }
 
 export function viewBienvenida() {
