@@ -1,4 +1,4 @@
-// Polinizadores: variables basadas en Kuniyoshi (2025) y Osorio (2025).
+// Polinizadores: variables basadas en Kuniyoshi (2026) y Osorio (2025).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluar } from '../src/core/engine.js';

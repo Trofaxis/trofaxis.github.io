@@ -11,6 +11,9 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
   cuántos tienen fuente.
 - Cada hecho dice su estado: **con fuente** (cita y enlace), **criterio propio** (por validar) o **por validar** (sugerido, no puntúa).
   Una prueba falla si un hecho no trae ninguno de los tres.
+- Datos de tesis: van en `src/core/fuentes.js`, en el campo `datos` de cada fuente, con la página o la sección donde
+  se leyeron (`donde`). Entran solos al cerebro como hechos `poli.<fuente>.<id>`. Hoy están Osorio (2025) y Kuniyoshi (2026).
+  Nunca se copian coordenadas de árboles: una prueba lo revisa.
 
 - `src/cerebro/vinculos.js`: la **matriz de vínculos**. Es la regla «una variable no afecta a otra sin fundamento»
   escrita como datos. Cada fila dice qué variables de la finca (al coincidir) suben o bajan qué riesgo, por qué mecanismo,
@@ -53,5 +56,4 @@ tiene `/admin/`.
 
 ## Pendiente
 
-- Datos de Osorio (2025) y Kuniyoshi (2025): se cargarán como hechos con su página cuando estén en el repo.
-- Tejeda et al. (2025): no está en los archivos del proyecto; no se cita.
+- Tejeda et al. (2025): con embargo en bdigital.zamorano.edu (handle 11036/8207); no se cita hasta tener el documento.

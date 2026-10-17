@@ -77,7 +77,7 @@ export const CONFIG = {
       aguaSeca: { peso: 10, cortes: [0, 0.5] }, // fracción de meses de floración de riesgo sin lluvia
       foliarEnFloracion: { peso: 5 }, // aplicaciones foliares (fertilizantes) en floración visitada
       abejasNativas: { peso: 5 }, // receptor: abejas nativas registradas
-      climaFloracion: { peso: 0 }, // clima en la floración de riesgo: solo informa (hipótesis de Kuniyoshi 2025, no medida)
+      climaFloracion: { peso: 0 }, // clima en la floración de riesgo: solo informa (hipótesis de Kuniyoshi 2026, no medida)
     },
     fert: {
       dosis: { peso: 30, cortes: [1, 1.2] }, // N aplicado / N objetivo
