@@ -8,6 +8,8 @@ import { mesesLluviosos, tieneClima } from '../clima/normales.js';
 import { CONFIG } from '../core/config.js';
 import { plagasDe } from '../especies/plagas.js';
 import { grupoPresencia, textoUmbrales } from '../especies/presencia.js';
+import { rapidoDeFinca } from '../core/rapido.js';
+import { FUENTES } from '../core/fuentes.js';
 
 // Secciones de especies: obligan a pensar en cada grupo por separado.
 export const SECCIONES = {
@@ -22,7 +24,38 @@ const presTxt=(p)=>p?` · presencia ${p}`:'';
 export const STEPS=['Finca','Cultivos','Especies','Prácticas','Calendarios','Certificación'];
 const numOpc=(id,label,bind,val,hint)=>`<div class="f"><label for="${id}">${label}</label><input id="${id}" type="number" min="0" step="any" data-nullable data-bind="${bind}" value="${val??''}"><span class="hint">${hint}</span></div>`;
 
+// Botones Sí / No / No sé de una pregunta rápida.
+const sino=(k,extra=[])=>`<div class="choice">${[['si','Sí'],['no','No'],['','No sé'],...extra].map(([v,t])=>`<button data-act="rapido-opc" data-k="${k}" data-v="${v}" aria-pressed="${S.rapido[k]===v}">${t}</button>`).join('')}</div>`;
+
+// Preguntas rápidas: lo mínimo para ver un primer resultado. Lo demás queda en el cuestionario completo.
+export function viewRapido(){
+  const f=S.farm;
+  if(!S.rapido||S.rapidoDe!==f){S.rapido=rapidoDeFinca(f);S.rapidoDe=f;}
+  const r=S.rapido,detalladas=f.plaguicidas.filter(p=>p.producto&&p.producto!=='Insecticida sin detallar');
+  const K=FUENTES.kuniyoshi,flor=K.datos.find(d=>d.id==='floracion');
+  const q=(n,t,cuerpo,pista='')=>`<div class="f pregunta"><h3><span class="num">${n}</span> ${t}</h3>${pista?`<p class="muted small">${pista}</p>`:''}${cuerpo}</div>`;
+  return `<section class="panel">
+    <h2>Lo básico de tu finca</h2><p class="muted">Siete preguntas cortas para ver tu primer resultado. Lo que no sepas, déjalo en «No sé»: después puedes completar el resto.</p>
+    ${q(1,'¿Cómo se llama y cuánto mide?',`<div class="fields">${field('r-nombre','Nombre de la finca','farm.nombre',f.nombre)}${field('r-area','Área total','farm.area',f.area||'','number','Hectáreas')}</div>`)}
+    ${q(2,'¿Dónde está?',bloqueUbicacion(),'Con la ubicación, la app llena sola el clima, la altitud y los meses de lluvia.')}
+    ${q(3,'¿Qué cultivas?',`<div class="fields">${field('r-cult','Cultivo principal','rapido.cultivo',r.cultivo)}${numOpc('r-ha','Área del cultivo','rapido.ha',r.ha,'Hectáreas, opcional')}</div>
+      <div class="f"><span class="label">Meses de cosecha</span>${months('rapido.cosecha',r.cosecha)}</div>`,f.cultivos.length>1?`Tienes ${f.cultivos.length} cultivos: aquí cambias el primero; los demás siguen igual.`:'')}
+    ${q(4,'¿Hay abejas nativas sin aguijón en tu finca o cerca?',sino('abejas'),'Si las hay, la app es más estricta con los insecticidas.')}
+    ${q(5,'¿Hay árboles de tulipán africano (<i>Spathodea campanulata</i>)?',sino('spathodea')+(r.spathodea==='si'?`<div class="fields">${numOpc('r-span','¿Cuántos árboles?','rapido.spaN',r.spaN,'Opcional')}</div>
+      <div class="f"><span class="label">Meses en que florecen</span>${months('rapido.spaFlor',r.spaFlor)}${flor?`<span class="hint">Referencia: en el campus de Zamorano florecieron de ${esc(flor.valor)} (${esc(K.corta)}). Marca los de tu finca.</span>`:''}</div>`:''),
+      'Sus flores matan abejas nativas. Es el problema que resuelve el ApiRadar.')}
+    ${q(6,'¿Aplicas insecticidas?',detalladas.length
+      ?`<p class="small">Ya tienes ${detalladas.length} aplicación(es) registradas en Plaguicidas. <button class="btn sm" data-view="plaguicidas">Ver plaguicidas</button></p>`
+      :sino('insect')+(r.insect==='si'?`<div class="f"><span class="label">¿En qué meses?</span>${months('rapido.insectMeses',r.insectMeses)}</div>
+      <div class="choice">${[['amplio','De amplio espectro (matan casi todo)'],['selectivo','Selectivos'],['biologico','Biológicos']].map(([v,t])=>`<button data-act="rapido-opc" data-k="insectClase" data-v="${v}" aria-pressed="${r.insectClase===v}">${t}</button>`).join('')}</div>
+      <p class="muted small">Para calcular el peligro real para las abejas hace falta el producto y la dosis: los detallas después en Plaguicidas.</p>`:''))}
+    ${q(7,'¿Cómo riegas?',select('r-riego','Sistema de riego','farm.riego',f.riego,[['gravedad','Gravedad'],['aspersion','Aspersión'],['goteo','Goteo'],['ninguno','Sin riego']]))}
+    <div class="wnav"><button class="btn" data-act="wiz-modo" data-v="completo">Prefiero el cuestionario completo</button><button class="btn primary" data-act="rapido-listo">Ver mi resultado</button></div>
+  </section>`;
+}
+
 export function viewWizard(){
+  if(S.wizModo!=='completo')return viewRapido();
   const f=S.farm,s=S.step;let body='';
   const ed=(l,i)=>`<button class="btn sm" data-act="edit" data-list="${l}" data-i="${i}">Editar</button><button class="btn sm" data-act="rm" data-list="${l}" data-i="${i}">Quitar</button>`;
   if(s===0)body=`<h2>Cuéntanos de tu finca</h2><div class="fields">
@@ -112,7 +145,8 @@ export function viewWizard(){
       <button data-act="gg" data-v="quiero" aria-pressed="${f.gg==='quiero'}">Quiero certificarme</button>
       <button data-act="gg" data-v="no" aria-pressed="${f.gg==='no'}">No por ahora</button>
     </div>`;
-  return `<section class="panel">
+  return `<p class="notice"><span>Cuestionario completo: entre más respondas, más preciso es tu resultado.</span><button class="btn sm" data-act="wiz-modo" data-v="rapido">Volver a lo básico</button></p>
+  <section class="panel">
     <div class="steps" role="group" aria-label="Pasos">${STEPS.map((t,i)=>`<button type="button" data-step="${i}" class="${i===s?'now':i<s?'done':''}" ${i===s?'aria-current="step"':''}>${i+1}. ${t}</button>`).join('')}</div>
     ${body}
     <div class="wnav"><button class="btn" data-act="prev" ${s===0?'disabled':''}>Anterior</button>

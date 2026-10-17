@@ -29,7 +29,7 @@ test('el KPI dice que la certificación es declarada, no verificada', () => {
 test('el cuestionario avisa que la app no verifica la certificación', () => {
   const pasoPrevio = S.step;
   try {
-    S.step = 5;
+    S.step = 5; S.wizModo = 'completo';
     assert.match(viewWizard(), /no verifica ninguna certificación/);
-  } finally { S.step = pasoPrevio; }
+  } finally { S.step = pasoPrevio; S.wizModo = 'rapido'; }
 });

@@ -55,7 +55,9 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
   <section class="panel">
     <div class="resumen-simple">
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}
-        <details><summary>¿Cómo se calcula?</summary><p class="muted small">${notaIndice}</p></details></div>
+        <details><summary>¿Cómo se calcula?</summary><p class="muted small">${notaIndice}</p></details>
+        <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
+        ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div></div>
       <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema. Abre «¿Por qué?» para ver de dónde sale.</p>
         <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
           <div class="row between"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${TEXTO_NIVEL[lv]}</span></div>

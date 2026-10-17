@@ -6,6 +6,7 @@ import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
 import { viewDashboard, extraRiego } from './ui/dashboard.js';
 import { CONFIG } from './core/config.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
+import { aplicarRapido } from './core/rapido.js';
 import { viewBienvenida, PASOS_BV } from './ui/bienvenida.js';
 import { viewEntrar, htmlCuenta } from './ui/entrar.js';
 import { leerCuenta, guardarCuenta, mostrarEntrada } from './core/cuenta.js';
@@ -138,7 +139,7 @@ const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.co
 // Acciones de los botones con data-act. Cada una recibe el botón pulsado `a` y la finca `f`.
 // Al terminar, el manejador de clics vuelve a dibujar la pantalla; una acción que devuelve `false`
 // (porque no cambió nada o porque ya dibujó o delega en otra función) evita ese dibujo.
-const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'start-empty', 'load-demo', 'reset-yes',
+const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'rapido-listo', 'wiz-modo', 'start-empty', 'load-demo', 'reset-yes',
   'bv-siguiente', 'bv-atras', 'bv-saltar', 'bv-cuestionario', 'bv-saltar-cuestionario', 'bv-ver']);
 
 const accionesGenerales = {
@@ -155,7 +156,7 @@ const accionesGenerales = {
   'reset-no': () => { S.confirmReset = false; },
   'reset-yes': () => {
     reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.tpl.rows = []; S.riego = riegoInicial();
-    S.confirmReset = false; S.view = 'wizard'; S.step = 0; S.ioMsg = 'Datos borrados.';
+    S.confirmReset = false; S.view = 'wizard'; S.step = 0; S.wizModo = 'rapido'; S.ioMsg = 'Datos borrados.';
   },
   'io-copy': () => {
     const txt = exportarTexto(S.farm, S.ajustes, S.tpl); S.io = txt; render();
@@ -178,7 +179,13 @@ const accionesCuestionario = {
   'next': () => { S.step = Math.min(STEPS.length - 1, S.step + 1); },
   'prev': () => { S.step = Math.max(0, S.step - 1); },
   'finish': () => { S.view = 'dashboard'; },
-  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; },
+  'rapido-opc': (a) => { S.rapido[a.dataset.k] = a.dataset.v; },
+  'rapido-listo': () => { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; S.demo = false; S.view = 'dashboard'; },
+  'wiz-modo': (a) => {
+    if (S.rapido && S.rapidoDe === S.farm && a.dataset.v === 'completo') { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; }
+    S.wizModo = a.dataset.v === 'completo' ? 'completo' : 'rapido'; S.view = 'wizard';
+  },
+  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; S.wizModo = 'rapido'; },
   'load-demo': () => {
     reiniciarMapa(); S.farm = demoFarm(); S.demo = true; S.done = {}; S.view = 'dashboard'; S.msg = 'Se cargó la finca de ejemplo.';
   },

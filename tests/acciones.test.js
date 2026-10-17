@@ -66,7 +66,7 @@ test('reset-yes borra la finca, las plantillas, lo marcado, el riego propio y la
   const guardada = JSON.parse(dom.almacen.get(CLAVE_LOCAL));
   assert.equal(guardada.farm.nombre, '', 'lo que queda guardado en el navegador ya es la finca vacía');
   assert.equal(guardada.demo, false);
-  assert.match(dom.pantalla(), /Cuéntanos de tu finca/, 'la pantalla pasó al primer paso del cuestionario');
+  assert.match(dom.pantalla(), /Lo básico de tu finca/, 'la pantalla pasó a las preguntas rápidas del cuestionario');
 });
 
 // ---------- io-load (Cargar respaldo) ----------

@@ -91,6 +91,8 @@ export const tiposPlantilla = () => Object.keys(TPL).filter((k) => !TPL[k].pesta
 export const S = {
   farm: demoFarm(), demo: true, view: 'dashboard', step: 0,
   theme: 'system', // tema visual: system | light | dark
+  wizModo: 'rapido', // cuestionario: rapido (lo básico, src/core/rapido.js) | completo (los 6 pasos)
+  rapido: null, rapidoDe: null, // respuestas rápidas y la finca de la que salieron
   vistaTecnica: false, // dashboard: false = vista simple (semáforo y acciones), true = todo el detalle técnico
   problema: '', // problema abierto en el ApiRadar del dashboard: '' | spathodea
   arCargando: false, // animación de análisis al generar el ApiRadar
