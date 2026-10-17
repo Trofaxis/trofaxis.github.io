@@ -15,21 +15,50 @@ const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se 
 
 // Estado de la vista que sobrevive a los redibujados de la app (posiciones, zoom, selección).
 // `agrupar` falso: solo relaciones (fórmulas y vínculos); los temas y las fuentes son agrupaciones y se piden aparte.
-const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', energia: 1, agrupar: false };
+const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', tipo: 'todo', estado: null, energia: 1, agrupar: false };
 function grafo() {
   if (!G.grafo) { G.grafo = posicionesIniciales(armarGrafo(HECHOS, { agrupar: G.agrupar })); for (let i = 0; i < 120; i++) paso(G.grafo); }
   return G.grafo;
 }
 const porId = (id) => grafo().nodos.find((n) => n.id === id);
 const pill = (estado) => `<span class="pill ${ESTADO_CLASE[estado]}">${esc(estado)}</span>`;
+// En los vínculos, «por validar» se lee «hipótesis».
+const pillV = (estado) => `<span class="pill ${ESTADO_CLASE[estado]}">${esc(estado === 'por validar' ? 'hipótesis' : estado)}</span>`;
 const irVariable = (id) => `<button type="button" class="btn sm cb-ir" data-cb-ir="${esc(id)}">${esc(VARIABLES[id].nombre)}</button>`;
 const nombreVinculo = (v) => `${v.de.map((x) => VARIABLES[x].nombre).join(' + ')} → ${VARIABLES[v.a].nombre}`;
 
-// Variables de la matriz cuyo nombre tiene todas las palabras buscadas.
-const VARIABLES_USADAS = [...new Set(VINCULOS.flatMap((v) => [...v.de, v.a]))];
-function buscarVariables(texto) {
-  const ps = normalizar(texto).split(/\s+/).filter((p) => p.length > 1);
-  return ps.length ? VARIABLES_USADAS.filter((id) => ps.every((p) => normalizar(VARIABLES[id].nombre).includes(p))) : [];
+// Explorador: buscar o listar variables, vínculos (con sus hipótesis), fuentes y hechos, todo con el mismo filtro.
+// No es una IA: compara palabras sin tildes ni mayúsculas. «hipótesis» encuentra los vínculos por validar.
+export const TIPOS = { todo: 'Todo', variable: 'Variables', vinculo: 'Vínculos', fuente: 'Fuentes', hecho: 'Hechos' };
+const ESTADO_VINCULO = { 'por validar': 'hipótesis' };
+const palabras = (t) => normalizar(t).split(/\s+/).filter((p) => p.length > 1);
+const coincide = (ps, ...textos) => { const t = normalizar(textos.join(' ')); return ps.every((p) => t.includes(p)); };
+const claveCita = (c) => c.replace(/\s*\(actualizada.*$/, '');
+
+// Fuentes distintas, con los hechos y los vínculos que las citan.
+function todasLasFuentes() {
+  const m = new Map();
+  const de = (cita, url = '') => { const k = claveCita(cita); if (!m.has(k)) m.set(k, { cita: k, url, hechos: [], vinculos: [] }); return m.get(k); };
+  for (const h of HECHOS) if (h.fuente?.cita) de(h.fuente.cita, h.fuente.url).hechos.push(h);
+  for (const v of VINCULOS) for (const ev of v.evidencia) { const f = de(ev.cita); if (!f.vinculos.includes(v)) f.vinculos.push(v); }
+  return [...m.values()].sort((a, b) => (b.hechos.length + b.vinculos.length) - (a.hechos.length + a.vinculos.length));
+}
+const FUENTES_TODAS = todasLasFuentes();
+
+export function explorar({ texto = '', tipo = 'todo', estado = null } = {}) {
+  const ps = palabras(texto), quiere = (t) => tipo === 'todo' || tipo === t;
+  const variables = !quiere('variable') || estado ? [] : Object.keys(VARIABLES).filter((id) => coincide(ps, VARIABLES[id].nombre, id));
+  const vinculos = !quiere('vinculo') ? [] : VINCULOS.filter((v) => (!estado || v.estado === estado)
+    && coincide(ps, nombreVinculo(v), v.mecanismo, v.estado, ESTADO_VINCULO[v.estado] ?? '', v.contexto ?? '', v.nota ?? '', ...v.evidencia.map((e) => `${e.cita} ${e.nota ?? ''}`)));
+  const fuentes = !quiere('fuente') || estado ? [] : FUENTES_TODAS.filter((f) => coincide(ps, f.cita));
+  const hechos = !quiere('hecho') ? [] : (ps.length ? buscar(texto, { max: 500 }) : HECHOS).filter((h) => !estado || h.estado === estado);
+  return { variables, vinculos, fuentes, hechos };
+}
+const activo = () => G.texto.trim() || G.tipo !== 'todo' || G.estado;
+
+// Ids de puntos del grafo que corresponden a lo que se está mostrando (para atenuar el resto).
+function idsEnGrafo(r) {
+  return new Set([...r.variables, ...r.vinculos.flatMap((v) => [...v.de, v.a]), ...r.hechos.map((h) => h.id), ...r.fuentes.flatMap((f) => f.hechos.map((h) => h.id))]);
 }
 
 // Ficha de un vínculo: causa → efecto, mecanismo, estado, evidencia y dónde actúa en la app.
@@ -44,7 +73,7 @@ function fichaVinculo(v) {
   return `<li class="cb-vinculo">
     <p>${v.de.map(irVariable).join(' + ')} → ${irVariable(v.a)} <span class="muted small">(${esc(SENTIDOS[v.sentido])})</span></p>
     <p class="small">${esc(v.mecanismo)}</p>
-    <p>${pill(v.estado)} <span class="muted small">${v.validado ? `validado por ${esc(v.validado.por)} (${esc(v.validado.fecha)})` : 'sin validar por un especialista'}</span></p>
+    <p>${pillV(v.estado)} <span class="muted small">${v.validado ? `validado por ${esc(v.validado.por)} (${esc(v.validado.fecha)})` : 'sin validar por un especialista'}</span></p>
     ${evidencia}${v.contexto ? `<p class="small muted">Contexto: ${esc(v.contexto)}.</p>` : ''}${v.nota ? `<p class="small muted">${esc(v.nota)}</p>` : ''}
     <p class="small muted">${uso} · <code>${esc(v.usadoEn.archivo)}</code></p></li>`;
 }
@@ -76,12 +105,52 @@ function detalle(n) {
     ${lista('Se usa junto con', vs.filter((v) => v.tipo === 'formula'))}${lista('Lo usan estas variables', vs.filter((v) => v.tipo === 'dato'))}`;
 }
 
-function resultados() {
-  if (!G.texto.trim()) return '';
-  const r = buscar(G.texto, { max: 12 }), vs = buscarVariables(G.texto);
-  if (!r.length && !vs.length) return '<p class="muted small">El cerebro no tiene un hecho ni una variable con esas palabras. Solo busca palabras: no responde preguntas libres.</p>';
-  return `<ul class="cb-vecinos">${vs.map((id) => `<li>${irVariable(id)} <span class="muted small">variable</span></li>`).join('')}${r.map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button> <span class="muted small">${esc(h.valor)} ${esc(h.unidad)}</span></li>`).join('')}</ul>`;
+// Botones de conteo y de tipo: cada uno abre su lista en el explorador.
+const filtroBtn = (tipo, estado, texto, clase = '') => {
+  const on = G.tipo === tipo && G.estado === estado;
+  return `<button type="button" class="pill cb-filtro ${clase}" data-cb-tipo="${tipo}" data-cb-estado="${esc(estado ?? '')}" aria-pressed="${on}">${texto}</button>`;
+};
+function filtros() {
+  const r = resumen(HECHOS), rv = resumenVinculos(), todo = explorar();
+  return `<div class="row">
+      ${filtroBtn('hecho', null, `${r.total} hechos`)}${filtroBtn('hecho', 'con fuente', `${r['con fuente']} con fuente`, 'cb-fuente')}
+      ${filtroBtn('hecho', 'criterio propio', `${r['criterio propio']} criterio propio`, 'cb-propio')}${filtroBtn('hecho', 'por validar', `${r['por validar']} por validar`, 'cb-validar')}
+    </div>
+    <div class="row">
+      ${filtroBtn('vinculo', null, `${rv.total} vínculos`)}${filtroBtn('vinculo', 'con fuente', `${rv['con fuente']} con fuente`, 'cb-fuente')}
+      ${filtroBtn('vinculo', 'criterio propio', `${rv['criterio propio']} criterio propio`, 'cb-propio')}${filtroBtn('vinculo', 'por validar', `${rv['por validar']} hipótesis`, 'cb-validar')}
+      ${rv.conflicto ? `<span class="pill cb-conflicto">${rv.conflicto} en conflicto</span>` : ''}
+    </div>
+    <div class="row cb-tipos" role="group" aria-label="Qué buscar">
+      ${Object.entries(TIPOS).map(([t, n]) => filtroBtn(t, null, t === 'todo' ? n : `${n} (${todo[t === 'vinculo' ? 'vinculos' : t === 'variable' ? 'variables' : t === 'fuente' ? 'fuentes' : 'hechos'].length})`, 'cb-tipo')).join('')}
+    </div>`;
 }
+
+const MAX = 80;
+const recorta = (a, f) => `${a.slice(0, MAX).map(f).join('')}${a.length > MAX ? `<li class="muted small">y ${a.length - MAX} más: escribe para acotar.</li>` : ''}`;
+function resultados() {
+  if (!activo()) return '<p class="muted small">Toca un conteo o un tipo para ver la lista, o escribe para buscar. Toca cualquier resultado para verlo en el grafo.</p>';
+  const r = explorar({ texto: G.texto, tipo: G.tipo, estado: G.estado });
+  const n = r.variables.length + r.vinculos.length + r.fuentes.length + r.hechos.length;
+  const que = [G.tipo !== 'todo' ? TIPOS[G.tipo].toLowerCase() : '', G.estado ? `«${ESTADO_VINCULO[G.estado] && G.tipo === 'vinculo' ? ESTADO_VINCULO[G.estado] : G.estado}»` : '', G.texto.trim() ? `con «${G.texto.trim()}»` : ''].filter(Boolean).join(' ');
+  const cab = `<div class="row between cb-res-cab"><p class="small"><b>${n} resultado${n === 1 ? '' : 's'}</b>${que ? ` · ${esc(que)}` : ''}</p><button type="button" class="btn sm" data-cb-limpiar>Limpiar</button></div>`;
+  if (!n) return `${cab}<p class="muted small">Nada coincide. El cerebro solo busca palabras: no responde preguntas libres.</p>`;
+  const grupo = (titulo, a, f) => (a.length ? `<h4>${titulo} (${a.length})</h4><ul class="cb-lista">${recorta(a, f)}</ul>` : '');
+  return `${cab}<div class="cb-res-grupos">
+    ${grupo('Vínculos', r.vinculos, (v) => `<li><button type="button" class="cb-item" data-cb-vinculo="${esc(v.id)}"><span>${esc(nombreVinculo(v))}</span><span class="small muted">${esc(v.mecanismo)}</span></button>${pillV(v.estado)}${pesoDe(v) ? ` <span class="small muted">peso ${pesoDe(v)}</span>` : ''}</li>`)}
+    ${grupo('Variables', r.variables, (id) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(id)}"><span>${esc(VARIABLES[id].nombre)}</span><span class="small muted">${VINCULOS.filter((v) => v.de.includes(id) || v.a === id).length} vínculos</span></button></li>`)}
+    ${grupo('Fuentes', r.fuentes, (f) => `<li><button type="button" class="cb-item" data-cb-fuente="${esc(f.cita)}"><span>${esc(f.cita)}</span><span class="small muted">${f.hechos.length} hechos · ${f.vinculos.length} vínculos</span></button></li>`)}
+    ${grupo('Hechos', r.hechos, (h) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(h.id)}"><span>${esc(h.titulo)}</span><span class="small muted">${esc(String(h.valor))} ${esc(h.unidad ?? '')}</span></button>${pill(h.estado)}</li>`)}
+  </div>`;
+}
+
+// Detalle de una fuente: lo que se apoya en ella.
+function detalleFuente(f) {
+  return `<p class="muted small">Fuente</p><h3>${esc(f.cita)}</h3>${f.url ? `<p><a href="${esc(f.url)}" target="_blank" rel="noopener">Abrir la fuente</a></p>` : ''}
+    ${f.vinculos.length ? `<h4>Vínculos que la citan (${f.vinculos.length})</h4><ul class="cb-vecinos">${f.vinculos.map(fichaVinculo).join('')}</ul>` : ''}
+    ${f.hechos.length ? `<h4>Hechos (${f.hechos.length})</h4><ul class="cb-vecinos">${f.hechos.slice(0, 60).map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button></li>`).join('')}</ul>` : ''}`;
+}
+const detalleVinculo = (v) => `<p class="muted small">Vínculo</p><h3>${esc(nombreVinculo(v))}</h3><ul class="cb-vecinos">${fichaVinculo(v)}</ul>`;
 
 // Lista de trabajo del administrador: lo que falta validar, agrupado por tema.
 function pendientes(hoy = new Date()) {
@@ -99,8 +168,8 @@ function pendientes(hoy = new Date()) {
     <details><summary>Por validar con un especialista (${HECHOS.filter((h) => h.estado === 'por validar').length})</summary><ul class="cb-grupos">${grupo('por validar')}</ul></details>
     <details><summary>Criterio propio por calibrar (${HECHOS.filter((h) => h.estado === 'criterio propio').length})</summary><ul class="cb-grupos">${grupo('criterio propio')}</ul></details>
     <details><summary>Vínculos sin validar por un especialista (${rv.sinValidar} de ${rv.total})</summary>
-      ${hipotesis.length ? `<p class="small"><b>${hipotesis.length} hipótesis ya suman al puntaje:</b> ${hipotesis.map((v) => `${esc(nombreVinculo(v))} (peso ${pesoDe(v)})`).join('; ')}. Conviene validarlas primero.</p>` : ''}
-      <ul class="cb-grupos">${sinValidar.map((v) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(v.de[0])}">${esc(nombreVinculo(v))}</button> ${pill(v.estado)}</li>`).join('')}</ul></details>
+      ${hipotesis.length ? `<p class="small"><b>${hipotesis.length} hipótesis ya suman al puntaje:</b> Conviene validarlas primero.</p><ul class="cb-grupos">${hipotesis.map((v) => `<li><button type="button" class="btn sm cb-ir" data-cb-vinculo="${esc(v.id)}">${esc(nombreVinculo(v))}</button> <span class="small muted">peso ${pesoDe(v)}</span></li>`).join('')}</ul>` : ''}
+      <ul class="cb-grupos">${sinValidar.map((v) => `<li><button type="button" class="btn sm cb-ir" data-cb-vinculo="${esc(v.id)}">${esc(nombreVinculo(v))}</button> ${pillV(v.estado)}</li>`).join('')}</ul></details>
     ${rv.conflicto ? `<p class="small"><b>Vínculos en conflicto (${rv.conflicto}):</b> tienen fuentes a favor y en contra.</p>` : ''}
   </section>`;
 }
@@ -112,22 +181,16 @@ export function viewCerebro() {
   <section class="card cerebro">
     <div><h2>Cerebro de Trofaxis</h2>
       <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho o una variable de la finca. Las líneas son solo relaciones reales: las fórmulas que usan dos valores juntos (punteadas) y los vínculos entre variables (con flecha), cada uno con su mecanismo y su fuente o su estado. El tema y la fuente son agrupaciones, no relaciones: se ven al marcar «Ver también temas y fuentes». Funciona sin conexión y sin inteligencia artificial.</p></div>
-    <div class="row">
-      <span class="pill">${r.total} hechos</span><span class="pill cb-fuente">${r['con fuente']} con fuente</span>
-      <span class="pill cb-propio">${r['criterio propio']} criterio propio</span><span class="pill cb-validar">${r['por validar']} por validar</span>
+    <div class="cb-explorar">
+      <div id="cb-filtros">${filtros()}</div>
+      <div class="row cb-controles">
+        <div class="f cb-buscar"><label for="cb-buscar">Buscar una variable, hipótesis, fuente o hecho</label><input id="cb-buscar" type="search" placeholder="hipótesis, Kuniyoshi, pendiente, imidacloprid…" value="${esc(G.texto)}" autocomplete="off"></div>
+        <label class="cb-agrupar small"><input type="checkbox" id="cb-agrupar"${G.agrupar ? ' checked' : ''}> Ver también temas y fuentes</label>
+        <button type="button" class="btn sm" id="cb-centrar">Centrar</button>
+        <button type="button" class="btn sm" id="cb-obsidian">Descargar para Obsidian (.zip)</button>
+      </div>
+      <div id="cb-resultados" class="cb-resultados" aria-live="polite">${resultados()}</div>
     </div>
-    <div class="row">
-      <span class="pill">${rv.total} vínculos</span><span class="pill cb-fuente">${rv['con fuente']} con fuente</span>
-      <span class="pill cb-propio">${rv['criterio propio']} criterio propio</span><span class="pill cb-validar">${rv['por validar']} hipótesis</span>
-      ${rv.conflicto ? `<span class="pill cb-conflicto">${rv.conflicto} en conflicto</span>` : ''}
-    </div>
-    <div class="row cb-controles">
-      <div class="f cb-buscar"><label for="cb-buscar">Buscar en el cerebro</label><input id="cb-buscar" type="search" placeholder="imidacloprid, kc maíz, viento…" value="${esc(G.texto)}" autocomplete="off"></div>
-      <label class="cb-agrupar small"><input type="checkbox" id="cb-agrupar"${G.agrupar ? ' checked' : ''}> Ver también temas y fuentes</label>
-      <button type="button" class="btn sm" id="cb-centrar">Centrar</button>
-      <button type="button" class="btn sm" id="cb-obsidian">Descargar para Obsidian (.zip)</button>
-    </div>
-    <div id="cb-resultados">${resultados()}</div>
     <div class="row small cb-leyenda" aria-hidden="true">
       <span><i class="cb-punto cb-var"></i>Variable de la finca</span><span><i class="cb-punto cb-tema"></i>Tema</span><span><i class="cb-punto cb-fte"></i>Fuente</span>
       <span><i class="cb-punto cb-fuente"></i>Hecho con fuente</span><span><i class="cb-punto cb-propio"></i>Criterio propio</span><span><i class="cb-punto cb-validar"></i>Por validar</span>
@@ -285,13 +348,25 @@ export function montarCerebro(raiz = document) {
 
   // Controles fuera del lienzo.
   const entrada = raiz.querySelector('#cb-buscar'), res = raiz.querySelector('#cb-resultados');
-  entrada?.addEventListener('input', () => {
-    G.texto = entrada.value;
-    const r = G.texto.trim() ? [...buscar(G.texto, { max: 500 }).map((x) => x.id), ...buscarVariables(G.texto)] : [];
-    G.filtro = G.texto.trim() ? new Set(r) : null;
+  const filtrosEl = raiz.querySelector('#cb-filtros');
+  function refrescar() {
+    const r = explorar({ texto: G.texto, tipo: G.tipo, estado: G.estado });
+    G.filtro = activo() ? idsEnGrafo(r) : null;
+    if (filtrosEl) filtrosEl.innerHTML = filtros();
     res.innerHTML = resultados(); dibujar();
-  });
+  }
+  entrada?.addEventListener('input', () => { G.texto = entrada.value; refrescar(); });
   (raiz.querySelector('#app') ?? raiz.querySelector('.cerebro')?.parentElement)?.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-cb-tipo]');
+    if (t) {
+      const tipo = t.dataset.cbTipo, estado = t.dataset.cbEstado || null, ya = G.tipo === tipo && G.estado === estado;
+      G.tipo = ya ? 'todo' : tipo; G.estado = ya ? null : estado; refrescar(); return;
+    }
+    if (e.target.closest('[data-cb-limpiar]')) { G.texto = ''; G.tipo = 'todo'; G.estado = null; if (entrada) entrada.value = ''; refrescar(); return; }
+    const v = e.target.closest('[data-cb-vinculo]');
+    if (v) { const x = VINCULOS.find((y) => y.id === v.dataset.cbVinculo); seleccionar(x.de[0], true); detalleEl.innerHTML = detalleVinculo(x); return; }
+    const f = e.target.closest('[data-cb-fuente]');
+    if (f) { const x = FUENTES_TODAS.find((y) => y.cita === f.dataset.cbFuente); seleccionar(null); detalleEl.innerHTML = detalleFuente(x); detalleEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     const b = e.target.closest('[data-cb-ir]'); if (b) seleccionar(b.dataset.cbIr, true);
   });
   raiz.querySelector('#cb-centrar')?.addEventListener('click', () => { encuadrar(); seleccionar(null); });
