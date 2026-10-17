@@ -185,6 +185,9 @@ svg text{font-family:var(--f-body)}
 .badge.ejemplo{background:var(--pollen-soft);color:var(--pollen)}
 .badge.propio{background:var(--accent-soft);color:var(--ink)}
 .badge.nube{background:var(--accent-soft);color:var(--ink);border-style:dashed}
+.badge.referencia{background:var(--chip);color:var(--accent);border-color:var(--accent)}
+.ref-caso{border-top:1px solid var(--line);padding:10px 0}
+.ref-caso>summary{cursor:pointer}
 pre.formula{white-space:pre-wrap;overflow-x:auto}
 .caso ul.acc{margin:4px 0 0;padding-left:18px}
 .caso .resultado{border-top:1px solid var(--line);padding-top:8px}
