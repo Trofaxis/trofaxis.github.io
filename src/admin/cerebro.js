@@ -1,29 +1,66 @@
 // Panel de administración: Cerebro. Grafo interactivo de todo lo que la app sabe, al estilo del de Obsidian:
 // arrastrar, acercar con la rueda o con dos dedos y tocar un punto para ver el hecho y su fuente.
-// Funciona sin conexión y sin IA: dibuja los hechos de src/cerebro/ en un <canvas>.
+// Funciona sin conexión y sin IA: dibuja los hechos y la matriz de vínculos de src/cerebro/ en un <canvas>.
 import { esc } from '../core/utils.js';
 import { HECHOS, TEMAS, PENDIENTES } from '../cerebro/hechos.js';
 import { CONSULTA_PPDB } from '../plag/catalogo.js';
 import { buscar, resumen } from '../cerebro/consulta.js';
 import { armarGrafo, posicionesIniciales, paso, vecinos } from '../cerebro/grafo.js';
 import { notasObsidian, zip } from '../cerebro/obsidian.js';
+import { VARIABLES, VINCULOS, SENTIDOS, pesoDe, resumenVinculos } from '../cerebro/vinculos.js';
+import { normalizar } from '../riego/referencias.js';
 
 const ESTADO_CLASE = { 'con fuente': 'cb-fuente', 'criterio propio': 'cb-propio', 'por validar': 'cb-validar' };
-const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de' };
+const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de', mecanismo: 'vínculo' };
 
 // Estado de la vista que sobrevive a los redibujados de la app (posiciones, zoom, selección).
-const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', energia: 1 };
+// `agrupar` falso: solo relaciones (fórmulas y vínculos); los temas y las fuentes son agrupaciones y se piden aparte.
+const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', energia: 1, agrupar: false };
 function grafo() {
-  if (!G.grafo) { G.grafo = posicionesIniciales(armarGrafo()); for (let i = 0; i < 120; i++) paso(G.grafo); }
+  if (!G.grafo) { G.grafo = posicionesIniciales(armarGrafo(HECHOS, { agrupar: G.agrupar })); for (let i = 0; i < 120; i++) paso(G.grafo); }
   return G.grafo;
 }
 const porId = (id) => grafo().nodos.find((n) => n.id === id);
+const pill = (estado) => `<span class="pill ${ESTADO_CLASE[estado]}">${esc(estado)}</span>`;
+const irVariable = (id) => `<button type="button" class="btn sm cb-ir" data-cb-ir="${esc(id)}">${esc(VARIABLES[id].nombre)}</button>`;
+const nombreVinculo = (v) => `${v.de.map((x) => VARIABLES[x].nombre).join(' + ')} → ${VARIABLES[v.a].nombre}`;
+
+// Variables de la matriz cuyo nombre tiene todas las palabras buscadas.
+const VARIABLES_USADAS = [...new Set(VINCULOS.flatMap((v) => [...v.de, v.a]))];
+function buscarVariables(texto) {
+  const ps = normalizar(texto).split(/\s+/).filter((p) => p.length > 1);
+  return ps.length ? VARIABLES_USADAS.filter((id) => ps.every((p) => normalizar(VARIABLES[id].nombre).includes(p))) : [];
+}
+
+// Ficha de un vínculo: causa → efecto, mecanismo, estado, evidencia y dónde actúa en la app.
+function fichaVinculo(v) {
+  const peso = pesoDe(v);
+  const uso = v.usadoEn.modulo
+    ? `Rúbrica <code>${esc(v.usadoEn.modulo)}.${esc(v.usadoEn.variable)}</code>, peso ${peso}${peso ? '' : ' (solo informa)'}`
+    : `Aviso «${esc(v.usadoEn.aviso)}»; no suma al puntaje`;
+  const evidencia = v.evidencia.length
+    ? `<ul class="cb-evidencia small">${v.evidencia.map((ev) => `<li><b>${esc(ev.postura)}:</b> ${esc(ev.cita)}${ev.nota ? ` <span class="muted">${esc(ev.nota)}</span>` : ''}</li>`).join('')}</ul>`
+    : '<p class="small muted">Sin fuente todavía.</p>';
+  return `<li class="cb-vinculo">
+    <p>${v.de.map(irVariable).join(' + ')} → ${irVariable(v.a)} <span class="muted small">(${esc(SENTIDOS[v.sentido])})</span></p>
+    <p class="small">${esc(v.mecanismo)}</p>
+    <p>${pill(v.estado)} <span class="muted small">${v.validado ? `validado por ${esc(v.validado.por)} (${esc(v.validado.fecha)})` : 'sin validar por un especialista'}</span></p>
+    ${evidencia}${v.contexto ? `<p class="small muted">Contexto: ${esc(v.contexto)}.</p>` : ''}${v.nota ? `<p class="small muted">${esc(v.nota)}</p>` : ''}
+    <p class="small muted">${uso} · <code>${esc(v.usadoEn.archivo)}</code></p></li>`;
+}
 
 function detalle(n) {
-  if (!n) return '<p class="muted">Toca un punto para ver el hecho, su fuente y con qué se relaciona.</p>';
+  if (!n) return '<p class="muted">Toca un punto para ver el hecho o la variable, su fuente y con qué se relaciona.</p>';
   const vs = vecinos(grafo(), n.id).map((v) => ({ ...v, n: porId(v.id) }));
-  const enlace = (v) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(v.id)}">${esc(v.n.titulo)}</button> <span class="muted small">${LINEA[v.tipo]}${v.donde ? ` <code>${esc(v.donde)}</code>` : ''}</span></li>`;
+  const texto = (v) => (v.tipo === 'dato' ? (v.sale ? 'valor que usa' : 'usa este valor') : LINEA[v.tipo]);
+  const enlace = (v) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(v.id)}">${esc(v.n.titulo)}</button> <span class="muted small">${texto(v)}${v.donde ? ` <code>${esc(v.donde)}</code>` : ''}</span></li>`;
   const lista = (titulo, a) => (a.length ? `<h4>${titulo}</h4><ul class="cb-vecinos">${a.slice(0, 40).map(enlace).join('')}</ul>${a.length > 40 ? `<p class="muted small">y ${a.length - 40} más.</p>` : ''}` : '');
+  if (n.tipo === 'variable') {
+    const sale = VINCULOS.filter((v) => v.de.includes(n.id)), entra = VINCULOS.filter((v) => v.a === n.id);
+    const fichas = (titulo, a) => (a.length ? `<h4>${titulo} (${a.length})</h4><ul class="cb-vecinos">${a.map(fichaVinculo).join('')}</ul>` : '');
+    return `<p class="muted small">${n.efecto ? 'Riesgo que recibe el efecto' : 'Variable de la finca'}</p><h3>${esc(n.titulo)}</h3>
+      ${lista('Usa los valores', vs.filter((v) => v.tipo === 'dato'))}${fichas('Afecta a', sale)}${fichas('Lo afectan', entra)}`;
+  }
   if (n.tipo !== 'hecho') {
     const tipo = n.tipo === 'tema' ? 'Tema' : 'Fuente';
     return `<p class="muted small">${tipo}</p><h3>${esc(n.titulo)}</h3>${n.url ? `<p><a href="${esc(n.url)}" target="_blank" rel="noopener">Abrir la fuente</a></p>` : ''}
@@ -33,17 +70,17 @@ function detalle(n) {
   const fuente = h.fuente ? (h.fuente.url ? `<a href="${esc(h.fuente.url)}" target="_blank" rel="noopener">${esc(h.fuente.cita)}</a>` : esc(h.fuente.cita)) : `Sin fuente todavía: ${esc(h.estado)}.`;
   return `<p class="muted small">${esc(TEMAS[h.tema])}</p><h3>${esc(h.titulo)}</h3>
     <p class="cb-valor">${esc(h.valor)}${h.unidad ? ` <span class="muted">${esc(h.unidad)}</span>` : ''}</p>
-    <p><span class="pill ${ESTADO_CLASE[h.estado]}">${esc(h.estado)}</span></p>
+    <p>${pill(h.estado)}</p>
     <p class="small"><b>Fuente:</b> ${fuente}</p>${h.nota ? `<p class="small muted">${esc(h.nota)}</p>` : ''}
     <p class="small muted">Vive en <code>${esc(h.donde)}</code>.</p>
-    ${lista('Se usa junto con', vs.filter((v) => v.tipo === 'formula'))}`;
+    ${lista('Se usa junto con', vs.filter((v) => v.tipo === 'formula'))}${lista('Lo usan estas variables', vs.filter((v) => v.tipo === 'dato'))}`;
 }
 
 function resultados() {
   if (!G.texto.trim()) return '';
-  const r = buscar(G.texto, { max: 12 });
-  if (!r.length) return '<p class="muted small">El cerebro no tiene un hecho con esas palabras. Solo busca palabras: no responde preguntas libres.</p>';
-  return `<ul class="cb-vecinos">${r.map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button> <span class="muted small">${esc(h.valor)} ${esc(h.unidad)}</span></li>`).join('')}</ul>`;
+  const r = buscar(G.texto, { max: 12 }), vs = buscarVariables(G.texto);
+  if (!r.length && !vs.length) return '<p class="muted small">El cerebro no tiene un hecho ni una variable con esas palabras. Solo busca palabras: no responde preguntas libres.</p>';
+  return `<ul class="cb-vecinos">${vs.map((id) => `<li>${irVariable(id)} <span class="muted small">variable</span></li>`).join('')}${r.map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button> <span class="muted small">${esc(h.valor)} ${esc(h.unidad)}</span></li>`).join('')}</ul>`;
 }
 
 // Lista de trabajo del administrador: lo que falta validar, agrupado por tema.
@@ -53,37 +90,51 @@ function pendientes(hoy = new Date()) {
     return hs.length ? `<li><b>${esc(nombre)}</b> (${hs.length}): ${hs.map((h) => `<button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button>`).join(' ')}</li>` : '';
   }).join('');
   const dias = Math.floor((hoy - new Date(CONSULTA_PPDB)) / 86400000);
+  const rv = resumenVinculos();
+  const sinValidar = VINCULOS.filter((v) => !v.validado);
+  const hipotesis = VINCULOS.filter((v) => v.estado === 'por validar' && pesoDe(v) > 0);
   return `<section class="card cb-pendientes"><h2>Pendientes del administrador</h2>
     <p class="muted small">Revisión sugerida una vez al mes. Los valores se cambian en el repo, con un PR, no aquí.</p>
     <p class="small"><b>Fichas PPDB/BPDB:</b> consultadas el ${esc(CONSULTA_PPDB)} (hace ${dias} días).</p>
     <details><summary>Por validar con un especialista (${HECHOS.filter((h) => h.estado === 'por validar').length})</summary><ul class="cb-grupos">${grupo('por validar')}</ul></details>
     <details><summary>Criterio propio por calibrar (${HECHOS.filter((h) => h.estado === 'criterio propio').length})</summary><ul class="cb-grupos">${grupo('criterio propio')}</ul></details>
+    <details><summary>Vínculos sin validar por un especialista (${rv.sinValidar} de ${rv.total})</summary>
+      ${hipotesis.length ? `<p class="small"><b>${hipotesis.length} hipótesis ya suman al puntaje:</b> ${hipotesis.map((v) => `${esc(nombreVinculo(v))} (peso ${pesoDe(v)})`).join('; ')}. Conviene validarlas primero.</p>` : ''}
+      <ul class="cb-grupos">${sinValidar.map((v) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(v.de[0])}">${esc(nombreVinculo(v))}</button> ${pill(v.estado)}</li>`).join('')}</ul></details>
+    ${rv.conflicto ? `<p class="small"><b>Vínculos en conflicto (${rv.conflicto}):</b> tienen fuentes a favor y en contra.</p>` : ''}
   </section>`;
 }
 
 export function viewCerebro() {
-  const r = resumen(HECHOS);
+  const r = resumen(HECHOS), rv = resumenVinculos();
   const sel = G.sel ? porId(G.sel) : null;
   return `<header class="admin-cab"><b>Trofaxis</b> · Administración <a class="btn sm" href="../">Ir a la app</a></header>
   <section class="card cerebro">
     <div><h2>Cerebro de Trofaxis</h2>
-      <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho, un tema o una fuente; las líneas son relaciones reales: el tema al que pertenece, la fuente de donde sale y las fórmulas que usan dos valores juntos. Funciona sin conexión y sin inteligencia artificial.</p></div>
+      <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho o una variable de la finca. Las líneas son solo relaciones reales: las fórmulas que usan dos valores juntos (punteadas) y los vínculos entre variables (con flecha), cada uno con su mecanismo y su fuente o su estado. El tema y la fuente son agrupaciones, no relaciones: se ven al marcar «Ver también temas y fuentes». Funciona sin conexión y sin inteligencia artificial.</p></div>
     <div class="row">
       <span class="pill">${r.total} hechos</span><span class="pill cb-fuente">${r['con fuente']} con fuente</span>
       <span class="pill cb-propio">${r['criterio propio']} criterio propio</span><span class="pill cb-validar">${r['por validar']} por validar</span>
     </div>
+    <div class="row">
+      <span class="pill">${rv.total} vínculos</span><span class="pill cb-fuente">${rv['con fuente']} con fuente</span>
+      <span class="pill cb-propio">${rv['criterio propio']} criterio propio</span><span class="pill cb-validar">${rv['por validar']} hipótesis</span>
+      ${rv.conflicto ? `<span class="pill cb-conflicto">${rv.conflicto} en conflicto</span>` : ''}
+    </div>
     <div class="row cb-controles">
       <div class="f cb-buscar"><label for="cb-buscar">Buscar en el cerebro</label><input id="cb-buscar" type="search" placeholder="imidacloprid, kc maíz, viento…" value="${esc(G.texto)}" autocomplete="off"></div>
+      <label class="cb-agrupar small"><input type="checkbox" id="cb-agrupar"${G.agrupar ? ' checked' : ''}> Ver también temas y fuentes</label>
       <button type="button" class="btn sm" id="cb-centrar">Centrar</button>
       <button type="button" class="btn sm" id="cb-obsidian">Descargar para Obsidian (.zip)</button>
     </div>
     <div id="cb-resultados">${resultados()}</div>
     <div class="row small cb-leyenda" aria-hidden="true">
-      <span><i class="cb-punto cb-tema"></i>Tema</span><span><i class="cb-punto cb-fte"></i>Fuente</span>
+      <span><i class="cb-punto cb-var"></i>Variable de la finca</span><span><i class="cb-punto cb-tema"></i>Tema</span><span><i class="cb-punto cb-fte"></i>Fuente</span>
       <span><i class="cb-punto cb-fuente"></i>Hecho con fuente</span><span><i class="cb-punto cb-propio"></i>Criterio propio</span><span><i class="cb-punto cb-validar"></i>Por validar</span>
+      <span>Flecha: vínculo · Punteada: fórmula</span>
     </div>
     <div class="cb-cuerpo">
-      <div class="cb-lienzo"><canvas id="cb-canvas" role="img" aria-label="Grafo del cerebro: ${r.total} hechos unidos por tema, fuente y fórmula. Usa la búsqueda para recorrerlo con el teclado."></canvas></div>
+      <div class="cb-lienzo"><canvas id="cb-canvas" role="img" aria-label="Grafo del cerebro: ${r.total} hechos y ${rv.total} vínculos entre variables de la finca. Usa la búsqueda para recorrerlo con el teclado."></canvas></div>
       <aside id="cb-detalle" class="cb-detalle" aria-live="polite">${detalle(sel)}</aside>
     </div>
     <details><summary>Lo que el cerebro todavía no sabe</summary><ul>${PENDIENTES.map((p) => `<li><b>${esc(p.fuente)}:</b> ${esc(p.falta)}</li>`).join('')}</ul>
@@ -98,9 +149,10 @@ export function montarCerebro(raiz = document) {
   const canvas = raiz.querySelector('#cb-canvas');
   if (!canvas || canvas.dataset.montado) return;
   canvas.dataset.montado = '1';
-  const g = grafo(), ctx = canvas.getContext('2d');
+  let g = grafo();
+  const ctx = canvas.getContext('2d');
   const css = getComputedStyle(document.documentElement), col = (v) => css.getPropertyValue(v).trim();
-  const C = { tema: col('--accent'), fte: col('--cb-fte'), 'con fuente': col('--good'), 'criterio propio': col('--warn'), 'por validar': col('--muted'), linea: col('--muted'), ink: col('--ink'), fondo: col('--surface') };
+  const C = { tema: col('--accent'), fte: col('--cb-fte'), var: col('--cb-var'), 'con fuente': col('--good'), 'criterio propio': col('--warn'), 'por validar': col('--muted'), linea: col('--muted'), ink: col('--ink'), fondo: col('--surface') };
   const detalleEl = raiz.querySelector('#cb-detalle');
   let w = 0, h = 0;
   function medir() {
@@ -116,8 +168,9 @@ export function montarCerebro(raiz = document) {
   }
   const aPantalla = (n) => [w / 2 + (n.x + G.vista.x) * G.vista.k, h / 2 + (n.y + G.vista.y) * G.vista.k];
   const aMundo = (px, py) => [(px - w / 2) / G.vista.k - G.vista.x, (py - h / 2) / G.vista.k - G.vista.y];
-  const radio = (n) => (n.tipo === 'tema' ? 9 : n.tipo === 'fuente' ? 2.5 + Math.sqrt(n.grado) * 0.9 : 2.5 + Math.sqrt(n.grado) * 0.7);
-  const color = (n) => (n.tipo === 'tema' ? C.tema : n.tipo === 'fuente' ? C.fte : C[n.estado]);
+  const radio = (n) => (n.tipo === 'tema' || n.efecto ? 9 : n.tipo === 'variable' ? 3.5 + Math.sqrt(n.grado) * 0.8 : n.tipo === 'fuente' ? 2.5 + Math.sqrt(n.grado) * 0.9 : 2.5 + Math.sqrt(n.grado) * 0.7);
+  const color = (n) => (n.tipo === 'tema' ? C.tema : n.tipo === 'fuente' ? C.fte : n.tipo === 'variable' ? C.var : C[n.estado]);
+  const escala = () => Math.min(1.6, Math.max(0.7, Math.sqrt(G.vista.k)));
 
   function dibujar() {
     ctx.clearRect(0, 0, w, h);
@@ -127,22 +180,30 @@ export function montarCerebro(raiz = document) {
     const idx = new Map(g.nodos.map((n) => [n.id, n]));
     ctx.lineWidth = 1;
     for (const e of g.aristas) {
-      const a = idx.get(e.a), b = idx.get(e.b), activa = G.sel && (e.a === G.sel || e.b === G.sel);
-      ctx.globalAlpha = activa ? 0.9 : tenue(e.a) || tenue(e.b) ? 0.05 : 0.22;
-      ctx.strokeStyle = activa ? C.ink : C.linea;
+      const a = idx.get(e.a), b = idx.get(e.b), activa = G.sel && (e.a === G.sel || e.b === G.sel), mec = e.tipo === 'mecanismo';
+      ctx.globalAlpha = activa ? 0.9 : tenue(e.a) || tenue(e.b) ? 0.05 : mec ? 0.6 : 0.22;
+      ctx.strokeStyle = activa ? C.ink : mec ? C.var : C.linea;
+      ctx.lineWidth = mec ? 1.5 : 1;
       ctx.setLineDash(e.tipo === 'formula' ? [4, 3] : []);
       const [x1, y1] = aPantalla(a), [x2, y2] = aPantalla(b);
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      if (mec) { // punta de flecha en el borde del efecto: causa → efecto
+        const d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, r = radio(b) * escala() + 2;
+        const px = x2 - ux * r, py = y2 - uy * r;
+        ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(px, py);
+        ctx.lineTo(px - ux * 7 - uy * 3.5, py - uy * 7 + ux * 3.5); ctx.lineTo(px - ux * 7 + uy * 3.5, py - uy * 7 - ux * 3.5); ctx.fill();
+      }
     }
-    ctx.setLineDash([]);
+    ctx.setLineDash([]); ctx.lineWidth = 1;
     for (const n of g.nodos) {
-      const [x, y] = aPantalla(n), r = radio(n) * Math.min(1.6, Math.max(0.7, Math.sqrt(G.vista.k)));
+      const [x, y] = aPantalla(n), r = radio(n) * escala();
       ctx.globalAlpha = tenue(n.id) ? 0.15 : 1;
       ctx.fillStyle = color(n); ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill();
       if (n.id === G.sel) { ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; }
-      const etiqueta = n.tipo === 'tema' || resaltar.has(n.id) || (G.filtro?.has(n.id)) || G.vista.k > 2.2;
+      const fuerte = n.tipo === 'tema' || n.efecto;
+      const etiqueta = fuerte || resaltar.has(n.id) || (G.filtro?.has(n.id)) || G.vista.k > 2.2;
       if (etiqueta && !tenue(n.id)) {
-        ctx.fillStyle = C.ink; ctx.font = `${n.tipo === 'tema' ? 600 : 400} ${n.tipo === 'tema' ? 13 : 11}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle = C.ink; ctx.font = `${fuerte ? 600 : 400} ${fuerte ? 13 : 11}px Inter, system-ui, sans-serif`;
         const t = n.titulo.length > 48 ? n.titulo.slice(0, 46) + '…' : n.titulo;
         ctx.fillText(t, x + r + 4, y + 4);
       }
@@ -166,7 +227,16 @@ export function montarCerebro(raiz = document) {
     }
     return mejor;
   }
+  // Con o sin temas y fuentes: se arma otro grafo y se vuelve a encuadrar.
+  function cambiarAgrupar(si) {
+    G.agrupar = si; G.grafo = null; g = grafo();
+    const casilla = raiz.querySelector('#cb-agrupar'); if (casilla) casilla.checked = si;
+    if (G.sel && !porId(G.sel)) G.sel = null;
+    encuadrar(); seleccionar(G.sel); despertar(0.5);
+  }
   function seleccionar(id, centrar = false) {
+    if (id && !porId(id) && !G.agrupar) cambiarAgrupar(true); // un hecho sin relaciones solo está en la vista completa
+    if (id && !porId(id)) id = null;
     G.sel = id; detalleEl.innerHTML = detalle(id ? porId(id) : null);
     if (centrar && id) { const n = porId(id); G.vista.x = -n.x; G.vista.y = -n.y; G.vista.k = Math.max(G.vista.k, 1.6); canvas.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     dibujar();
@@ -217,16 +287,17 @@ export function montarCerebro(raiz = document) {
   const entrada = raiz.querySelector('#cb-buscar'), res = raiz.querySelector('#cb-resultados');
   entrada?.addEventListener('input', () => {
     G.texto = entrada.value;
-    const r = G.texto.trim() ? buscar(G.texto, { max: 500 }) : [];
-    G.filtro = G.texto.trim() ? new Set(r.map((x) => x.id)) : null;
+    const r = G.texto.trim() ? [...buscar(G.texto, { max: 500 }).map((x) => x.id), ...buscarVariables(G.texto)] : [];
+    G.filtro = G.texto.trim() ? new Set(r) : null;
     res.innerHTML = resultados(); dibujar();
   });
   (raiz.querySelector('#app') ?? raiz.querySelector('.cerebro')?.parentElement)?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-cb-ir]'); if (b) seleccionar(b.dataset.cbIr, true);
   });
   raiz.querySelector('#cb-centrar')?.addEventListener('click', () => { encuadrar(); seleccionar(null); });
+  raiz.querySelector('#cb-agrupar')?.addEventListener('change', (e) => cambiarAgrupar(e.target.checked));
   raiz.querySelector('#cb-obsidian')?.addEventListener('click', () => {
-    const blob = new Blob([zip(notasObsidian(g))], { type: 'application/zip' });
+    const blob = new Blob([zip(notasObsidian(armarGrafo()))], { type: 'application/zip' }); // la bóveda lleva todo, con temas y fuentes
     const url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = 'trofaxis-cerebro.zip'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);

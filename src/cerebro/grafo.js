@@ -1,9 +1,14 @@
-// Grafo del cerebro, al estilo del de Obsidian: cada hecho es un nodo y las líneas salen de relaciones reales.
-// Tres clases de línea, ninguna inventada:
-//   tema    → el hecho pertenece a ese tema de la app.
-//   fuente  → el hecho sale de esa fuente (dos hechos con la misma cita quedan unidos por ella).
-//   formula → una fórmula de la app usa los dos valores juntos (el archivo se nombra en cada regla).
+// Grafo del cerebro, al estilo del de Obsidian: cada hecho y cada variable de la finca es un nodo.
+// Dos clases de línea son relaciones:
+//   formula   → una fórmula de la app usa los dos valores juntos (el archivo se nombra en cada regla).
+//   mecanismo → una variable afecta a otra según la matriz de vínculos (src/cerebro/vinculos.js), con flecha.
+// Una une la matriz con los hechos:
+//   dato      → la variable usa ese valor (un umbral, un corte).
+// Y dos son solo agrupaciones, no relaciones; se dibujan únicamente con `agrupar`:
+//   tema      → el hecho pertenece a ese tema de la app.
+//   fuente    → el hecho sale de esa fuente (dos hechos con la misma cita quedan unidos por ella).
 import { HECHOS, TEMAS } from './hechos.js';
+import { VARIABLES, VINCULOS } from './vinculos.js';
 
 // Reglas de «se usan juntos en una fórmula». Cada una dice dónde está esa fórmula.
 const FORMULAS = [
@@ -31,13 +36,15 @@ const FORMULAS = [
 // Clave de una fuente: la misma cita es el mismo nodo.
 const claveFuente = (f) => 'fuente:' + f.cita.replace(/\s*\(actualizada.*$/, '');
 
-export function armarGrafo(hechos = HECHOS) {
+// `agrupar` suma los temas y las fuentes. Sin él quedan solo las relaciones, y los hechos sin ninguna se ocultan.
+export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIABLES, vinculos = VINCULOS } = {}) {
   const nodos = new Map();
   const aristas = [];
   const ids = new Set(hechos.map((h) => h.id));
-  for (const [id, nombre] of Object.entries(TEMAS)) nodos.set('tema:' + id, { id: 'tema:' + id, tipo: 'tema', titulo: nombre });
+  if (agrupar) for (const [id, nombre] of Object.entries(TEMAS)) nodos.set('tema:' + id, { id: 'tema:' + id, tipo: 'tema', titulo: nombre, tema: id });
   for (const h of hechos) {
-    nodos.set(h.id, { id: h.id, tipo: 'hecho', titulo: h.titulo, estado: h.estado, hecho: h });
+    nodos.set(h.id, { id: h.id, tipo: 'hecho', titulo: h.titulo, estado: h.estado, tema: h.tema, hecho: h });
+    if (!agrupar) continue;
     aristas.push({ a: h.id, b: 'tema:' + h.tema, tipo: 'tema' });
     if (h.fuente) {
       const k = claveFuente(h.fuente);
@@ -58,28 +65,48 @@ export function armarGrafo(hechos = HECHOS) {
       }
     }
   }
-  const lista = [...nodos.values()];
+  // Variables de la matriz de vínculos. Solo entran las que algún vínculo usa.
+  const usadas = new Set(vinculos.flatMap((v) => [...v.de, v.a]));
+  for (const id of usadas) {
+    const v = variables[id];
+    nodos.set(id, { id, tipo: 'variable', titulo: v.nombre, tema: v.tema, efecto: !!v.efecto });
+    for (const hid of v.hechos ?? []) if (ids.has(hid)) aristas.push({ a: id, b: hid, tipo: 'dato' });
+    if (agrupar && TEMAS[v.tema]) aristas.push({ a: id, b: 'tema:' + v.tema, tipo: 'tema' });
+  }
+  // Una línea por par causa → efecto; si varios vínculos la comparten, la línea los lista a todos.
+  const mec = new Map();
+  for (const v of vinculos) {
+    for (const de of v.de) {
+      const k = de + '>' + v.a;
+      if (mec.has(k)) mec.get(k).vinculos.push(v.id);
+      else { const e = { a: de, b: v.a, tipo: 'mecanismo', vinculos: [v.id] }; mec.set(k, e); aristas.push(e); }
+    }
+  }
+  let lista = [...nodos.values()];
   const grado = new Map(lista.map((n) => [n.id, 0]));
   for (const e of aristas) { grado.set(e.a, grado.get(e.a) + 1); grado.set(e.b, grado.get(e.b) + 1); }
   for (const n of lista) n.grado = grado.get(n.id);
-  return { nodos: lista, aristas };
+  if (!agrupar) lista = lista.filter((n) => n.grado > 0);
+  return { nodos: lista, aristas, agrupar };
 }
 
 // Vecinos de un nodo, para el panel de detalle.
+// `sale` es verdadero cuando la línea va de este nodo al otro (causa → efecto).
 export function vecinos(grafo, id) {
-  return grafo.aristas.filter((e) => e.a === id || e.b === id).map((e) => ({ id: e.a === id ? e.b : e.a, tipo: e.tipo, donde: e.donde }));
+  return grafo.aristas.filter((e) => e.a === id || e.b === id)
+    .map((e) => ({ id: e.a === id ? e.b : e.a, tipo: e.tipo, donde: e.donde, vinculos: e.vinculos, sale: e.a === id }));
 }
 
 // Posiciones iniciales en círculos por tema (deterministas: el mismo grafo siempre arranca igual).
+// Las fuentes no tienen tema y arrancan en el centro.
 export function posicionesIniciales(grafo, radio = 300) {
-  const temas = grafo.nodos.filter((n) => n.tipo === 'tema');
+  const temas = [...new Set([...Object.keys(TEMAS), ...grafo.nodos.map((n) => n.tema).filter(Boolean)])];
   const centro = new Map(temas.map((t, i) => {
     const ang = (2 * Math.PI * i) / temas.length;
-    return [t.id, { x: Math.cos(ang) * radio, y: Math.sin(ang) * radio }];
+    return [t, { x: Math.cos(ang) * radio, y: Math.sin(ang) * radio }];
   }));
-  const temaDe = new Map(grafo.aristas.filter((e) => e.tipo === 'tema').map((e) => [e.a, e.b]));
   grafo.nodos.forEach((n, i) => {
-    const c = centro.get(n.tipo === 'tema' ? n.id : temaDe.get(n.id)) ?? { x: 0, y: 0 };
+    const c = centro.get(n.tema) ?? { x: 0, y: 0 };
     const ang = i * 2.399963, r = n.tipo === 'tema' ? 0 : 30 + (i % 7) * 12; // ángulo áureo: reparte sin azar
     n.x = c.x + Math.cos(ang) * r; n.y = c.y + Math.sin(ang) * r; n.vx = 0; n.vy = 0;
   });

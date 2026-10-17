@@ -12,7 +12,7 @@ test('cada línea del grafo une dos nodos que existen y dice de qué clase es', 
   const ids = new Set(g.nodos.map((n) => n.id));
   for (const e of g.aristas) {
     assert.ok(ids.has(e.a) && ids.has(e.b), `${e.a} — ${e.b}`);
-    assert.ok(['tema', 'fuente', 'formula'].includes(e.tipo));
+    assert.ok(['tema', 'fuente', 'formula', 'dato', 'mecanismo'].includes(e.tipo), e.tipo);
     if (e.tipo === 'formula') assert.match(e.donde, /^src\//, 'una línea de fórmula nombra el archivo de la fórmula');
   }
 });

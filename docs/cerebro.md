@@ -12,8 +12,18 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
 - Cada hecho dice su estado: **con fuente** (cita y enlace), **criterio propio** (por validar) o **por validar** (sugerido, no puntúa).
   Una prueba falla si un hecho no trae ninguno de los tres.
 
-- `src/cerebro/grafo.js`: el grafo, como el de Obsidian. Nodos = hechos, temas y fuentes. Líneas solo de relaciones reales:
-  el tema del hecho, su fuente y las fórmulas que usan dos valores juntos (cada regla nombra el archivo de la fórmula).
+- `src/cerebro/vinculos.js`: la **matriz de vínculos**. Es la regla «una variable no afecta a otra sin fundamento»
+  escrita como datos. Cada fila dice qué variables de la finca (al coincidir) suben o bajan qué riesgo, por qué mecanismo,
+  con qué estado (con fuente, criterio propio o hipótesis por validar), con qué evidencia (a favor, en contra o «menciona»),
+  en qué contexto y dónde actúa en el código (variable de la rúbrica o aviso). `VARIABLES` es el diccionario de variables:
+  un id por cosa medida o decidida, para que dos fuentes que dicen lo mismo con otras palabras caigan en la misma.
+  Las pruebas exigen que cada vínculo apunte a una variable que existe en su archivo y que cada variable marcada «Vínculo»
+  en `src/modules/` tenga su fila. Una fuente nueva confirma una fila (evidencia a favor), la contradice (en contra: el panel
+  la marca en conflicto) o propone una nueva (entra como «por validar»).
+- `src/cerebro/grafo.js`: el grafo, como el de Obsidian. Nodos = hechos y variables de la finca. Líneas solo de relaciones
+  reales: las fórmulas que usan dos valores juntos (cada regla nombra su archivo), los vínculos de la matriz (con flecha,
+  causa → efecto) y los valores que usa cada variable. El tema y la fuente son agrupaciones, no relaciones: el panel los
+  muestra solo al marcar «Ver también temas y fuentes». La descarga para Obsidian lleva todo.
 - `src/admin/cerebro.js`: vista del cerebro para el **panel de administración**, que vive en un sitio aparte con inicio
   de sesión (`https://diegoguevara912-pixel.github.io/trofaxis-admin/`) y la importa desde la app publicada. Arrastrar puntos o el fondo, acercar con la rueda o dos dedos, tocar un punto
   para ver el hecho, su fuente y sus vecinos. La búsqueda resalta los puntos que coinciden.
@@ -22,8 +32,8 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
 
 Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por validar.
 
-- Pendientes del administrador: lo que está por validar y lo que es criterio propio, por tema, y la fecha de consulta
-  de las fichas PPDB. Revisión sugerida una vez al mes; los valores se cambian en el repo con un PR.
+- Pendientes del administrador: lo que está por validar y lo que es criterio propio, por tema, los vínculos sin validar
+  por un especialista (primero las hipótesis que ya suman al puntaje) y la fecha de consulta de las fichas PPDB. Revisión sugerida una vez al mes; los valores se cambian en el repo con un PR.
 
 **Acceso:** el panel pide inicio de sesión y solo entran las cuentas de la tabla `admins` de Supabase. La app ya no
 tiene `/admin/`.
