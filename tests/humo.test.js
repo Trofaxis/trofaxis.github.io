@@ -38,6 +38,7 @@ const FINCAS = {
 // Cada vista con el estado que la deja en sus pantallas más cargadas, además de la inicial.
 const VISTAS = {
   tablero: () => viewDashboard(),
+  'tablero en vista técnica': () => { S.vistaTecnica = true; try { return viewDashboard(); } finally { S.vistaTecnica = false; } },
   'tablero con el ApiRadar abierto': () => { S.problema = 'spathodea'; try { return viewDashboard(); } finally { S.problema = ''; } },
   'tablero con el borrado por confirmar': () => { S.confirmReset = true; try { return viewDashboard(); } finally { S.confirmReset = false; } },
   plantillas: () => viewTemplates(),

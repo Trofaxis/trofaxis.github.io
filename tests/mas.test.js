@@ -16,10 +16,10 @@ const { encuadre, partir } = await import('../src/ui/plan-imagen.js');
 test('las seis tarjetas del resumen y el perfil de riesgo traen su «+»', () => {
   const previo = S.farm;
   try {
-    S.farm = demoFarm();
+    S.farm = demoFarm(); S.vistaTecnica = true;
     const h = viewDashboard();
     for (const k of ['mayor', 'alto', 'mes', 'coinc', 'datos', 'gg', 'perfil']) assert.match(h, new RegExp(`data-keep="mas-${k}"`), `falta el «+» de ${k}`);
-  } finally { S.farm = previo; }
+  } finally { S.farm = previo; S.vistaTecnica = false; }
 });
 
 test('«Datos completos» dice en qué módulo falta información y qué dato', () => {

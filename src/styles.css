@@ -342,6 +342,12 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .leyenda{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 
 .plan-compacto{gap:4px}
+/* Vista simple del dashboard: índice + semáforo por tema; «¿Por qué?» abre el detalle técnico. */
+.resumen-simple{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
+.semaforo{display:flex;flex-direction:column;gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.semaforo li{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.semaforo details,.urgentes details{margin-top:6px}
+@media (max-width:720px){.resumen-simple{grid-template-columns:1fr}}
 .plan-compacto li{border:none;padding:0}
 .notice-col{flex-direction:column;align-items:flex-start;gap:4px}
 .item.editando{outline:2px solid var(--pollen)}
