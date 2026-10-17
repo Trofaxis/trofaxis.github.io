@@ -29,7 +29,9 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
   muestra solo al marcar «Ver también temas y fuentes». La descarga para Obsidian lleva todo.
 - `src/admin/cerebro.js`: vista del cerebro para el **panel de administración**, que vive en un sitio aparte con inicio
   de sesión (`https://diegoguevara912-pixel.github.io/trofaxis-admin/`) y la importa desde la app publicada. Arrastrar puntos o el fondo, acercar con la rueda o dos dedos, tocar un punto
-  para ver el hecho, su fuente y sus vecinos. La búsqueda resalta los puntos que coinciden.
+  para ver el hecho, su fuente y sus vecinos. Cada conteo (hechos, vínculos, «5 hipótesis»…) se toca y abre su lista;
+  el buscador encuentra variables, vínculos, fuentes y hechos («hipótesis» trae los vínculos por validar) y resalta en el grafo
+  lo que coincide. Una fuente muestra los hechos y vínculos que se apoyan en ella.
 - `src/cerebro/obsidian.js`: botón «Descargar para Obsidian (.zip)»: una nota .md por nodo con [[enlaces]]. Obsidian es
   opcional; editar esas notas no cambia la app.
 

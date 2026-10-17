@@ -110,3 +110,18 @@ test('el panel muestra la matriz: conteo, casilla de agrupaciones y vínculos po
   assert.match(html, /Vínculos sin validar por un especialista/);
   assert.match(html, /hipótesis ya suman al puntaje/);
 });
+
+test('explorador: cada conteo abre su lista y el buscador encuentra variables, hipótesis y fuentes', async () => {
+  const { explorar } = await import('../src/admin/cerebro.js');
+  const hip = explorar({ tipo: 'vinculo', estado: 'por validar' });
+  assert.equal(hip.vinculos.length, VINCULOS.filter((v) => v.estado === 'por validar').length);
+  assert.equal(hip.hechos.length + hip.variables.length + hip.fuentes.length, 0, 'solo vínculos');
+  assert.deepEqual(explorar({ texto: 'hipotesis' }).vinculos.map((v) => v.id), hip.vinculos.map((v) => v.id), '«hipótesis» encuentra los vínculos por validar');
+  assert.ok(explorar({ texto: 'pendiente' }).variables.includes('finca.pendiente'));
+  const k = explorar({ texto: 'Kuniyoshi' });
+  assert.ok(k.fuentes.some((f) => /Kuniyoshi/.test(f.cita)) && k.vinculos.length > 0);
+  assert.equal(explorar({ tipo: 'hecho', estado: 'con fuente' }).hechos.length, HECHOS.filter((h) => h.estado === 'con fuente').length);
+  const html = viewCerebro();
+  assert.match(html, /data-cb-tipo="vinculo" data-cb-estado="por validar"/);
+  assert.match(html, /Buscar una variable, hipótesis, fuente o hecho/);
+});
