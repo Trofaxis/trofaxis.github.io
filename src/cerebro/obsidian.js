@@ -1,8 +1,9 @@
-// Exporta el cerebro como una bóveda de Obsidian: una nota .md por hecho, tema y fuente, unidas con [[enlaces]].
+// Exporta el cerebro como una bóveda de Obsidian: una nota .md por hecho, variable, tema y fuente, unidas con [[enlaces]].
 // Abrir la carpeta en Obsidian muestra el mismo grafo. Obsidian es opcional: la app no lo necesita.
 // El .zip se arma aquí mismo (sin compresión, formato ZIP estándar), sin bibliotecas ni conexión.
 import { armarGrafo } from './grafo.js';
 import { TEMAS } from './hechos.js';
+import { VINCULOS, SENTIDOS } from './vinculos.js';
 
 const CARPETA = 'Trofaxis cerebro';
 const limpio = (t) => String(t).replace(/[\\/:*?"<>|#^[\]]/g, '-').replace(/\s+/g, ' ').trim().slice(0, 90);
@@ -19,7 +20,7 @@ function nombres(grafo) {
   return out;
 }
 
-const SUB = { tema: 'Temas', fuente: 'Fuentes', hecho: 'Hechos' };
+const SUB = { tema: 'Temas', fuente: 'Fuentes', hecho: 'Hechos', variable: 'Variables' };
 const yaml = (v) => JSON.stringify(String(v ?? ''));
 
 // Lista de { ruta, contenido } de la bóveda.
@@ -38,15 +39,26 @@ export function notasObsidian(grafo = armarGrafo()) {
       if (h.nota) c.push(`> ${h.nota}`, '');
       const juntos = de(n.id, 'formula');
       if (juntos.length) c.push('## Se usa junto con', '', ...juntos.map((j) => `- ${enl(j.otro)} (fórmula en \`${j.donde}\`)`), '');
+      const usan = de(n.id, 'dato');
+      if (usan.length) c.push('## Lo usan estas variables', '', ...usan.map((j) => `- ${enl(j.otro)}`), '');
+    } else if (n.tipo === 'variable') {
+      const vinculo = (v) => [`- **${v.de.map(enl).join(' + ')} → ${enl(v.a)}** (${SENTIDOS[v.sentido]}; ${v.estado})`, `  - ${v.mecanismo}`,
+        ...v.evidencia.map((ev) => `  - ${ev.postura}: ${ev.cita}${ev.nota ? ` (${ev.nota})` : ''}`)].join('\n');
+      const sale = VINCULOS.filter((v) => v.de.includes(n.id)), entra = VINCULOS.filter((v) => v.a === n.id);
+      const datos = de(n.id, 'dato');
+      c = ['---', `id: ${yaml(n.id)}`, 'tipo: "variable"', '---', '', `# ${n.titulo}`, '',
+        ...(datos.length ? ['**Usa los valores:** ' + datos.map((d) => enl(d.otro)).join(', '), ''] : []),
+        ...(sale.length ? ['## Afecta a', '', ...sale.map(vinculo), ''] : []),
+        ...(entra.length ? ['## Lo afectan', '', ...entra.map(vinculo), ''] : [])];
     } else {
       const tipo = n.tipo === 'tema' ? 'tema' : 'fuente';
       const hechos = de(n.id, tipo).map((x) => x.otro);
-      c = [`# ${n.titulo}`, '', n.url ? `Enlace: ${n.url}` : '', '', `## Hechos (${hechos.length})`, '', ...hechos.map((id) => `- ${enl(id)}`), ''];
+      c = [`# ${n.titulo}`, '', n.url ? `Enlace: ${n.url}` : '', '', `## ${n.tipo === 'tema' ? 'Hechos y variables' : 'Hechos'} (${hechos.length})`, '', ...hechos.map((id) => `- ${enl(id)}`), ''];
     }
     return { ruta: `${CARPETA}/${SUB[n.tipo]}/${nom.get(n.id)}.md`, contenido: c.join('\n') };
   });
   notas.unshift({ ruta: `${CARPETA}/Léeme.md`, contenido: ['# Cerebro de Trofaxis', '',
-    'Exportado desde la app. Cada nota es un hecho, un tema o una fuente; las líneas del grafo de Obsidian son los enlaces entre notas.',
+    'Exportado desde la app. Cada nota es un hecho, una variable de la finca, un tema o una fuente; las líneas del grafo de Obsidian son los enlaces entre notas. Los vínculos entre variables (qué afecta a qué y por qué) están en las notas de Variables.',
     'Editar estas notas no cambia la app: los valores viven en el código de Trofaxis.', '',
     ...Object.keys(TEMAS).map((t) => `- ${enl('tema:' + t)}`), ''].join('\n') });
   return notas;
