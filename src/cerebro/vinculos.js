@@ -42,8 +42,8 @@ export const VARIABLES = {
   'plag.alSuelo': { nombre: 'Plaguicida aplicado al suelo o por el riego', tema: 'plaguicidas', hechos: [] },
   'plagas.meses': { nombre: 'Meses con plaga', tema: 'plagas', hechos: [] },
   'poli.floracionVisitada': { nombre: 'Floración visitada por polinizadores', tema: 'polinizadores', hechos: [] },
-  'poli.floracionRiesgo': { nombre: 'Floración de la especie de riesgo', tema: 'polinizadores', hechos: [] },
-  'poli.abundanciaRiesgo': { nombre: 'Abundancia de la especie de riesgo (volumen de copa)', tema: 'polinizadores', hechos: [] },
+  'poli.floracionRiesgo': { nombre: 'Floración de la especie de riesgo', tema: 'polinizadores', hechos: ['poli.kuniyoshi.floracion'] },
+  'poli.abundanciaRiesgo': { nombre: 'Abundancia de la especie de riesgo (volumen de copa)', tema: 'polinizadores', hechos: ['poli.corteCopa', 'poli.osorio.ecuacion3'] },
   'poli.sinOtrasFlores': { nombre: 'Meses sin otras flores disponibles', tema: 'polinizadores', hechos: [] },
   'riesgo.poli': { nombre: 'Riesgo de Polinizadores', tema: 'motor', hechos: ['motor.rubrica'], efecto: true },
   'riesgo.fert': { nombre: 'Riesgo de Fertilización', tema: 'motor', hechos: ['motor.rubrica'], efecto: true },
@@ -53,7 +53,7 @@ export const VARIABLES = {
   'riesgo.lixiviacion': { nombre: 'Plaguicida que llega al agua subterránea', tema: 'plaguicidas', hechos: [], efecto: true },
 };
 
-const K = { cita: FUENTES_ECO.kuniyoshi.cita };
+const K = { cita: FUENTES_ECO.kuniyoshi.cita }, O = { cita: FUENTES_ECO.osorio.cita };
 const SPATHODEA = 'Spathodea campanulata en el campus de Zamorano';
 const rubrica = (modulo, variable, archivo) => ({ modulo, variable, archivo });
 
@@ -95,7 +95,7 @@ export const VINCULOS = [
   // Polinizadores: lo que expone a las abejas en la floración (Kuniyoshi y Osorio, PEG Zamorano).
   { id: 'poli-coincidencia', de: ['plag.meses', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Aplicar cuando las abejas visitan las flores las expone al producto.',
-    estado: 'criterio propio', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la exposición a agroquímicos como un factor que no midió.' }],
+    estado: 'criterio propio', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la exposición a agroquímicos como un factor que no midió (Limitaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'coincidencia', 'src/modules/polinizadores.js') },
   { id: 'poli-hq', de: ['plag.hq', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'HQ = dosis ÷ DL50 por contacto: si supera el umbral, la dosis aplicada en floración puede matar abejas por contacto.',
@@ -105,25 +105,28 @@ export const VINCULOS = [
       { cita: FUENTES_PLAG.arena.cita, postura: 'a favor', nota: 'Margen ×10 para abejas sin aguijón: derivación, no norma.' },
     ], usadoEn: rubrica('poli', 'claseEnFloracion', 'src/modules/polinizadores.js') },
   { id: 'poli-abundancia', de: ['poli.abundanciaRiesgo'], a: 'riesgo.poli', sentido: '+',
-    mecanismo: 'Más flores de la especie de riesgo, más abejas muertas bajo ellas.',
-    estado: 'con fuente', evidencia: [{ ...K, postura: 'a favor', nota: 'Relación positiva pero débil (R² = 0,21, no significativa).' }],
-    contexto: SPATHODEA, nota: 'Un solo estudio y una relación débil: conviene más evidencia. El volumen de copa sale de Osorio (2025), Ec. 3.',
+    mecanismo: 'Más volumen de copa daría más flores de la especie de riesgo y, con ellas, más abejas muertas bajo los árboles.',
+    estado: 'por validar', evidencia: [
+      { ...O, postura: 'menciona', nota: 'Espera más floración con más volumen de copa, sin medirlo (pág. 27).' },
+      { ...K, postura: 'menciona', nota: 'Midió flores visibles en copas cercanas, no volumen de copa: pendiente 0,077 y R² = 0,2147, con Spearman no significativa (p > 0,05). La autora dice que no se puede afirmar una asociación consistente (Resultados, Figura 10). Cita a Tejeda et al. (2025) con una relación más fuerte usando flores caídas.' },
+    ],
+    contexto: SPATHODEA, nota: 'Hipótesis que ya suma al puntaje. Para validarla hay que contar flores y abejas muertas por árbol junto con su volumen de copa (Osorio, Ec. 3).',
     usadoEn: rubrica('poli', 'abundanciaRiesgo', 'src/modules/polinizadores.js') },
   { id: 'poli-sin-alternativas', de: ['poli.floracionRiesgo', 'poli.sinOtrasFlores'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Sin otras flores disponibles, las abejas dependen más de la especie de riesgo.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la disponibilidad de otras especies en floración como un factor que no midió.' }],
+    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la disponibilidad de otras especies en floración como un factor que no midió (Limitaciones y Recomendaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'alternativas', 'src/modules/polinizadores.js') },
   { id: 'poli-agua-seca', de: ['poli.floracionRiesgo', 'clima.mesesSecos'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'En época seca las abejas podrían buscar el líquido que se acumula en la corola de la especie de riesgo.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Menciona la disponibilidad de agua y la acumulación de líquidos en la corola como posibles factores.' }],
+    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Menciona la disponibilidad de agua y la acumulación de líquidos en la corola como posibles factores (Introducción).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'aguaSeca', 'src/modules/polinizadores.js') },
   { id: 'poli-foliar', de: ['fert.foliar', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Un producto foliar aplicado en floración puede llegar a las flores que visitan las abejas.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Cita la exposición a agroquímicos sin medirla.' }],
+    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Cita la exposición a agroquímicos sin medirla (Limitaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'foliarEnFloracion', 'src/modules/polinizadores.js') },
   { id: 'poli-clima', de: ['clima.floracion', 'poli.floracionRiesgo'], a: 'riesgo.poli', sentido: '?',
     mecanismo: 'La temperatura, la humedad y la lluvia durante la floración podrían influir en la muerte de abejas; no se sabe en qué dirección.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Los menciona como factores que no midió.' }],
+    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Los menciona como factores que no midió (Limitaciones y Recomendaciones).' }],
     contexto: SPATHODEA, nota: 'Solo informa: peso 0 hasta que se mida su efecto.',
     usadoEn: rubrica('poli', 'climaFloracion', 'src/modules/polinizadores.js') },
 

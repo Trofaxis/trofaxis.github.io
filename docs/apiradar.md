@@ -40,11 +40,12 @@ En el mapa de la finca, el bloque «Censo de árboles y sitios (ApiRadar)» reci
 | Área excluida por árbol (28-79 ha) | Cálculo geométrico π·r² con ese radio | |
 | Punto del refugio y % de la finca fuera del radio | Cálculo con las coordenadas que carga el usuario, sobre una rejilla dentro del contorno | Distancia en plano local (error de metros en una finca) |
 | Conversión de UTM a grados | Series de Krüger; probada contra el arco de meridiano (WGS84) | Karney (2011) |
-| Volumen de copa, meses de floración | Verificado | Osorio (2025), Kuniyoshi (2025), como ya usa Polinizadores |
-| Otras flores, meses secos, foliares | No verificado: hipótesis | Factores que Kuniyoshi (2025) menciona sin medir |
+| Fórmula del volumen de copa, meses de floración | Verificado | Osorio (2025), Ec. 3, pág. 15; Kuniyoshi (2026), floración de septiembre a enero |
+| Más volumen de copa, más riesgo | No verificado: hipótesis | Osorio lo espera sin medirlo (pág. 27); Kuniyoshi halló una relación débil y no significativa con flores visibles |
+| Otras flores, meses secos, foliares | No verificado: hipótesis | Factores que Kuniyoshi (2026) menciona sin medir |
 | Pesos y cortes de la rúbrica | Criterio propio, por calibrar | `CONFIG.rubrica.poli` |
 
-**No se cita Tejeda et al. (2025):** no está entre los archivos del proyecto y no se pudo verificar.
+**No se cita Tejeda et al. (2025):** está con embargo en bdigital.zamorano.edu y no se pudo verificar.
 
 ## Límites conocidos
 

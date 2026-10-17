@@ -42,6 +42,15 @@ test('toda variable de una rúbrica marcada como «Vínculo» tiene su fila en l
   assert.ok(n >= 3, 'se encontraron los vínculos marcados en las rúbricas');
 });
 
+test('una hipótesis de la matriz no se muestra como «verificado» en su rúbrica', () => {
+  for (const v of VINCULOS.filter((x) => x.usadoEn.modulo && x.estado === 'por validar')) {
+    const src = fs.readFileSync(v.usadoEn.archivo, 'utf8');
+    const m = src.match(new RegExp(`variable\\('${v.usadoEn.variable}'[\\s\\S]*?'(no verificado|verificado|criterio propio)'`));
+    assert.ok(m, v.id);
+    assert.notEqual(m[1], 'verificado', `${v.id}: la rúbrica dice «verificado» pero el vínculo es hipótesis`);
+  }
+});
+
 test('una variable no choca con el id de un hecho y cada dato que usa existe', () => {
   const ids = new Set(HECHOS.map((h) => h.id));
   for (const [id, v] of Object.entries(VARIABLES)) {

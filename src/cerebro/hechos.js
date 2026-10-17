@@ -76,11 +76,21 @@ function riego() {
   return hechos;
 }
 
+// Datos de las tesis tal como están en src/core/fuentes.js, cada uno con la página o la sección donde se leyó.
+function datosDeTesis() {
+  return Object.entries(FUENTES_ECO).flatMap(([k, f]) => (f.datos ?? []).map((x) => ({
+    id: `poli.${k}.${x.id}`, titulo: x.titulo, valor: x.valor, unidad: x.unidad, ...conFuente(f), donde: 'src/core/fuentes.js',
+    pagina: x.donde, nota: [`${f.corta}, ${x.donde}.`, x.nota].filter(Boolean).join(' '), claves: x.claves,
+  })));
+}
+
 function polinizadores() {
   const a = CONFIG.apiradar, d = 'src/core/config.js';
   return [
     { id: 'poli.radioExclusion', titulo: 'Radio de exclusión alrededor de los árboles de riesgo (rango de vuelo de Trigona fulviventris)', valor: lista(a.radioExclusionM), unidad: 'm', ...conFuente(FUENTES_ECO.barrantes), donde: d, nota: 'Verificado en el resumen en inglés, no en el texto completo. Para Plebeia melanica se usa el mismo radio como criterio propio.', claves: ['spathodea', 'abejas', 'apiradar', 'refugio'] },
     { id: 'poli.percentiles', titulo: 'Cortes de riesgo de cada árbol del censo por volumen de copa', valor: 'tercios del propio censo', unidad: '', ...propio, donde: d, claves: ['spathodea', 'censo', 'apiradar'] },
+    { id: 'poli.corteCopa', titulo: 'Cortes de riesgo por volumen de copa de las especies de riesgo', valor: CONFIG.rubrica.poli.abundanciaRiesgo.cortes.join(' y '), unidad: 'm³', ...propio, donde: d, nota: `${FUENTES_ECO.osorio.corta}, pág. 26: la mayoría de las copas del campus mide ≤ 1 000 m³. Usar esa cifra como corte es criterio propio.`, claves: ['spathodea', 'copa'] },
+    ...datosDeTesis(),
     ...Object.entries(CONFIG.presencia).map(([g, p]) => ({ id: `poli.presencia.${g}`, titulo: `Nivel de presencia de ${g}: baja, media o alta`, valor: `baja < ${p.cortes[0]}; media < ${p.cortes[1]}; alta desde ${p.cortes[1]}`, unidad: p.unidad, ...propio, donde: d, nota: p.fuenteMetodo ? `El método de muestreo sí tiene fuente: ${p.fuenteMetodo}.` : 'Informativo: no entra en ninguna fórmula.' })),
   ];
 }
@@ -135,7 +145,5 @@ export function validarHecho(h) {
 // Documentos del proyecto que el cerebro conoce por nombre pero cuyos datos todavía no tiene cargados.
 // No se inventa lo que dicen: cuando estén en el repo, cada dato entra como hecho con su página.
 export const PENDIENTES = [
-  { fuente: FUENTES_ECO.osorio.corta, falta: 'Censo real de árboles de Spathodea y sus volúmenes de copa.' },
-  { fuente: FUENTES_ECO.kuniyoshi.corta, falta: 'Fechas y conteos de abejas muertas bajo las flores.' },
-  { fuente: 'Tejeda et al. (2025)', falta: 'El documento no está en los archivos del proyecto; no se cita.' },
+  { fuente: 'Tejeda et al. (2025)', falta: 'Con embargo en bdigital.zamorano.edu (handle 11036/8207). Kuniyoshi (2026) la cita y reproduce una figura suya, pero sus datos no se citan sin el documento.' },
 ];

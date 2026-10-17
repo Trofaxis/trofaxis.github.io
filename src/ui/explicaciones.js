@@ -79,7 +79,7 @@ export function masPerfil(R, cfg = CONFIG) {
 export function masApiRadar(cfg = CONFIG) {
   const [rMin, rMax] = cfg.apiradar.radioExclusionM;
   return `<p><b>Qué es.</b> El ApiRadar es una herramienta para resolver un problema ambiental concreto: abejas nativas que mueren en las flores de <i>Spathodea campanulata</i> (tulipán africano), un árbol introducido muy usado como ornamental.</p>
-    <p><b>De dónde nace.</b> Es un caso real del campus de Zamorano, estudiado en dos trabajos de graduación: Osorio (2025) censó los árboles de Spathodea del campus y midió su copa; Kuniyoshi (2025) siguió su floración y registró abejas muertas en sus flores. Trofaxis usa ese caso como primer problema resuelto de punta a punta.</p>
+    <p><b>De dónde nace.</b> Es un caso real del campus de Zamorano, estudiado en dos trabajos de graduación: Osorio (2025) censó los árboles de Spathodea del campus y midió su copa; Kuniyoshi (2026) siguió su floración y registró abejas muertas en sus flores. Trofaxis usa ese caso como primer problema resuelto de punta a punta.</p>
     <p><b>Qué resuelve.</b> Te dice, con tus propios datos:</p>
     <ul><li>qué tan en riesgo están las abejas de tu finca y por qué;</li>
       <li>dónde están los árboles que más pesan (los de más copa);</li>

@@ -29,9 +29,20 @@ test('el cerebro lee los mismos valores que usan las fórmulas (sin copiar cifra
   assert.equal(HECHOS.filter((x) => x.id.startsWith('plag.dl50.')).length, INGREDIENTES.length);
 });
 
-test('ningún hecho cita a Osorio, Kuniyoshi o Tejeda mientras sus datos no estén cargados', () => {
-  for (const h of HECHOS) assert.ok(!/osorio|kuniyoshi|tejeda/i.test(h.fuente?.cita ?? ''), h.id);
+test('los datos de Osorio y Kuniyoshi entran con su página o sección; Tejeda no se cita', () => {
+  const tesis = HECHOS.filter((h) => /osorio|kuniyoshi/i.test(h.fuente?.cita ?? ''));
+  assert.ok(tesis.length >= 10, 'datos de las dos tesis cargados');
+  for (const h of tesis) assert.ok(h.pagina?.trim(), `${h.id}: falta la página o la sección`);
+  assert.ok(tesis.some((h) => /2026/.test(h.fuente.cita) && /Kuniyoshi/.test(h.fuente.cita)), 'Kuniyoshi es de 2026 (portada: agosto de 2026)');
+  for (const h of HECHOS) assert.ok(!/tejeda/i.test(h.fuente?.cita ?? ''), h.id);
   assert.ok(PENDIENTES.some((p) => /Tejeda/.test(p.fuente)));
+  assert.ok(!PENDIENTES.some((p) => /Osorio|Kuniyoshi/.test(p.fuente)));
+});
+
+test('ningún dato de las tesis trae coordenadas', () => {
+  for (const h of HECHOS.filter((x) => x.id.startsWith('poli.osorio.') || x.id.startsWith('poli.kuniyoshi.'))) {
+    assert.ok(!/\b\d{6,7}\b|\b1[34]\.\d{3,}|-8[67]\.\d{3,}/.test(`${h.valor} ${h.nota}`), h.id);
+  }
 });
 
 test('cada tema tiene hechos y el resumen cuadra con el total', () => {
