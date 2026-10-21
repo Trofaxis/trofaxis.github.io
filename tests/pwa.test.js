@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -77,6 +78,24 @@ test('el app shell incluye todos los JavaScript, estilos y fuentes dentro de src
   recorrer('src');
   const faltantes = recursosFuente.filter((recurso) => !shell.has(recurso));
   assert.deepEqual(faltantes, [], `faltan recursos de src en APP_SHELL: ${faltantes.join(', ')}`);
+});
+
+test('la versión de caché cambia si cambia el contenido de cualquier recurso del app shell', () => {
+  const sw = leer('sw.js');
+  const shell = JSON.parse(sw.match(/const APP_SHELL = (\[[\s\S]*?\]);/)[1]);
+  const hash = createHash('sha256');
+  for (const recurso of shell) {
+    const ruta = recurso === '/' ? 'index.html' : path.normalize(recurso.replace(/^\//, ''));
+    const bytes = fs.readFileSync(ruta);
+    const contenido = /\.(?:png|woff2)$/i.test(ruta)
+      ? bytes
+      : bytes.toString('utf8').replace(/\r\n?/g, '\n');
+    hash.update(recurso).update('\0').update(contenido).update('\0');
+  }
+  const versionEsperada = `trofaxis-shell-${hash.digest('hex').slice(0, 12)}`;
+  const versionActual = sw.match(/const CACHE_NAME = '([^']+)'/);
+  assert.ok(versionActual, 'falta CACHE_NAME');
+  assert.equal(versionActual[1], versionEsperada, `CACHE_NAME debe ser '${versionEsperada}'; actualízalo si cambió un recurso del APP_SHELL`);
 });
 
 test('el service worker nunca maneja ni almacena respuestas externas', () => {
@@ -199,6 +218,40 @@ test('el service worker consulta primero la red para cada archivo del app shell 
   assert.equal(await respaldo, versionAnterior, 'si falla la red, debe servir la copia guardada');
 });
 
+test('el service worker revalida por HTTP los recursos propios antes de usar su copia sin conexión', async () => {
+  const listeners = {};
+  const cacheUsada = [];
+  const respuesta = { ok: true, type: 'basic', clone() { return this; } };
+  const contexto = {
+    URL,
+    Promise,
+    fetch: async (request, opciones) => { cacheUsada.push(opciones?.cache); return respuesta; },
+    caches: {
+      match: async () => null,
+      open: async () => ({ addAll: async () => {}, put: async () => {} }),
+      keys: async () => [],
+      delete: async () => true,
+    },
+    self: {
+      location: { origin: 'https://trofaxis.github.io' },
+      clients: { claim: async () => {} },
+      addEventListener: (tipo, callback) => { listeners[tipo] = callback; },
+      skipWaiting: async () => {},
+    },
+  };
+  vm.runInNewContext(leer('sw.js'), contexto);
+
+  for (const solicitud of [
+    { url: 'https://trofaxis.github.io/src/app.js', method: 'GET', mode: 'cors' },
+    { url: 'https://trofaxis.github.io/', method: 'GET', mode: 'navigate' },
+  ]) {
+    let promesa;
+    listeners.fetch({ request: solicitud, respondWith: (valor) => { promesa = valor; } });
+    assert.equal(await promesa, respuesta);
+  }
+  assert.deepEqual(cacheUsada, ['no-cache', 'no-cache']);
+});
+
 test('el service worker consulta primero la red para navegar y usa la copia guardada si falla', async () => {
   const listeners = {};
   const paginaAnterior = { version: 'guardada' };
@@ -249,7 +302,7 @@ test('sin red anuncia la finca local y el texto correspondiente a la sesión', (
     };
     const registro = { waiting: null, installing: null, addEventListener: () => {}, update: () => Promise.resolve() };
     const entorno = {
-      document: { getElementById: (id) => nodos[id] },
+      document: { visibilityState: 'visible', activeElement: null, getElementById: (id) => nodos[id], addEventListener: () => {} },
       localStorage: { getItem: (clave) => valores[clave] ?? null },
       navigator: { onLine: false, serviceWorker: { controller: null, addEventListener: () => {}, register: () => Promise.resolve(registro) } },
       window: { addEventListener: (tipo, callback) => { eventos[tipo] = callback; }, location: { reload: () => {} } },
@@ -274,4 +327,137 @@ test('al recuperar la conexión la sesión compara o sube los cambios locales', 
   const app = leer('src/app.js');
   assert.match(app, /addEventListener\('online'/);
   assert.match(app, /if\(S\.nube\.listo\)subidor\.pedir\(\);else sincronizarAlEntrar\(\)/);
+});
+
+async function abrirPwaConRegistro({ workerEnEspera = null } = {}) {
+  const eventosVentana = {};
+  const eventosDocumento = {};
+  const eventosRegistro = {};
+  const eventosAccion = {};
+  const mensajes = [];
+  let tiempo = 100_000;
+  let llamadasRegistro = 0;
+  let llamadasUpdate = 0;
+  let recargas = 0;
+  const registro = {
+    waiting: workerEnEspera,
+    installing: null,
+    addEventListener: (tipo, callback) => { eventosRegistro[tipo] = callback; },
+    update: () => { llamadasUpdate += 1; return Promise.resolve(); },
+  };
+  if (workerEnEspera) workerEnEspera.postMessage = (mensaje) => mensajes.push(mensaje);
+  const nodos = {
+    'estado-pwa': { hidden: true },
+    'mensaje-pwa': { textContent: '' },
+    'accion-pwa': {
+      hidden: true,
+      textContent: '',
+      dataset: {},
+      addEventListener: (tipo, callback) => { eventosAccion[tipo] = callback; },
+    },
+  };
+  const document = {
+    visibilityState: 'visible',
+    activeElement: null,
+    getElementById: (id) => nodos[id],
+    addEventListener: (tipo, callback) => { eventosDocumento[tipo] = callback; },
+  };
+  class FechaFalsa { static now() { return tiempo; } }
+  const entorno = {
+    document,
+    localStorage: { getItem: () => null },
+    navigator: {
+      onLine: true,
+      serviceWorker: {
+        controller: {},
+        addEventListener: (tipo, callback) => { eventosVentana[`serviceWorker:${tipo}`] = callback; },
+        register: () => { llamadasRegistro += 1; return Promise.resolve(registro); },
+      },
+    },
+    window: {
+      addEventListener: (tipo, callback) => { eventosVentana[tipo] = callback; },
+      location: { reload: () => { recargas += 1; } },
+    },
+    Date: FechaFalsa,
+    Promise,
+  };
+  vm.runInNewContext(leer('pwa.js'), entorno);
+  await Promise.resolve();
+  await Promise.resolve();
+  return {
+    nodos, document, registro, mensajes,
+    llamadasUpdate: () => llamadasUpdate,
+    llamadasRegistro: () => llamadasRegistro,
+    recargas: () => recargas,
+    fijarTiempo: (nuevo) => { tiempo = nuevo; },
+    emitirDocumento: (tipo, evento = {}) => eventosDocumento[tipo]?.(evento),
+    emitirVentana: (tipo, evento = {}) => eventosVentana[tipo]?.(evento),
+    emitirAccion: (tipo, evento = {}) => eventosAccion[tipo]?.(evento),
+  };
+}
+
+test('busca actualizaciones al abrir y volver al frente con un máximo de una consulta por minuto', async () => {
+  const pwa = await abrirPwaConRegistro();
+  assert.equal(pwa.llamadasRegistro(), 1, 'al abrir, el registro del service worker comprueba la versión publicada');
+  assert.equal(pwa.llamadasUpdate(), 0, 'no duplica la consulta que ya hace register() al abrir');
+
+  pwa.document.visibilityState = 'hidden';
+  pwa.emitirDocumento('visibilitychange');
+  pwa.document.visibilityState = 'visible';
+  pwa.fijarTiempo(130_000);
+  pwa.emitirDocumento('visibilitychange');
+  pwa.emitirVentana('pageshow', { persisted: true });
+  assert.equal(pwa.llamadasUpdate(), 0, 'los eventos dentro del minuto se agrupan con la comprobación de apertura');
+
+  pwa.fijarTiempo(160_000);
+  pwa.emitirDocumento('visibilitychange');
+  assert.equal(pwa.llamadasUpdate(), 1, 'una vez transcurrido el minuto vuelve a revisar');
+  pwa.emitirVentana('pageshow', { persisted: true });
+  pwa.emitirVentana('pageshow', { persisted: false });
+  assert.equal(pwa.llamadasUpdate(), 1, 'pageshow repetidos no superan el límite ni fuerzan una revisión');
+});
+
+test('no recarga sin que la persona toque «Actualizar» y recarga solo una vez tras activarlo', async () => {
+  const worker = {};
+  const pwa = await abrirPwaConRegistro({ workerEnEspera: worker });
+  assert.equal(pwa.nodos['estado-pwa'].hidden, false);
+  assert.match(pwa.nodos['mensaje-pwa'].textContent, /Hay una versión nueva/);
+  pwa.emitirVentana('serviceWorker:controllerchange');
+  assert.equal(pwa.recargas(), 0, 'el aviso por sí solo no recarga');
+
+  pwa.emitirAccion('click');
+  assert.equal(pwa.mensajes.length, 1);
+  assert.equal(pwa.mensajes[0].type, 'SKIP_WAITING');
+  pwa.emitirVentana('serviceWorker:controllerchange');
+  pwa.emitirVentana('serviceWorker:controllerchange');
+  assert.equal(pwa.recargas(), 1, 'la elección de actualizar produce una sola recarga');
+});
+
+test('si se toca actualizar desde un campo activo, conserva la página hasta que la persona decida de nuevo', async () => {
+  const worker = {};
+  const pwa = await abrirPwaConRegistro({ workerEnEspera: worker });
+  const campo = { tagName: 'INPUT', type: 'text' };
+  pwa.document.activeElement = campo;
+  pwa.emitirDocumento('pointerdown', { target: pwa.nodos['accion-pwa'] });
+  pwa.document.activeElement = pwa.nodos['accion-pwa'];
+  pwa.emitirAccion('click');
+
+  assert.equal(pwa.recargas(), 0);
+  assert.equal(pwa.mensajes.length, 0, 'no activa el worker mientras se edita');
+  assert.match(pwa.nodos['mensaje-pwa'].textContent, /Termina o guarda lo que estás escribiendo/);
+
+  pwa.emitirAccion('click');
+  assert.equal(pwa.mensajes.length, 1, 'la persona puede actualizar al volver al aviso');
+  assert.equal(pwa.mensajes[0].type, 'SKIP_WAITING');
+});
+
+test('también protege la edición cuando se llega al aviso con el teclado', async () => {
+  const worker = {};
+  const pwa = await abrirPwaConRegistro({ workerEnEspera: worker });
+  const campo = { tagName: 'TEXTAREA', type: '' };
+  pwa.emitirDocumento('focusout', { target: campo, relatedTarget: pwa.nodos['accion-pwa'] });
+  pwa.document.activeElement = pwa.nodos['accion-pwa'];
+  pwa.emitirAccion('click');
+  assert.equal(pwa.mensajes.length, 0);
+  assert.match(pwa.nodos['mensaje-pwa'].textContent, /Termina o guarda lo que estás escribiendo/);
 });

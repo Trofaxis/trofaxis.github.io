@@ -7,6 +7,13 @@ const accion = document.getElementById('accion-pwa');
 let instalacionPendiente = null;
 let workerEnEspera = null;
 let recargarAlCambiar = false;
+let recargaSolicitada = false;
+let activandoActualizacion = false;
+let actualizacionPospuestaPorEdicion = false;
+let registroPwa = null;
+let ultimaBusquedaActualizacion = null;
+let busquedaActualizacion = null;
+const INTERVALO_BUSQUEDA_ACTUALIZACION = 60_000;
 
 function hayFincaGuardada() {
   try {
@@ -41,6 +48,36 @@ function ocultar() {
   accion.dataset.accion = '';
 }
 
+function esCampoEditable(elemento) {
+  if (!elemento) return false;
+  if (elemento.isContentEditable) return true;
+  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(elemento.tagName)) return false;
+  return !['button', 'submit', 'reset'].includes((elemento.type || '').toLowerCase());
+}
+
+function esAccionActualizar(elemento) {
+  return elemento === accion || Boolean(accion.contains?.(elemento));
+}
+
+function buscarActualizacion() {
+  if (!registroPwa || typeof registroPwa.update !== 'function') return Promise.resolve();
+  if (busquedaActualizacion) return busquedaActualizacion;
+  const ahora = Date.now();
+  if (ultimaBusquedaActualizacion !== null && ahora - ultimaBusquedaActualizacion < INTERVALO_BUSQUEDA_ACTUALIZACION) {
+    return Promise.resolve();
+  }
+  ultimaBusquedaActualizacion = ahora;
+  try {
+    busquedaActualizacion = Promise.resolve(registroPwa.update())
+      .catch(() => {})
+      .finally(() => { busquedaActualizacion = null; });
+  } catch {
+    busquedaActualizacion = null;
+    return Promise.resolve();
+  }
+  return busquedaActualizacion;
+}
+
 function actualizarAviso() {
   if (!navigator.onLine) {
     const finca = hayFincaGuardada()
@@ -66,6 +103,27 @@ function actualizarAviso() {
 window.addEventListener('offline', actualizarAviso);
 window.addEventListener('online', actualizarAviso);
 window.addEventListener('storage', actualizarAviso);
+window.addEventListener('online', () => { void buscarActualizacion(); });
+window.addEventListener('pageshow', (evento) => {
+  if (evento.persisted) void buscarActualizacion();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void buscarActualizacion();
+});
+document.addEventListener('pointerdown', (evento) => {
+  if (accion.dataset.accion === 'actualizar'
+    && esAccionActualizar(evento.target)
+    && esCampoEditable(document.activeElement)) {
+    actualizacionPospuestaPorEdicion = true;
+  }
+}, true);
+document.addEventListener('focusout', (evento) => {
+  if (accion.dataset.accion === 'actualizar'
+    && esCampoEditable(evento.target)
+    && esAccionActualizar(evento.relatedTarget)) {
+    actualizacionPospuestaPorEdicion = true;
+  }
+}, true);
 
 window.addEventListener('beforeinstallprompt', (evento) => {
   evento.preventDefault();
@@ -84,18 +142,31 @@ accion.addEventListener('click', async () => {
     instalacionPendiente = null;
     await evento.prompt();
     actualizarAviso();
-  } else if (accion.dataset.accion === 'actualizar' && workerEnEspera) {
+  } else if (accion.dataset.accion === 'actualizar' && workerEnEspera && !activandoActualizacion) {
+    const estabaEditando = actualizacionPospuestaPorEdicion || esCampoEditable(document.activeElement);
+    actualizacionPospuestaPorEdicion = false;
+    if (estabaEditando) {
+      mostrar('Termina o guarda lo que estás escribiendo antes de actualizar.', 'Actualizar', 'actualizar');
+      return;
+    }
     recargarAlCambiar = true;
+    activandoActualizacion = true;
     workerEnEspera.postMessage({ type: 'SKIP_WAITING' });
   }
 });
 
 if ('serviceWorker' in navigator) {
+  // register() ya solicita una comprobación al abrir; cuenta para el límite de frecuencia.
+  ultimaBusquedaActualizacion = Date.now();
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (recargarAlCambiar) window.location.reload();
+    if (recargarAlCambiar && !recargaSolicitada) {
+      recargaSolicitada = true;
+      window.location.reload();
+    }
   });
 
   navigator.serviceWorker.register('./sw.js', { scope: '/' }).then((registro) => {
+    registroPwa = registro;
     const revisarWorker = () => {
       if (registro.waiting && navigator.serviceWorker.controller) {
         workerEnEspera = registro.waiting;
@@ -110,7 +181,6 @@ if ('serviceWorker' in navigator) {
         if (nuevo.state === 'installed') revisarWorker();
       });
     });
-    window.addEventListener('online', () => registro.update().catch(() => {}));
   }).catch(() => {
     // Si el navegador no permite service workers, la versión web sigue funcionando.
   });

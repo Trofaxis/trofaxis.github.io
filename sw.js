@@ -1,6 +1,6 @@
 // Este prefijo agrupa las cachés propias para retirar versiones anteriores.
 const CACHE_PREFIX = 'trofaxis-shell-';
-const CACHE_NAME = 'trofaxis-shell-2026-10-20-pwa1';
+const CACHE_NAME = 'trofaxis-shell-f1d4264ca689';
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -115,7 +115,7 @@ self.addEventListener('message', (evento) => {
 });
 
 async function consultarRed(request) {
-  const respuesta = await fetch(request);
+  const respuesta = await fetch(request, { cache: 'no-cache' });
   if (respuesta.ok && respuesta.type === 'basic') {
     try {
       const cache = await caches.open(CACHE_NAME);
