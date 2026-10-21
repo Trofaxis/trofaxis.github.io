@@ -22,6 +22,9 @@ export function guardarCuenta(c) {
   try { localStorage.setItem(CLAVE, JSON.stringify(normalizarCuenta(c))); return true; } catch { return false; }
 }
 
+// Borrar cuenta elimina el dato recordado, pero no borra la finca ni el mapa de este equipo.
+export function borrarCuentaRecordada() { try { localStorage.removeItem(CLAVE); } catch { /* sin almacenamiento */ } }
+
 // La entrada sale al abrir la app si la nube está activa, no hay sesión, no es la bienvenida de primera vez
 // y el usuario no eligió «Seguir sin cuenta».
 export function mostrarEntrada({ nubeActiva, sesion, vista, cuenta }) {

@@ -61,6 +61,7 @@ const APP_SHELL = [
   "/src/modules/suelo.js",
   "/src/modules/troficas.js",
   "/src/nube/cliente.js",
+  "/src/nube/borrar-cuenta.js",
   "/src/nube/sincronia.js",
   "/src/plag/calculo.js",
   "/src/plag/catalogo.js",

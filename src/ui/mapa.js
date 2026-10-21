@@ -392,6 +392,14 @@ function bajarRespaldo() {
   msg = 'Se descargó el respaldo del mapa y del censo. Guárdalo en un lugar privado: lleva coordenadas exactas.';
   rerender();
 }
+
+// El menú de cuenta también puede ofrecer una copia del mapa sin salir de la confirmación de borrado.
+export function descargarRespaldoMapa() {
+  if (!hayDatosPropios(U)) return false;
+  bajarRespaldo();
+  return true;
+}
+
 function subirRespaldo() {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.json,application/json';

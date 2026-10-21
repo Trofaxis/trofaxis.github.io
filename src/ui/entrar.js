@@ -47,6 +47,7 @@ export function htmlCuenta() {
       <button type="button" role="menuitem" data-view="ajustes">Ajustes</button>
       ${ses ? '<button type="button" role="menuitem" data-view="casos">Mi finca en la nube</button>' : ''}
       <a role="menuitem" href="privacidad/">Política de privacidad</a>
+      ${ses ? '<button type="button" role="menuitem" data-act="cuenta-borrar">Borrar cuenta</button>' : ''}
       <hr>
       ${ses ? '<button type="button" role="menuitem" data-act="cuenta-salir">Cerrar sesión</button>' : '<button type="button" role="menuitem" data-act="cuenta-entrar">Iniciar sesión</button>'}
     </div>` : '';
@@ -57,7 +58,23 @@ export function htmlCuenta() {
       <div class="cta-tarjeta cta-fija">${avatar(email)}${quien(email)}</div>
       <div class="row cta-acciones"><button type="button" class="btn" data-act="salir-cancelar">Cancelar</button><button type="button" class="btn danger-solido" data-act="salir-confirmar">Cerrar sesión</button></div>
     </div>` : '';
+  const uiBorrar = S.borrarCuentaUI;
+  const confirmarBorrar = uiBorrar.abierto && ses ? `<div class="cta-fondo" data-act="cuenta-borrar-cancelar"></div>
+    <div class="cta-dialogo" role="alertdialog" aria-modal="true" aria-labelledby="cta-borrar-t" aria-describedby="cta-borrar-detalle">
+      <h2 id="cta-borrar-t">¿Borrar tu cuenta de Trofaxis?</h2>
+      <div id="cta-borrar-detalle">
+        <p class="muted">La cuenta que se borrará es <b>${esc(email)}</b>. También se eliminarán tu finca guardada en la nube y tus casos compartidos.</p>
+        <p class="muted">La finca, el mapa y el censo de este equipo se conservarán. Las respuestas anónimas de bienvenida no se borran.</p>
+      </div>
+      <div class="row cta-acciones">
+        <button type="button" class="btn sm" data-act="export" ${uiBorrar.ocupado ? 'disabled' : ''}>Exportar finca</button>
+        <button type="button" class="btn sm" data-act="cuenta-borrar-mapa" ${uiBorrar.ocupado ? 'disabled' : ''}>Guardar mapa y censo</button>
+      </div>
+      <div class="f"><label for="cuenta-borrar-confirmacion">Para continuar, escribe BORRAR</label><input id="cuenta-borrar-confirmacion" type="text" autocomplete="off" autocapitalize="characters" value="${esc(uiBorrar.texto)}" ${uiBorrar.ocupado ? 'disabled' : ''}></div>
+      ${uiBorrar.error ? `<p class="notice" role="alert">${esc(uiBorrar.error)}</p>` : ''}
+      <div class="row cta-acciones"><button type="button" class="btn" data-act="cuenta-borrar-cancelar" ${uiBorrar.ocupado ? 'disabled' : ''}>Cancelar</button><button type="button" id="cuenta-borrar-confirmar" class="btn danger-solido" data-act="cuenta-borrar-confirmar" ${uiBorrar.texto !== 'BORRAR' || uiBorrar.ocupado ? 'disabled' : ''}>${uiBorrar.ocupado ? 'Borrando…' : 'Borrar cuenta'}</button></div>
+    </div>` : '';
   const cara = ses ? `${avatar(email)}<span class="cta-quien"><b>${esc(email.split('@')[0])}</b><span class="small">${esc(email)}</span></span>`
     : `${avatar('?', 'cta-vacio')}<span class="cta-quien"><b>Sin cuenta</b><span class="small">Entrar o cambiar tema</span></span>`;
-  return `<button type="button" class="cta-boton" data-act="cuenta-menu" aria-haspopup="menu" aria-expanded="${S.cuentaMenu ? 'true' : 'false'}" aria-label="Cuenta y tema">${cara}</button>${menu}${confirmar}`;
+  return `<button type="button" class="cta-boton" data-act="cuenta-menu" aria-haspopup="menu" aria-expanded="${S.cuentaMenu ? 'true' : 'false'}" aria-label="Cuenta y tema">${cara}</button>${menu}${confirmar}${confirmarBorrar}`;
 }

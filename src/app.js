@@ -10,12 +10,12 @@ import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { aplicarRapido } from './core/rapido.js';
 import { viewBienvenida, PASOS_BV } from './ui/bienvenida.js';
 import { viewEntrar, htmlCuenta } from './ui/entrar.js';
-import { leerCuenta, guardarCuenta, mostrarEntrada } from './core/cuenta.js';
+import { leerCuenta, guardarCuenta, borrarCuentaRecordada, mostrarEntrada } from './core/cuenta.js';
 import { mostrarBienvenida, guardarBienvenida, leerBienvenida } from './core/bienvenida.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewCasos } from './ui/casos.js';
-import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual } from './ui/mapa.js';
+import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual, descargarRespaldoMapa } from './ui/mapa.js';
 import { descargarImagenPlan } from './ui/plan-imagen.js';
 import { apiRadar } from './apiradar/diagnostico.js';
 import { marcarManual } from './ui/clima.js';
@@ -25,6 +25,7 @@ import { nombreCultivoPrincipal } from './casos/perfil.js';
 import { casoAnonimo } from './casos/anonimo.js';
 import { decidirAlEntrar, debeSubir, huella } from './nube/sincronia.js';
 import { crearCliente, cargarSesion, guardarSesion, borrarSesion, sesionDeHash, necesitaRenovar, ErrorNube } from './nube/cliente.js';
+import { borrarCuentaRemota, ErrorBorrarCuenta } from './nube/borrar-cuenta.js';
 import { riegoVacio } from './riego/calculo.js';
 import { riegoInicial } from './riego/guardado.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
@@ -73,27 +74,40 @@ function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.r
 const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());if(S.nube.sesion)subidor.pedir();});
 // Con sesión iniciada, la finca también se sube sola a la nube unos segundos después del último cambio.
 const subidor=crearGuardado(()=>{subirSola();},{espera:4000});
+let subidaEnCurso=null;
+let sincronizacionEnCurso=null;
 async function subirSola(){
   const n=S.nube;
-  if(!nube.activo||!debeSubir({sesion:n.sesion,listo:n.listo,local:S.farm,demo:S.demo,conflicto:n.conflicto,ultima:n.ultima}))return;
-  try{const ses=await sesionLista();if(!ses)return;const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.estado='Guardada en la nube.';}
-  catch(err){if(err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}n.estado='No se pudo subir a la nube; se reintentará con el próximo cambio.';}
-  if(S.view==='casos')render();
+  if(n.borrandoCuenta||!nube.activo||!debeSubir({sesion:n.sesion,listo:n.listo,local:S.farm,demo:S.demo,conflicto:n.conflicto,ultima:n.ultima}))return;
+  if(subidaEnCurso)return subidaEnCurso;
+  const trabajo=(async()=>{
+    try{const ses=await sesionLista();if(!ses||n.borrandoCuenta)return;const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.estado='Guardada en la nube.';}
+    catch(err){if(err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}n.estado='No se pudo subir a la nube; se reintentará con el próximo cambio.';}
+    if(S.view==='casos')render();
+  })();
+  subidaEnCurso=trabajo;
+  try{await trabajo;}finally{if(subidaEnCurso===trabajo)subidaEnCurso=null;}
 }
 // Al entrar (o abrir la app con sesión) se compara la finca de este navegador con la de la nube.
 async function sincronizarAlEntrar(){
   const n=S.nube;
-  try{
-    const ses=await sesionLista();if(!ses)return;
-    const enNube=await nube.cargarFinca(ses);
-    const paso=decidirAlEntrar({local:S.farm,demo:S.demo,enNube});
-    if(paso==='cargar'){S.farm=enNube;S.demo=false;S.done={};n.ultima=huella(enNube);S.msg=`Se cargó tu finca "${enNube.nombre||'sin nombre'}" desde la nube.`;}
-    else if(paso==='conflicto'){n.conflicto=true;n.ultima=huella(enNube);}
-    else if(paso==='nada'&&enNube)n.ultima=huella(enNube);
-    n.listo=true;
-    if(paso==='subir')subidor.pedir();
-  }catch(err){if(err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}}
-  render();
+  if(n.borrandoCuenta)return;
+  if(sincronizacionEnCurso)return sincronizacionEnCurso;
+  const trabajo=(async()=>{
+    try{
+      const ses=await sesionLista();if(!ses||n.borrandoCuenta)return;
+      const enNube=await nube.cargarFinca(ses);if(n.borrandoCuenta)return;
+      const paso=decidirAlEntrar({local:S.farm,demo:S.demo,enNube});
+      if(paso==='cargar'){S.farm=enNube;S.demo=false;S.done={};n.ultima=huella(enNube);S.msg=`Se cargó tu finca "${enNube.nombre||'sin nombre'}" desde la nube.`;}
+      else if(paso==='conflicto'){n.conflicto=true;n.ultima=huella(enNube);}
+      else if(paso==='nada'&&enNube)n.ultima=huella(enNube);
+      n.listo=true;
+      if(paso==='subir')subidor.pedir();
+    }catch(err){if(!n.borrandoCuenta&&err instanceof ErrorNube&&err.estado===401){borrarSesion();n.sesion=null;}}
+    if(!n.borrandoCuenta)render();
+  })();
+  sincronizacionEnCurso=trabajo;
+  try{await trabajo;}finally{if(sincronizacionEnCurso===trabajo)sincronizacionEnCurso=null;}
 }
 addEventListener('pagehide',()=>guardador.ahora());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')guardador.ahora();});
@@ -259,7 +273,44 @@ const accionesCuenta = {
   'cuenta-salir': () => { S.cuentaMenu = false; S.confirmarSalir = true; },
   'salir-cancelar': () => { S.confirmarSalir = false; },
   'salir-confirmar': () => { S.confirmarSalir = false; nubeAccion('nube-salir'); return false; },
+  'cuenta-borrar': () => {
+    if (!S.nube.sesion) return;
+    S.cuentaMenu = false;
+    S.borrarCuentaUI = { abierto: true, texto: '', error: '', ocupado: false };
+  },
+  'cuenta-borrar-cancelar': () => {
+    if (S.borrarCuentaUI.ocupado) return false;
+    S.borrarCuentaUI = { abierto: false, texto: '', error: '', ocupado: false };
+  },
+  'cuenta-borrar-mapa': () => {
+    if (!descargarRespaldoMapa()) { S.msg = 'No hay mapa ni censo propio para guardar.'; render(); }
+    return false;
+  },
+  'cuenta-borrar-confirmar': () => { void borrarCuentaConfirmada(); return false; },
 };
+
+async function borrarCuentaConfirmada(){
+  if(!S.nube.sesion||S.borrarCuentaUI.texto!=='BORRAR'||S.borrarCuentaUI.ocupado)return;
+  S.nube.borrandoCuenta=true;
+  S.borrarCuentaUI.ocupado=true;S.borrarCuentaUI.error='';render();
+  try{
+    if(S.nube.ocupado)throw new ErrorBorrarCuenta('Espera a que termine la acción de la nube y vuelve a intentar.');
+    // Deja terminar operaciones ya iniciadas antes de borrar; las subidas nuevas se detienen hasta finalizar.
+    if(sincronizacionEnCurso)await sincronizacionEnCurso;
+    if(subidaEnCurso)await subidaEnCurso;
+    const sesion=S.nube.sesion;
+    if(!sesion)throw new ErrorBorrarCuenta('Tu sesión ya no está disponible. Inicia sesión e inténtalo de nuevo.',401);
+    await borrarCuentaRemota(sesion);
+    borrarSesion();borrarCuentaRecordada();
+    S.nube.sesion=null;S.nube.listo=false;S.nube.conflicto=false;S.nube.ultima='';S.nube.estado='';
+    S.cuenta={email:'',proveedor:'',sinCuenta:false};S.cuentaMenu=false;
+    S.borrarCuentaUI={abierto:false,texto:'',error:'',ocupado:false};
+    S.view='dashboard';S.msg='La cuenta se borró. La finca, el mapa y el censo de este equipo se conservaron.';
+  }catch(error){
+    S.borrarCuentaUI.ocupado=false;
+    S.borrarCuentaUI.error=error instanceof ErrorBorrarCuenta?error.message:'No se pudo borrar la cuenta. Los datos de este equipo siguen intactos. Inténtalo de nuevo o escribe a support.trofaxis@gmail.com.';
+  }finally{S.nube.borrandoCuenta=false;render();}
+}
 const accionesBienvenida = {
   'bv-siguiente': () => { S.bv.paso = Math.min(PASOS_BV.length - 1, S.bv.paso + 1); },
   'bv-atras': () => { S.bv.paso = Math.max(0, S.bv.paso - 1); },
@@ -436,12 +487,16 @@ document.addEventListener('click',e=>{
   if(Object.hasOwn(ACCIONES,act)&&ACCIONES[act](a,S.farm)===false)return;
   render();if(ACCIONES_QUE_SUBEN.has(act))window.scrollTo(0,0);
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.cuentaMenu||S.confirmarSalir)){S.cuentaMenu=false;S.confirmarSalir=false;render();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.cuentaMenu||S.confirmarSalir||S.borrarCuentaUI.abierto)){if(S.borrarCuentaUI.ocupado)return;S.cuentaMenu=false;S.confirmarSalir=false;S.borrarCuentaUI={abierto:false,texto:'',error:'',ocupado:false};render();}});
 function bindValue(el){const[o,k]=getRef(el.dataset.bind);
   if('lines' in el.dataset)o[k]=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
   else if(el.type==='checkbox')o[k]=el.checked;else if(el.type==='number')o[k]=el.value===''?('nullable' in el.dataset?null:0):Number(el.value);else if(el.tagName==='SELECT'&&el.value===''&&'nullable' in el.dataset)o[k]=null;else o[k]=el.value;
   if(el.dataset.bind.startsWith('farm.'))S.demo=false;}
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardador.pedir();}});
+document.addEventListener('input',e=>{if(e.target.id==='cuenta-borrar-confirmacion'){
+  S.borrarCuentaUI.texto=e.target.value;S.borrarCuentaUI.error='';
+  const boton=document.getElementById('cuenta-borrar-confirmar');if(boton)boton.disabled=e.target.value!=='BORRAR';
+  return;
+}if(e.target.dataset&&e.target.dataset.bind){bindValue(e.target);guardador.pedir();}});
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset&&el.dataset.done!==undefined){S.done[el.dataset.done]=el.checked;render();return;}
   if(!el.dataset||!el.dataset.bind)return;bindValue(el);

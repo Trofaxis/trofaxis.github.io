@@ -12,34 +12,38 @@
 <body>
   <main class="admin-main"><section class="card">
     <h1>Política de privacidad de Trofaxis</h1>
-    <p class="muted small">Última actualización: 20 de octubre de 2026. Trofaxis es una herramienta del proyecto CADS (Zamorano) para evaluar el riesgo ambiental de fincas.</p>
+    <p class="muted small">Última actualización: 21 de octubre de 2026. Trofaxis es una herramienta del proyecto CADS (Zamorano) para evaluar el riesgo ambiental de fincas.</p>
 
     <h2>Sin iniciar sesión</h2>
     <p>Todo lo que escribes se guarda solo en tu navegador. Nada sale de tu equipo, salvo lo que se describe abajo para el clima y el mapa.</p>
 
     <h2>Si inicias sesión (con Google o con un enlace a tu correo)</h2>
     <ul>
-      <li>Se crea una cuenta con tu correo. Con Google, Trofaxis solo recibe tu correo, tu nombre y tu foto de perfil; no lee tu Gmail ni tus archivos.</li>
-      <li>Mientras la sesión esté abierta, tu finca se guarda sola en la nube (Supabase) para que la tengas en otros equipos. La finca de ejemplo nunca se sube.</li>
+      <li>La cuenta se administra con Supabase Auth y puedes entrar con Google o con un enlace de un solo uso enviado a tu correo. Con Google, Trofaxis recibe tu correo, tu nombre y tu foto de perfil; no lee tu Gmail ni tus archivos.</li>
+      <li>Mientras la sesión esté abierta, tu finca se guarda sola en la nube de Supabase para que la tengas en otros equipos. La finca de ejemplo nunca se sube.</li>
       <li>Tu finca en la nube no es pública. La ves tú y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas. Sí ve los textos que escribas en la finca (por ejemplo, acciones o fuente de agua): no pongas ahí nombres de personas ni lugares. Cada consulta del administrador queda registrada.</li>
       <li>Si no quieres que tu finca se suba, cierra la sesión: sin sesión nada sale de tu navegador.</li>
-      <li>Las coordenadas del mapa nunca salen de tu navegador.</li>
+      <li>La finca, el mapa y el censo se guardan en este equipo. Las coordenadas exactas del mapa no se guardan en Supabase ni se envían a Open-Meteo.</li>
     </ul>
 
     <h2>Casos compartidos</h2>
-    <p>Solo si marcas el consentimiento y pulsas «Compartir mi caso anónimo» se publica un resumen de tu finca sin nombre, sin lugar y sin coordenadas. Puedes ver antes exactamente qué se envía y retirarlo cuando quieras.</p>
+    <p>Solo si marcas el consentimiento y pulsas «Compartir mi caso anónimo» se publica un resumen sin nombre, lugar ni coordenadas. Supabase conserva la asociación privada con tu cuenta para que puedas retirar los casos y para borrarlos si eliminas la cuenta; esa asociación no aparece en la consulta pública. Puedes ver antes exactamente qué contenido se envía.</p>
+
+    <h2>Respuestas de bienvenida</h2>
+    <p>Si respondes cómo conociste Trofaxis y para qué la usarás, esas respuestas se envían a Supabase de forma anónima. No se envían con tu sesión, correo, finca ni ubicación, y no se pueden asociar a tu cuenta. Por eso no se borran al eliminar una cuenta.</p>
 
     <h2>Servicios externos</h2>
     <ul>
-      <li><b>Open-Meteo</b>: al pedir el clima de tu ubicación se envía la latitud y la longitud redondeadas a 2 decimales (cerca de 1 km).</li>
-      <li><b>EOX</b>: las imágenes del mapa se descargan de sus servidores.</li>
-      <li><b>Supabase</b>: guarda las cuentas, las fincas y los casos compartidos.</li>
+      <li><b>Open-Meteo</b>: al pedir el clima se envían la latitud y la longitud redondeadas a 2 decimales (aproximadamente 1 km de precisión), además de la solicitud de clima. No se envían las coordenadas exactas del mapa.</li>
+      <li><b>EOX</b>: el mapa pide imágenes de teselas para el área que estás viendo. La solicitud revela a EOX el área aproximada del mapa y la dirección de red desde la que navegas.</li>
+      <li><b>Supabase</b>: administra la autenticación y guarda las fincas en la nube, los casos compartidos asociados de forma privada a la cuenta y las respuestas anónimas de bienvenida.</li>
       <li><b>Google</b>: solo si eliges «Continuar con Google», para confirmar tu cuenta.</li>
     </ul>
     <p>Trofaxis no usa publicidad ni rastreadores, y no vende ni comparte tus datos con nadie más.</p>
 
-    <h2>Borrar tus datos</h2>
-    <p>Puedes retirar tus casos compartidos desde «Fincas parecidas», en Mi finca, y cerrar la sesión cuando quieras. Para borrar tu cuenta y tu finca de la nube, pídelo en <a href="https://github.com/Trofaxis/trofaxis.github.io/issues">la página de solicitudes del proyecto</a>.</p>
+    <h2>Borrar tu cuenta y tus datos</h2>
+    <p>Desde la app puedes solicitar que se borren tu cuenta de Supabase Auth, tu finca guardada en la nube y tus casos compartidos. La app conserva la finca local, el mapa y el censo de este equipo; también permanecen las respuestas anónimas de bienvenida, que no están ligadas a la cuenta. La cuenta de Google que hayas usado no se borra. <a href="borrar-cuenta/">Lee cómo borrar la cuenta desde la app o pedir el borrado por correo</a>.</p>
+    <p>Para dudas sobre privacidad, escribe a <a href="mailto:support.trofaxis@gmail.com">support.trofaxis@gmail.com</a>.</p>
 
     <p class="muted small"><a href="../">Volver a la app</a></p>
   </section></main>
