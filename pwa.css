@@ -1,0 +1,6 @@
+.pwa-banner[hidden],.pwa-banner button[hidden]{display:none!important}
+.pwa-banner{position:fixed;z-index:20;inset:12px 12px auto;max-width:760px;margin-inline:auto;padding:10px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-size:14px}
+.pwa-banner span{flex:1;min-width:0}
+.pwa-banner button{flex:none}
+@media(max-width:900px){.pwa-banner{inset-block-start:calc(76px + env(safe-area-inset-top))}}
+@media(max-width:560px){.pwa-banner{inset-inline:8px;padding:9px 10px;font-size:13px;gap:8px}.pwa-banner button{min-height:44px}}

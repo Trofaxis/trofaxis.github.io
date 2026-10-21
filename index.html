@@ -6,10 +6,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Trofaxis</title>
   <meta name="description" content="Trofaxis: riesgo ambiental de tu finca, alineado a GLOBALG.A.P. IFA v6.">
+  <meta name="theme-color" content="#2C5F4E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/trofaxis-192.png">
   <link rel="preload" href="src/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="src/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="src/fonts/fuentes.css">
   <link rel="stylesheet" href="src/styles.css">
+  <link rel="stylesheet" href="pwa.css">
 </head>
 <body>
   <!-- Íconos: Lucide (lucide.dev, licencia ISC), los mismos que usa el diseño de Figma. -->
@@ -29,6 +33,10 @@
     <symbol id="i-tema" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
   </svg>
   <div class="shell">
+    <div id="estado-pwa" class="pwa-banner" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span id="mensaje-pwa"></span>
+      <button id="accion-pwa" class="btn sm" type="button" hidden></button>
+    </div>
     <aside class="side"><div class="side-in">
       <div class="brand"><span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-hoja"/></svg></span><div>Trofaxis<small>Riesgo ambiental de la finca</small></div></div>
       <nav class="tabs" aria-label="Vistas">
@@ -42,6 +50,7 @@
     <main class="wrap" id="app"></main>
     <div id="avisos" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
+  <script type="module" src="pwa.js"></script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
