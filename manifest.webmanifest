@@ -15,5 +15,23 @@
     { "src": "/icons/trofaxis-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/trofaxis-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/trofaxis-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/docs/capturas/tienda-trofaxis-ancho.png",
+      "sizes": "1440x960",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Panel principal de la finca demostrativa"
+    },
+    {
+      "src": "/docs/capturas/tienda-trofaxis-angosto.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Trofaxis en una pantalla angosta"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false
 }
