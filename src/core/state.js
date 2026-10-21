@@ -108,8 +108,9 @@ export const S = {
   espSeccion: '', // sección de especies con el formulario abierto: fauna | arboles | malezas
   // Nube (Supabase): sesión por enlace al correo, casos de la comunidad y consentimiento de la sesión actual.
   cuenta: { email: '', proveedor: '', sinCuenta: false }, // cuenta recordada en este navegador (src/core/cuenta.js)
-  cuentaMenu: false, confirmarSalir: false, entrarCorreo: false, // menú de cuenta, confirmación de cierre y correo en la entrada
-  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false, listo: false, conflicto: false, ultima: '', estado: '' },
+  cuentaMenu: false, confirmarSalir: false, entrarCorreo: false,
+  borrarCuentaUI: { abierto: false, texto: '', error: '', ocupado: false }, // confirmación temporal: nunca se guarda con la finca
+  nube: { sesion: null, comunidad: [], consentimiento: false, email: '', ocupado: false, listo: false, conflicto: false, ultima: '', estado: '', borrandoCuenta: false },
   fertImport: null, // último archivo de fertilización cargado: { archivo, hoja, omitidas, avisos }
   fertUnidad: 'kgha', // unidad de dosis en la pestaña Fertilización: kgha | qqmz // casos guardados por el usuario en este navegador (memoria de casos)
   plagEdit: null, // índice de la aplicación de plaguicida que se está editando (null: agregando una nueva)
