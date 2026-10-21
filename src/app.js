@@ -467,6 +467,10 @@ function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaU
 document.addEventListener('biogap:render',()=>render());
 applyTheme();render();
 if(nube.activo&&S.nube.sesion)sincronizarAlEntrar(); // renueva la sesión al abrir y compara la finca con la de la nube
+addEventListener('online',()=>{
+  if(!nube.activo||!S.nube.sesion)return;
+  if(S.nube.listo)subidor.pedir();else sincronizarAlEntrar();
+}); // al volver la conexión, compara o sube los cambios locales pendientes
 if(nube.activo)nubeAccion('nube-comunidad',true); // casos de la comunidad: lectura pública, sin sesión
 
 // Exportar e importar la finca como archivo JSON.
