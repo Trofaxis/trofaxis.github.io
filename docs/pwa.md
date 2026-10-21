@@ -6,10 +6,18 @@ Trofaxis sigue siendo un sitio estático publicado desde la raíz de `main` en G
 
 - El app shell enumera la página, los estilos, iconos y módulos propios que necesita la app, incluidas las vistas que se cargan al abrirlas por primera vez. Una prueba confirma que incluya cada archivo `.js`, `.css` y `.woff2` dentro de `src/`.
 - El manifiesto usa íconos normales y versiones maskable separadas. En las adaptables, el logo queda dentro de la zona central segura sobre un fondo sólido.
-- El service worker solo atiende solicitudes `GET` del mismo origen y de esa lista. Primero consulta la red y actualiza la copia guardada con la respuesta recibida; solo usa la copia guardada si falla la conexión. Las navegaciones también prueban la red primero y, si no está disponible, abren la página guardada. No intercepta ni guarda respuestas de Supabase, Open-Meteo ni del proveedor de mapas.
-- `CACHE_NAME` identifica la caché propia de Trofaxis para que el service worker pueda retirar cachés anteriores. No es necesario cambiarlo en cada despliegue: cada recurso se actualiza en caché cuando se solicita con conexión, aunque el nombre de la caché no cambie. Los recursos que aún no se solicitan conservan su copia anterior hasta que se consulten conectados. El aviso de versión nueva depende de que cambie `sw.js`, no del nombre de caché.
-- Cuando el navegador detecta la versión nueva, Trofaxis muestra «Hay una versión nueva» y el botón «Actualizar». El usuario elige cuándo recargar.
+- El service worker solo atiende solicitudes `GET` del mismo origen y de esa lista. Primero consulta la red con `cache: 'no-cache'`, para que el navegador revalide su copia HTTP con el servidor y aproveche ETag cuando el archivo no cambió; luego guarda una respuesta nueva en la caché de Trofaxis. Si falla la conexión, usa la copia guardada. Las navegaciones siguen la misma regla. No intercepta ni guarda respuestas de Supabase, Open-Meteo ni del proveedor de mapas.
+- `CACHE_NAME` lleva los primeros 12 caracteres de un SHA-256 calculado sobre las rutas y contenidos del `APP_SHELL`. La prueba `tests/pwa.test.js` calcula ese valor y falla con el nombre esperado si cambia un archivo precargado y no se actualiza `CACHE_NAME`. Así el cambio del app shell también cambia `sw.js` y permite que el navegador descubra e instale la versión nueva; no hace falta un build, una acción de GitHub ni un servicio externo.
+- Al abrir Trofaxis, y al volver al frente (`visibilitychange` visible o `pageshow` persistido), se busca una actualización. Las búsquedas se limitan a una por minuto; al recuperar conexión también se revisa con el mismo límite.
+- Cuando el navegador encuentra la versión nueva, Trofaxis muestra «Hay una versión nueva» y «Actualizar». No recarga por su cuenta: la persona toca el aviso. Si toca mientras tiene un campo de texto activo, Trofaxis le pide terminar o guardar primero y deja el aviso disponible. La recarga ocurre una sola vez después de activar el nuevo service worker. Las claves `biogap:*`, la sesión y la finca local no se borran ni se modifican.
+- En Android con Capacitor, `pwa.js` no se carga; esta comprobación de PWA aplica al navegador, iPhone instalado desde Safari y escritorio.
 - Si el usuario vuelve a conectarse con sesión, la app compara la copia local con la nube o reintenta la subida pendiente. Si ambas copias cambiaron, conserva el conflicto existente para que el usuario elija; no pisa datos en silencio.
+
+## Publicar y recuperar una versión
+
+1. Diego no necesita hacer pasos manuales después de cada publicación: GitHub Pages sigue publicando desde `main` como hoy.
+2. Si un cambio modifica archivos enumerados en `APP_SHELL`, ejecuta `npm test`. Si el hash cambió, la prueba informa el `CACHE_NAME` esperado; copia ese valor en `sw.js` y vuelve a correr las pruebas. Esa actualización de `sw.js` forma parte del mismo PR.
+3. Si una app instalada sigue mostrando la versión anterior después de que GitHub Pages publique, ciérrala por completo y ábrela otra vez. Espera el aviso «Hay una versión nueva» y toca «Actualizar». No borres los datos del sitio ni la finca local.
 
 ## Comprobación manual antes de cerrar la fase
 
