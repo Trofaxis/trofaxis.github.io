@@ -101,10 +101,8 @@ export function viewDashboard(){
   const conDatos=mods.filter(m=>m.suficiente);
   const top=[...conDatos].sort((a,b)=>b.score-a.score)[0];
   const hotM=R.mh.map((a,i)=>[i,a.length]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
-  const recs=mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',score:m.suficiente?m.score:null,driver:m.suficiente?m.driver:'',r}))).sort((a,b)=>ORDEN_NIVEL[a.lv]-ORDEN_NIVEL[b.lv]);
-  const doneN=recs.filter(x=>S.done[x.k]).length;
+  const recs=listaAcciones(mods);
   const gg=f.gg!=='no';
-  const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
   const anySim=Object.values(S.sim).some(Boolean);const RS=anySim?simular(f,S.sim,cfg,X):R;
   const lvO=nivel(R.overall,cfg);
   const pesoTotal=mods.reduce((s,m)=>s+(cfg.pesos[m.id]??0),0);
@@ -181,12 +179,29 @@ export function viewDashboard(){
     </tbody></table></div>
     ${anySim?`<div><button class="btn sm" data-act="sim-reset">Quitar todos los cambios</button></div>`:''}
   </section>
-  <section class="panel"><div class="row between"><div><h2>Plan de acción</h2><p class="muted">Ordenado por riesgo del módulo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${doneN} de ${recs.length} hechas</span>`:''}</div>
-    ${recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>'}
-  </section>
+  ${panelPlan(recs)}
   ${panelVecinosDashboard()}
   ${panelRelaciones()}
-  ${gg?`<section class="panel">
+  ${gg?`<section class="panel flat"><div class="row between"><div><h2>Panel GLOBALG.A.P. IFA v6</h2><p class="muted">El margen de Minor Musts, las no conformidades y las secciones de IFA v6 están en la pestaña Auditoría.</p></div><button class="btn sm" data-view="auditoria">Ir a Auditoría</button></div></section>`:''}
+  ${panelDatos()}`;
+}
+
+// Acciones de todos los módulos, de mayor a menor riesgo (las usan el inicio, la vista técnica y Auditoría).
+function listaAcciones(mods){
+  return mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',score:m.suficiente?m.score:null,driver:m.suficiente?m.driver:'',r}))).sort((a,b)=>ORDEN_NIVEL[a.lv]-ORDEN_NIVEL[b.lv]);
+}
+
+// Plan de acción completo, con la casilla de «hecha» de cada acción.
+function panelPlan(recs){
+  return `<section class="panel"><div class="row between"><div><h2>Plan de acción</h2><p class="muted">Ordenado por riesgo del módulo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.filter(x=>S.done[x.k]).length} de ${recs.length} hechas</span>`:''}</div>
+    ${recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>'}
+  </section>`;
+}
+
+// Margen de Minor Musts, no conformidades abiertas y secciones de IFA v6 por módulo.
+function panelGlobalgap(f,mods){
+  const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
+  return `<section class="panel">
     <div><h2>Panel GLOBALG.A.P. IFA v6</h2><p class="muted">Guía de referencia. No reemplaza la auditoría ni garantiza el resultado.</p></div>
     <div class="grid2">
       <div class="stack gap-12 minw-0">
@@ -216,15 +231,24 @@ export function viewDashboard(){
       ${mods.map(m=>`<tr><td>${m.nombre}</td><td>${m.ifa}</td><td class="num">${m.suficiente?`<span class="pill ${m.level}">${m.score}</span>`:'<span class="pill sin-datos">sin datos</span>'}</td></tr>`).join('')}
     </tbody></table></div>
     <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>
-  </section>`:''}
-  ${panelDatos()}`;
+  </section>`;
+}
+
+// Pestaña Auditoría: lo que se prepara para GLOBALG.A.P. IFA v6. Lee la misma evaluación que el dashboard.
+export function viewAuditoria(){
+  const cfg=configEfectiva(normalizarAjustes(S.ajustes));
+  const f=conPlan(S.farm),R=evaluar(f,cfg,extraRiego()),mods=R.mods;
+  const cab=`<section class="panel flat"><p class="label">Auditoría</p><h1>Prepararte para GLOBALG.A.P.</h1><p class="muted">Tu margen de Minor Musts, las no conformidades abiertas y el plan de acción, en un solo lugar.</p></section>`;
+  const gg=f.gg!=='no'?panelGlobalgap(f,mods):`<section class="panel"><h2>Dijiste que tu finca no busca GLOBALG.A.P.</h2><p class="muted">Por eso el panel de certificación está oculto. Si cambias de idea, elige otra respuesta:</p>
+    <div class="choice" role="group" aria-label="¿Tu finca tiene GLOBALG.A.P.?"><button data-act="gg" data-v="si" aria-pressed="false">Sí, ya estoy certificado</button><button data-act="gg" data-v="quiero" aria-pressed="false">Quiero certificarme</button><button data-act="gg" data-v="no" aria-pressed="true">No por ahora</button></div></section>`;
+  return `${cab}${gg}${panelPlan(listaAcciones(mods))}`;
 }
 
 // Respaldo y borrado de los datos: está en las dos vistas.
 function panelDatos(){
   return `
   <section class="panel flat">
-    <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador (la nube es opcional, en la pestaña Casos). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
+    <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador (la nube es opcional, en Mi finca, «Fincas parecidas»). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
     <div class="f"><label for="io-box">Respaldo en texto (JSON)</label><textarea id="io-box" data-bind="io" placeholder="Pega aquí un respaldo y pulsa Cargar">${esc(S.io)}</textarea></div>
     <div class="row">
       <button class="btn sm" data-act="io-copy">Copiar respaldo</button>

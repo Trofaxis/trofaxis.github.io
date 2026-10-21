@@ -547,3 +547,18 @@ body.en-bienvenida main{padding-block:0;background:radial-gradient(circle at 100
   .cta-boton .cta-quien{display:none}
   .cta-menu{left:auto;right:0;bottom:auto;top:calc(100% + 8px)}
 }
+/* Menú de 4 tareas: botones del grupo arriba de la vista (Mi finca, Registrar). */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.subtabs button{font:600 14px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.subtabs button:hover{border-color:var(--accent)}
+.subtabs button[aria-current="page"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+/* En el celular los 4 grupos van en una barra fija abajo, con su nombre siempre visible. */
+@media (max-width:700px){
+  nav.tabs{position:fixed;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));z-index:6;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:6px;border-radius:18px;background:var(--side);box-shadow:0 8px 24px rgba(20,60,45,.3);overflow:visible}
+  nav.tabs button,nav.tabs button:not([aria-current="page"]){flex-direction:column;gap:2px;padding:4px 2px;font-size:12px;text-align:center;justify-content:center;white-space:nowrap;min-height:52px}
+  nav.tabs button:not([aria-current="page"]) span{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+  nav.tabs button .ic{width:28px;height:28px;padding:5px}
+  .shell>main.wrap{padding-bottom:96px}
+  .subtabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .subtabs button{flex:none;min-height:44px}
+}

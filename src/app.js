@@ -3,7 +3,8 @@ import { uniq } from './core/utils.js';
 import { S, demoFarm, emptyFarm, blankDrafts } from './core/state.js';
 import { exportarTexto, importarTexto, guardarLocal, cargarLocal, configBase, cargarCasos, guardarCasos, normalizarFinca, configEfectiva, normalizarAjustes, respaldoDemasiadoGrande, MENSAJE_RESPALDO_GRANDE } from './core/storage.js';
 import { guardado, TEXTO_AVISO } from './core/aviso-guardado.js';
-import { viewDashboard, extraRiego } from './ui/dashboard.js';
+import { viewDashboard, viewAuditoria, extraRiego } from './ui/dashboard.js';
+import { grupoDe, subMenu } from './ui/grupos.js';
 import { CONFIG } from './core/config.js';
 import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { aplicarRapido } from './core/rapido.js';
@@ -105,7 +106,7 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
-const VISTAS={bienvenida:viewBienvenida,entrar:viewEntrar,dashboard:viewDashboard,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
+const VISTAS={bienvenida:viewBienvenida,entrar:viewEntrar,dashboard:viewDashboard,auditoria:viewAuditoria,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
 const cargador=crearCargador({
   riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
   fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),
@@ -122,11 +123,11 @@ function render(){
   if(!vista)cargador.pedir(S.view);
   let html;
   try{html=vista?vista():htmlCargando(cargador.fallo(S.view));}catch(e){console.error(e);html=htmlErrorVista(S.view,e);}
-  app.innerHTML=html;
+  app.innerHTML=subMenu(S.view)+html;
   const msg=S.msg;S.msg='';
   document.body.classList.toggle('en-bienvenida',S.view==='bienvenida'||S.view==='entrar');
   const cta=document.getElementById('cuenta');if(cta)cta.innerHTML=htmlCuenta();
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===S.view?'page':'false'));
+  const grupo=grupoDe(S.view)?.id;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.grupo===grupo?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
 }
@@ -272,7 +273,7 @@ const accionesBienvenida = {
   },
   'bv-saltar-cuestionario': () => {
     terminarBienvenida(); S.view = 'dashboard';
-    S.msg = S.demo ? 'Estás viendo una finca de ejemplo. Cuando quieras, llena tus datos en la pestaña Cuestionario.' : '';
+    S.msg = S.demo ? 'Estás viendo una finca de ejemplo. Cuando quieras, llena tus datos en Mi finca.' : '';
   },
   'bv-ver': () => { S.bv = { ...leerBienvenida(), paso: 0 }; S.view = 'bienvenida'; },
 };
