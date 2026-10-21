@@ -1,4 +1,4 @@
-// Cambia esta etiqueta en cada publicación para renovar el app shell instalado.
+// Este prefijo agrupa las cachés propias para retirar versiones anteriores.
 const CACHE_PREFIX = 'trofaxis-shell-';
 const CACHE_NAME = 'trofaxis-shell-2026-10-20-pwa1';
 const APP_SHELL = [
@@ -9,6 +9,8 @@ const APP_SHELL = [
   "/pwa.css",
   "/icons/trofaxis-192.png",
   "/icons/trofaxis-512.png",
+  "/icons/trofaxis-maskable-192.png",
+  "/icons/trofaxis-maskable-512.png",
   "/src/app.js",
   "/src/styles.css",
   "/src/admin/cerebro.css",
@@ -110,27 +112,44 @@ self.addEventListener('message', (evento) => {
   if (evento.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
+async function consultarRed(request) {
+  const respuesta = await fetch(request);
+  if (respuesta.ok && respuesta.type === 'basic') {
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, respuesta.clone());
+    } catch {
+      // Una falla al guardar no debe ocultar una respuesta válida de la red.
+    }
+  }
+  return respuesta;
+}
+
+async function responderRedPrimero(request, respaldo) {
+  try {
+    return await consultarRed(request);
+  } catch (error) {
+    const guardada = await caches.match(request);
+    if (guardada) return guardada;
+    if (respaldo) {
+      const alternativa = await caches.match(respaldo);
+      if (alternativa) return alternativa;
+    }
+    throw error;
+  }
+}
+
 self.addEventListener('fetch', (evento) => {
   const request = evento.request;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    evento.respondWith(fetch(request).then((respuesta) => {
-      if (respuesta.ok && respuesta.type === 'basic') {
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, respuesta.clone()));
-      }
-      return respuesta;
-    }).catch(() => caches.match('/')));
+    evento.respondWith(responderRedPrimero(request, '/'));
     return;
   }
 
   const esAppShell = APP_SHELL.some((recurso) => new URL(recurso, self.location.origin).pathname === url.pathname);
   if (!esAppShell) return;
-  evento.respondWith(caches.match(request).then((guardada) => guardada || fetch(request).then((respuesta) => {
-    if (respuesta.ok && respuesta.type === 'basic') {
-      caches.open(CACHE_NAME).then((cache) => cache.put(request, respuesta.clone()));
-    }
-    return respuesta;
-  })));
+  evento.respondWith(responderRedPrimero(request));
 });

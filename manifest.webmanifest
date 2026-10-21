@@ -13,7 +13,7 @@
   "icons": [
     { "src": "/icons/trofaxis-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/trofaxis-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/trofaxis-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/trofaxis-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icons/trofaxis-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/trofaxis-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

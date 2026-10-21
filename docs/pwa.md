@@ -4,9 +4,10 @@ Trofaxis sigue siendo un sitio estático publicado desde la raíz de `main` en G
 
 ## Caché y actualizaciones
 
-- El app shell enumera la página, los estilos, iconos y módulos propios que necesita la app, incluidas las vistas que se cargan al abrirlas por primera vez.
-- El service worker solo atiende solicitudes `GET` del mismo origen y de esa lista. No intercepta ni guarda respuestas de Supabase, Open-Meteo ni del proveedor de mapas.
-- En cada despliegue se debe cambiar `CACHE_NAME` en `sw.js`. Esa etiqueta provoca que el navegador instale el app shell nuevo; luego elimina las versiones anteriores. Sin cambiarla, un navegador podría conservar archivos viejos.
+- El app shell enumera la página, los estilos, iconos y módulos propios que necesita la app, incluidas las vistas que se cargan al abrirlas por primera vez. Una prueba confirma que incluya cada archivo `.js`, `.css` y `.woff2` dentro de `src/`.
+- El manifiesto usa íconos normales y versiones maskable separadas. En las adaptables, el logo queda dentro de la zona central segura sobre un fondo sólido.
+- El service worker solo atiende solicitudes `GET` del mismo origen y de esa lista. Primero consulta la red y actualiza la copia guardada con la respuesta recibida; solo usa la copia guardada si falla la conexión. Las navegaciones también prueban la red primero y, si no está disponible, abren la página guardada. No intercepta ni guarda respuestas de Supabase, Open-Meteo ni del proveedor de mapas.
+- `CACHE_NAME` identifica la caché propia de Trofaxis para que el service worker pueda retirar cachés anteriores. No es necesario cambiarlo en cada despliegue: cada recurso se actualiza en caché cuando se solicita con conexión, aunque el nombre de la caché no cambie. Los recursos que aún no se solicitan conservan su copia anterior hasta que se consulten conectados. El aviso de versión nueva depende de que cambie `sw.js`, no del nombre de caché.
 - Cuando el navegador detecta la versión nueva, Trofaxis muestra «Hay una versión nueva» y el botón «Actualizar». El usuario elige cuándo recargar.
 - Si el usuario vuelve a conectarse con sesión, la app compara la copia local con la nube o reintenta la subida pendiente. Si ambas copias cambiaron, conserva el conflicto existente para que el usuario elija; no pisa datos en silencio.
 

@@ -38,9 +38,15 @@ test('el manifiesto declara Trofaxis como app en español, de alcance raíz y co
     assert.equal(png.readUInt32BE(16), Number.parseInt(size.split('x')[0]), `tamaño incorrecto: ${icono.src}`);
     assert.equal(png.readUInt32BE(20), Number.parseInt(size.split('x')[1]), `tamaño incorrecto: ${icono.src}`);
   }
+  for (const size of ['192x192', '512x512']) {
+    const cualquier = manifiesto.icons.find((i) => i.sizes === size && i.purpose === 'any');
+    const adaptable = manifiesto.icons.find((i) => i.sizes === size && i.purpose === 'maskable');
+    assert.notEqual(adaptable.src, cualquier.src, `el ícono adaptable ${size} debe tener su propio archivo`);
+    assert.match(adaptable.src, /trofaxis-maskable-/);
+  }
 });
 
-test('el service worker versiona y precarga un app shell que existe en el repo', () => {
+test('el service worker administra su caché y precarga un app shell que existe en el repo', () => {
   const sw = leer('sw.js');
   const bloque = sw.match(/const APP_SHELL = (\[[\s\S]*?\]);/);
   assert.ok(bloque, 'falta la lista de archivos del app shell');
@@ -51,6 +57,26 @@ test('el service worker versiona y precarga un app shell que existe en el repo',
     const ruta = url === '/' ? 'index.html' : path.normalize(url.replace(/^\//, ''));
     assert.ok(fs.existsSync(ruta), `el app shell apunta a un archivo inexistente: ${url}`);
   }
+});
+
+test('el app shell incluye todos los JavaScript, estilos y fuentes dentro de src', () => {
+  const sw = leer('sw.js');
+  const bloque = sw.match(/const APP_SHELL = (\[[\s\S]*?\]);/);
+  assert.ok(bloque, 'falta la lista de archivos del app shell');
+  const shell = new Set(JSON.parse(bloque[1]));
+  const recursosFuente = [];
+  const recorrer = (directorio) => {
+    for (const entrada of fs.readdirSync(directorio, { withFileTypes: true })) {
+      const ruta = path.join(directorio, entrada.name);
+      if (entrada.isDirectory()) recorrer(ruta);
+      else if (/\.(?:js|css|woff2)$/i.test(entrada.name)) {
+        recursosFuente.push(`/${ruta.split(path.sep).join('/')}`);
+      }
+    }
+  };
+  recorrer('src');
+  const faltantes = recursosFuente.filter((recurso) => !shell.has(recurso));
+  assert.deepEqual(faltantes, [], `faltan recursos de src en APP_SHELL: ${faltantes.join(', ')}`);
 });
 
 test('el service worker nunca maneja ni almacena respuestas externas', () => {
@@ -133,6 +159,75 @@ test('el service worker precarga el app shell y sirve la página guardada sin re
     respondWith: (promesa) => { respuesta = promesa; },
   });
   assert.equal(await respuesta, htmlLocal);
+});
+
+test('el service worker consulta primero la red para cada archivo del app shell y actualiza la caché', async () => {
+  const listeners = {};
+  const solicitud = { url: 'https://trofaxis.github.io/src/app.js', method: 'GET', mode: 'cors' };
+  const versionAnterior = { version: 'anterior' };
+  const versionActual = { ok: true, type: 'basic', version: 'actual', clone() { return this; } };
+  const guardados = [];
+  const contexto = {
+    URL,
+    Promise,
+    fetch: async () => versionActual,
+    caches: {
+      match: async () => versionAnterior,
+      open: async () => ({ addAll: async () => {}, put: async (...args) => { guardados.push(args); } }),
+      keys: async () => [],
+      delete: async () => true,
+    },
+    self: {
+      location: { origin: 'https://trofaxis.github.io' },
+      clients: { claim: async () => {} },
+      addEventListener: (tipo, callback) => { listeners[tipo] = callback; },
+      skipWaiting: async () => {},
+    },
+  };
+  vm.runInNewContext(leer('sw.js'), contexto);
+
+  let respuesta;
+  listeners.fetch({ request: solicitud, respondWith: (promesa) => { respuesta = promesa; } });
+  assert.equal(await respuesta, versionActual, 'debe entregar la copia actual de la red, no la guardada');
+  assert.equal(guardados.length, 1, 'debe reemplazar la copia guardada por la que llegó de la red');
+  assert.equal(guardados[0][0], solicitud);
+  assert.equal(guardados[0][1], versionActual);
+
+  contexto.fetch = async () => { throw new Error('sin conexión'); };
+  let respaldo;
+  listeners.fetch({ request: solicitud, respondWith: (promesa) => { respaldo = promesa; } });
+  assert.equal(await respaldo, versionAnterior, 'si falla la red, debe servir la copia guardada');
+});
+
+test('el service worker consulta primero la red para navegar y usa la copia guardada si falla', async () => {
+  const listeners = {};
+  const paginaAnterior = { version: 'guardada' };
+  const paginaActual = { ok: true, type: 'basic', version: 'publicada', clone() { return this; } };
+  const guardados = [];
+  const contexto = {
+    URL,
+    Promise,
+    fetch: async () => paginaActual,
+    caches: {
+      match: async () => paginaAnterior,
+      open: async () => ({ addAll: async () => {}, put: async (...args) => { guardados.push(args); } }),
+      keys: async () => [],
+      delete: async () => true,
+    },
+    self: {
+      location: { origin: 'https://trofaxis.github.io' },
+      clients: { claim: async () => {} },
+      addEventListener: (tipo, callback) => { listeners[tipo] = callback; },
+      skipWaiting: async () => {},
+    },
+  };
+  vm.runInNewContext(leer('sw.js'), contexto);
+
+  let respuesta;
+  const solicitud = { url: 'https://trofaxis.github.io/', method: 'GET', mode: 'navigate' };
+  listeners.fetch({ request: solicitud, respondWith: (promesa) => { respuesta = promesa; } });
+  assert.equal(await respuesta, paginaActual, 'la navegación debe entregar la versión actual de la red');
+  assert.equal(guardados.length, 1, 'la navegación debe actualizar la copia guardada');
 });
 
 test('el control PWA explica el uso sin conexión según haya una sesión y permite actualizar', () => {
