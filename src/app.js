@@ -36,6 +36,7 @@ import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
 import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
+import { crearPuenteCapacitor, sesionDeURLProfunda, urlRetornoAuth } from './core/capacitor-auth.js';
 
 // Recupera lo último guardado en este navegador (finca, ajustes, plantillas, plan y tema).
 const previo = cargarLocal(S.tpl);
@@ -46,19 +47,42 @@ if (mostrarBienvenida(!!previo)) S.view = 'bienvenida';
 
 // Nube (opcional): si falta la configuración o la conexión, todo sigue en local.
 const nube = crearCliente();
+const puenteCapacitor = crearPuenteCapacitor(window.Capacitor);
 const delHash = sesionDeHash(location.hash); // al volver del enlace del correo
-if (delHash) { guardarSesion(delHash); history.replaceState(null, '', location.pathname + location.search); }
+if (delHash) history.replaceState(null, '', location.pathname + location.search);
 S.nube.sesion = delHash || cargarSesion();
 // Pantalla de entrada: al volver de Google o del correo se va directo al tablero y se recuerda la cuenta.
 S.cuenta = leerCuenta();
 if (delHash) {
-  S.cuenta = { email: delHash.email, proveedor: delHash.proveedor, sinCuenta: false }; guardarCuenta(S.cuenta);
-  if (S.view !== 'bienvenida') S.view = 'dashboard';
-  S.msg = `Sesión iniciada como ${delHash.email || 'tu cuenta'}.`;
+  aplicarSesionAuth(delHash);
 } else if (S.nube.sesion && !S.cuenta.email) {
   // Sesiones abiertas antes de esta pantalla: se recuerda la cuenta para la próxima entrada.
   S.cuenta = { email: S.nube.sesion.email || '', proveedor: S.nube.sesion.proveedor || '', sinCuenta: false }; guardarCuenta(S.cuenta);
 } else if (mostrarEntrada({ nubeActiva: nube.activo, sesion: S.nube.sesion, vista: S.view, cuenta: S.cuenta })) S.view = 'entrar';
+
+function aplicarSesionAuth(sesion, redibujar = false) {
+  guardarSesion(sesion);
+  S.nube.sesion = sesion;
+  S.cuenta = { email: sesion.email, proveedor: sesion.proveedor, sinCuenta: false };
+  guardarCuenta(S.cuenta);
+  if (S.view !== 'bienvenida') S.view = 'dashboard';
+  S.msg = `Sesión iniciada como ${sesion.email || 'tu cuenta'}.`;
+  if (redibujar) {
+    render();
+    void sincronizarAlEntrar();
+  }
+}
+
+function procesarRetornoCapacitor(url) {
+  const sesion = sesionDeURLProfunda(url);
+  if (sesion) aplicarSesionAuth(sesion, true);
+}
+
+if (puenteCapacitor) {
+  void puenteCapacitor.preparar(procesarRetornoCapacitor).catch(() => {
+    S.msg = 'No se pudo preparar el regreso del inicio de sesión. Cierra y vuelve a abrir Trofaxis.';
+  });
+}
 // Sesión lista para usarse: si el token está por vencer, se renueva con el de renovación (una sola renovación a la vez).
 let renovando = null;
 function sesionLista() {
@@ -624,10 +648,20 @@ async function nubeAccion(act,silenciosa=false){
   try{
     const ses=['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)?await sesionLista():null;
     if(['nube-guardar','nube-cargar','nube-compartir','nube-retirar'].includes(act)&&!ses)throw new ErrorNube('Inicia sesión para usar la nube.');
-    if(act==='nube-google'){n.ocupado=false;location.assign(nube.urlGoogle(location.origin+location.pathname));return;}
+    if(act==='nube-google'){
+      const destino=urlRetornoAuth(window.Capacitor,location);
+      const url=nube.urlGoogle(destino);
+      n.ocupado=false;
+      if(puenteCapacitor){await puenteCapacitor.abrirLogin(url);render();}
+      else location.assign(url);
+      return;
+    }
     if(act==='nube-enlace'){
       const email=n.email.trim();if(!/^\S+@\S+\.\S+$/.test(email))throw new ErrorNube('Escribe un correo válido.');
-      await nube.enviarEnlace(email,location.origin+location.pathname);S.msg=`Te enviamos un enlace a ${email}. Ábrelo en este navegador para iniciar sesión.`;}
+      await nube.enviarEnlace(email,urlRetornoAuth(window.Capacitor,location));
+      S.msg=puenteCapacitor
+        ? `Te enviamos un enlace a ${email}. Ábrelo en tu correo; volverás a Trofaxis.`
+        : `Te enviamos un enlace a ${email}. Ábrelo en este navegador para iniciar sesión.`;}
     else if(act==='nube-salir'){borrarSesion();n.sesion=null;n.consentimiento=false;n.listo=false;n.conflicto=false;n.ultima='';n.estado='';S.entrarCorreo=false;S.view='entrar';S.msg='Sesión cerrada.';}
     else if(act==='nube-guardar'){const h=huella(S.farm);await nube.guardarFinca(S.farm,ses);n.ultima=h;n.conflicto=false;n.listo=true;S.msg='Tu finca quedó guardada en la nube (privada).';}
     else if(act==='nube-cargar'){const f=await nube.cargarFinca(ses);
