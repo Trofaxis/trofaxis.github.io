@@ -547,6 +547,8 @@ body.en-bienvenida main{padding-block:0;background:radial-gradient(circle at 100
   .cta-boton .cta-quien{display:none}
   .cta-menu{left:auto;right:0;bottom:auto;top:calc(100% + 8px)}
 }
+/* En el celular el botón de cuenta queda a la izquierda de la barra: el menú abre hacia la derecha para no salirse de la pantalla. */
+@media (max-width:700px){.cta-menu{left:0;right:auto;max-width:calc(100vw - 24px)}}
 /* Menú de 4 tareas: botones del grupo arriba de la vista (Mi finca, Registrar). */
 .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
 .subtabs button{font:600 14px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
