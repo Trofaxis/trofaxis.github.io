@@ -1,5 +1,6 @@
 const ORIGENES = new Set([
   'https://trofaxis.github.io',
+  'https://localhost',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   'http://localhost:5173',

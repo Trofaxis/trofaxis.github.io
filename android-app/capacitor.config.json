@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.trofaxis.app",
+  "appName": "Trofaxis",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "localhost"
+  }
+}

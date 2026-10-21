@@ -32,6 +32,7 @@ const APP_SHELL = [
   "/src/clima/servicio.js",
   "/src/core/aviso-guardado.js",
   "/src/core/bienvenida.js",
+  "/src/core/capacitor-auth.js",
   "/src/core/carga-diferida.js",
   "/src/core/completitud.js",
   "/src/core/config.js",

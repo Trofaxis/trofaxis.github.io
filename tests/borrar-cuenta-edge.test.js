@@ -14,6 +14,16 @@ const solicitud = () => new Request('https://proyecto-ficticio.supabase.co/funct
   body: JSON.stringify({ confirmacion: 'BORRAR' }),
 });
 
+test('CORS permite la solicitud nativa desde el origen HTTPS local de Capacitor', async () => {
+  const respuesta = await handleBorrarCuenta(new Request('https://proyecto-ficticio.supabase.co/functions/v1/borrar-cuenta', {
+    method: 'OPTIONS', headers: { Origin: 'https://localhost' },
+  }), { env, fetchFn: async () => { throw new Error('el preflight no debe tocar red'); } });
+
+  assert.equal(respuesta.status, 204);
+  assert.equal(respuesta.headers.get('Access-Control-Allow-Origin'), 'https://localhost');
+  assert.match(respuesta.headers.get('Access-Control-Allow-Methods'), /POST/);
+});
+
 test('la función verifica la sesión y borra casos, finca y Auth en ese orden', async () => {
   assert.equal(typeof handleBorrarCuenta, 'function', 'la función Edge debe exportar su manejador para probarlo sin red');
   const llamadas = [];

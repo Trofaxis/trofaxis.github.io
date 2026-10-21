@@ -4,3 +4,13 @@ node_modules/
 research_notes/
 reports/
 handoff-*.md
+android-app/www/
+android-app/node_modules/
+android-app/android/.gradle/
+android-app/android/local.properties
+android-app/android/**/build/
+*.apk
+*.aab
+*.jks
+*.keystore
+google-services.json
