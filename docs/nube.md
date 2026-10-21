@@ -8,7 +8,7 @@ Proyecto `biogap` (organización personal de Diego, plan gratis, región us-east
 
 | Tabla | Qué guarda | Quién la ve |
 |---|---|---|
-| `fincas` | La finca completa (JSON validado) de cada usuario. Una por usuario: guardar reemplaza la anterior. | Solo su dueño (RLS por `auth.uid()`) |
+| `fincas` | La finca completa (JSON validado) de cada usuario. Una por usuario: guardar reemplaza la anterior. Se sube sola mientras hay sesión (ver «Guardado automático»). | Su dueño (RLS por `auth.uid()`). El administrador, solo con `admin_fincas()` del panel aparte: sin nombre, correo ni coordenadas y con registro de cada lectura |
 | `casos` | Caso anonimizado: `perfil`, `acciones`, `resultado`, fecha de `consentimiento` | Lectura pública, pero **sin la columna `user_id`**. Escribe y borra solo su dueño |
 | `bienvenida` | Respuestas de la bienvenida de primera vez: `fuente` (cómo conoció la app) y `usos` (para qué la usará), con fecha. Sin `user_id`, nombre ni ubicación. | Nadie con la clave publicable: `anon` y `authenticated` solo pueden insertar. Diego la lee en el panel de Supabase (Table Editor) |
 
@@ -19,9 +19,19 @@ Garantías puestas en la base, no solo en la app:
 - Un usuario solo inserta y borra casos con su propio `user_id`.
 - `bienvenida.fuente` y `bienvenida.usos` solo admiten las opciones de `src/core/bienvenida.js` (CHECK), y una fila vacía se rechaza. Se envía una sola vez, al terminar la bienvenida la primera vez y solo si respondió algo; verla otra vez desde Ajustes no envía nada. Riesgo conocido: como no pide sesión, alguien podría insertar filas falsas a mano; los valores están acotados, pero los conteos son orientativos.
 
+## Guardado automático (PR 105, decisión de Diego del 2026-10-16)
+
+El guardado es **mixto**: automático mientras hay sesión, con botones manuales de respaldo. La lógica está en `src/nube/sincronia.js` (funciones puras, con pruebas) y las llamadas en `src/app.js`.
+
+- Cada cambio guarda en el navegador y, si hay sesión, pide una subida unos segundos después (`debeSubir`). Solo sube si ya se comparó con la nube al entrar, la finca no es la de ejemplo, tiene datos, no hay conflicto pendiente y cambió desde la última subida.
+- Al entrar (o abrir la app con sesión) se compara con la nube (`decidirAlEntrar`): se **carga** si este navegador tiene la de ejemplo o una vacía; se **sube** si la nube está vacía y aquí hay datos; si las dos tienen datos distintos queda un **conflicto** y no se pisa ninguna hasta que el usuario elija.
+- Si falla la subida (sin conexión), la finca sigue en el navegador y se reintenta con el próximo cambio. Un 401 cierra la sesión.
+- *Guardar mi finca en la nube* y *Cargar mi finca desde la nube* siguen disponibles y resuelven un conflicto a mano.
+- Sin sesión no sale nada. Para que deje de subirse, cerrar la sesión.
+
 ## Sesión
 
-El enlace del correo inicia la sesión en ese navegador. El token de acceso dura cerca de una hora (valor por defecto de Supabase), pero la app guarda también el token de renovación y lo cambia por uno nuevo sola, al abrir la app y antes de cada acción de la nube. Así no hay que volver a escribir el correo salvo que se cierre la sesión o Supabase rechace la renovación (por ejemplo, tras 30 días sin entrar o si se cierra la sesión en otro lado). Supabase rota ese token (sirve una sola vez), por eso la app lo guarda de inmediato y nunca lanza dos renovaciones a la vez. Sin conexión, la sesión no se pierde.
+El enlace del correo o «Continuar con Google» inicia la sesión en ese navegador. El token de acceso dura cerca de una hora (valor por defecto de Supabase), pero la app guarda también el token de renovación y lo cambia por uno nuevo sola, al abrir la app y antes de cada acción de la nube. Así no hay que volver a escribir el correo salvo que se cierre la sesión o Supabase rechace la renovación (por ejemplo, tras 30 días sin entrar o si se cierra la sesión en otro lado). Supabase rota ese token (sirve una sola vez), por eso la app lo guarda de inmediato y nunca lanza dos renovaciones a la vez. Sin conexión, la sesión no se pierde.
 
 ## Consentimiento y anonimización
 
@@ -46,7 +56,7 @@ En Authentication → URL Configuration: poner como **Site URL** la dirección d
 
 1. Pestaña Casos → Nube y comunidad: debe decir cuántos casos de la comunidad se descargaron (hoy 0).
 2. Escribir un correo → llega el enlace → al abrirlo en el mismo navegador la sesión queda iniciada.
-3. Guardar la finca en la nube, borrar los datos locales, cargarla desde la nube.
+3. Con sesión, cambiar un dato y esperar unos segundos: el estado dice «Guardada en la nube». Borrar los datos locales, volver a entrar y comprobar que se carga sola. Probar también los botones manuales y el conflicto (dos navegadores con fincas distintas).
 4. Marcar el consentimiento, abrir *Ver exactamente qué se enviaría*, compartir, y comprobar que aparece un caso «Comunidad». Retirarlo.
 5. Con Wi-Fi apagado: la app debe seguir funcionando y mostrar un aviso entendible.
 
