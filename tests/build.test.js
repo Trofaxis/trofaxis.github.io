@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
-  importsDiferidos, entradasDiferidas, reescribirIndex, leerAppShell, appShellPublicado, versionCache, reescribirSw,
+  importsDiferidos, entradasDiferidas, versionApp, ARCHIVOS_DEL_PANEL, reescribirIndex, leerAppShell, appShellPublicado, versionCache, reescribirSw,
 } from '../scripts/build.mjs';
 
 // Estas pruebas no necesitan esbuild: revisan las piezas del build que deciden qué se publica.
@@ -24,11 +25,44 @@ test('el build rechaza un import() que no sabría empaquetar', () => {
   assert.throws(() => importsDiferidos('import(`./ui/${nombre}.js`);', 'a.js'), /import\(conIntento/);
 });
 
-test('index.html publicado carga app/app.js y precarga sus archivos comunes', () => {
+test('las vistas diferidas solo se aceptan en src/app.js', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'trofaxis-build-'));
+  try {
+    fs.mkdirSync(path.join(raiz, 'src', 'ui'), { recursive: true });
+    fs.writeFileSync(path.join(raiz, 'src', 'ui', 'x.js'), 'export const x = 1;');
+    fs.writeFileSync(path.join(raiz, 'src', 'app.js'), "const v = (i) => import(conIntento('./ui/x.js', i));");
+    assert.deepEqual(entradasDiferidas(raiz), ['ui/x.js']);
+    fs.writeFileSync(path.join(raiz, 'src', 'ui', 'otra.js'), "const v = (i) => import(conIntento('./x.js', i));");
+    assert.throws(() => entradasDiferidas(raiz), /solo desde src\/app\.js/);
+  } finally {
+    fs.rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('cada versión del código publica en su propia carpeta app/<versión>/', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'trofaxis-build-'));
+  try {
+    fs.mkdirSync(path.join(raiz, 'src'));
+    fs.writeFileSync(path.join(raiz, 'src', 'app.js'), 'export const a = 1;');
+    const primera = versionApp(raiz);
+    assert.match(primera, /^[0-9a-f]{10}$/);
+    assert.equal(versionApp(raiz), primera, 'el mismo código da la misma carpeta');
+    fs.writeFileSync(path.join(raiz, 'src', 'app.js'), 'export const a = 2;');
+    assert.notEqual(versionApp(raiz), primera, 'un cambio en src da otra carpeta');
+  } finally {
+    fs.rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('los archivos que importa el panel de administración existen', () => {
+  for (const archivo of ARCHIVOS_DEL_PANEL) assert.ok(fs.existsSync(archivo), `falta ${archivo}`);
+});
+
+test('index.html publicado carga app/<versión>/app.js y precarga sus archivos comunes', () => {
   const html = fs.readFileSync('index.html', 'utf8');
-  const publicado = reescribirIndex(html, ['app/comun/chunk-A.js']);
+  const publicado = reescribirIndex(html, ['app/abc123/comun/chunk-A.js'], 'app/abc123/app.js');
   assert.ok(!publicado.includes('src="src/app.js"'));
-  assert.match(publicado, /<link rel="modulepreload" href="app\/comun\/chunk-A\.js">\s*<script type="module" src="app\/app\.js"><\/script>/);
+  assert.match(publicado, /<link rel="modulepreload" href="app\/abc123\/comun\/chunk-A\.js">\s*<script type="module" src="app\/abc123\/app\.js"><\/script>/);
   assert.match(publicado, /<script type="module" src="pwa\.js"><\/script>/, 'conserva el control PWA');
   assert.match(publicado, /href="src\/styles\.css"/, 'los estilos siguen en src');
   assert.throws(() => reescribirIndex('<html></html>'), /una sola vez/);

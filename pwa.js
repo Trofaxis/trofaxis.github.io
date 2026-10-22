@@ -13,6 +13,8 @@ let actualizacionPospuestaPorEdicion = false;
 let registroPwa = null;
 let ultimaBusquedaActualizacion = null;
 let busquedaActualizacion = null;
+// Otra ventana activó la versión nueva: esta sigue con la anterior en memoria y debe recargar.
+let actualizadaEnOtraVentana = false;
 const INTERVALO_BUSQUEDA_ACTUALIZACION = 60_000;
 
 function hayFincaGuardada() {
@@ -89,6 +91,10 @@ function actualizarAviso() {
     mostrar(`${finca}${red}`);
     return;
   }
+  if (actualizadaEnOtraVentana) {
+    mostrar('Trofaxis se actualizó en otra ventana. Recarga esta para seguir.', 'Recargar', 'recargar');
+    return;
+  }
   if (workerEnEspera) {
     mostrar('Hay una versión nueva de Trofaxis.', 'Actualizar', 'actualizar');
     return;
@@ -111,14 +117,14 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') void buscarActualizacion();
 });
 document.addEventListener('pointerdown', (evento) => {
-  if (accion.dataset.accion === 'actualizar'
+  if (['actualizar', 'recargar'].includes(accion.dataset.accion)
     && esAccionActualizar(evento.target)
     && esCampoEditable(document.activeElement)) {
     actualizacionPospuestaPorEdicion = true;
   }
 }, true);
 document.addEventListener('focusout', (evento) => {
-  if (accion.dataset.accion === 'actualizar'
+  if (['actualizar', 'recargar'].includes(accion.dataset.accion)
     && esCampoEditable(evento.target)
     && esAccionActualizar(evento.relatedTarget)) {
     actualizacionPospuestaPorEdicion = true;
@@ -152,16 +158,38 @@ accion.addEventListener('click', async () => {
     recargarAlCambiar = true;
     activandoActualizacion = true;
     workerEnEspera.postMessage({ type: 'SKIP_WAITING' });
+  } else if (accion.dataset.accion === 'recargar') {
+    const estabaEditando = actualizacionPospuestaPorEdicion || esCampoEditable(document.activeElement);
+    actualizacionPospuestaPorEdicion = false;
+    if (estabaEditando) {
+      mostrar('Termina o guarda lo que estás escribiendo antes de recargar.', 'Recargar', 'recargar');
+      return;
+    }
+    window.location.reload();
   }
 });
 
-if ('serviceWorker' in navigator) {
+// En localhost el service worker serviría el código guardado y no el que se acaba de editar.
+// Se activa solo con ?sw en la dirección (para probar la app instalada o sin conexión).
+const esDesarrolloLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && !/[?&]sw(?:[=&]|$)/.test(window.location.search || '');
+
+if ('serviceWorker' in navigator && esDesarrolloLocal) {
+  navigator.serviceWorker.getRegistrations?.().then((registros) => registros.forEach((r) => r.unregister())).catch(() => {});
+} else if ('serviceWorker' in navigator) {
+  const teniaControlador = Boolean(navigator.serviceWorker.controller);
   // register() ya solicita una comprobación al abrir; cuenta para el límite de frecuencia.
   ultimaBusquedaActualizacion = Date.now();
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (recargarAlCambiar && !recargaSolicitada) {
       recargaSolicitada = true;
       window.location.reload();
+    } else if (teniaControlador && !recargarAlCambiar) {
+      // La versión nueva ya está activa: el aviso «Actualizar» de esta ventana no tendría efecto.
+      actualizadaEnOtraVentana = true;
+      workerEnEspera = null;
+      activandoActualizacion = false;
+      actualizarAviso();
     }
   });
 

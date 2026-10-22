@@ -27,7 +27,7 @@ Nunca uses ni escribas el correo personal de Diego en el repo.
 - Al publicar, GitHub Actions corre `npm run build` (esbuild, versión fija, solo para publicar) y sube `dist/` a GitHub Pages. Decisión de Diego del 2026-10-22; ver `docs/build.md`. No agregar otras dependencias sin pedírselo.
 - No usar SheetJS 0.18.5 (CVE-2023-30533, CVE-2024-22363). Existe un lector .xlsx propio.
 - Umbrales y pesos van en `src/core/config.js`, no dentro de las fórmulas.
-- Ver la app en local: `npx --yes http-server -p 8000`. La copia publicada: `npm ci && npm run build` y `npx --yes http-server dist -p 8001`.
+- Ver la app en local: `npx --yes http-server -p 8000`. La copia publicada: `npm ci && npm run build` y `npx --yes http-server dist -p 8002`.
 
 ## Estilo
 Responde en español, corto y técnico. Si una petición tiene un error o un riesgo, dilo claramente.

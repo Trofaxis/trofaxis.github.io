@@ -480,7 +480,6 @@ test('no recarga sin que la persona toque «Actualizar» y recarga solo una vez 
   const pwa = await abrirPwaConRegistro({ workerEnEspera: worker });
   assert.equal(pwa.nodos['estado-pwa'].hidden, false);
   assert.match(pwa.nodos['mensaje-pwa'].textContent, /Hay una versión nueva/);
-  pwa.emitirVentana('serviceWorker:controllerchange');
   assert.equal(pwa.recargas(), 0, 'el aviso por sí solo no recarga');
 
   pwa.emitirAccion('click');
@@ -518,4 +517,40 @@ test('también protege la edición cuando se llega al aviso con el teclado', asy
   pwa.emitirAccion('click');
   assert.equal(pwa.mensajes.length, 0);
   assert.match(pwa.nodos['mensaje-pwa'].textContent, /Termina o guarda lo que estás escribiendo/);
+});
+
+test('si otra ventana activa la versión nueva, esta pide recargar en vez de dejar un «Actualizar» sin efecto', async () => {
+  const worker = {};
+  const pwa = await abrirPwaConRegistro({ workerEnEspera: worker });
+  assert.match(pwa.nodos['mensaje-pwa'].textContent, /Hay una versión nueva/);
+  pwa.emitirVentana('serviceWorker:controllerchange');
+  assert.equal(pwa.recargas(), 0, 'no recarga sola: puede haber algo sin guardar');
+  assert.match(pwa.nodos['mensaje-pwa'].textContent, /se actualizó en otra ventana/);
+  assert.equal(pwa.nodos['accion-pwa'].textContent, 'Recargar');
+
+  pwa.document.activeElement = { tagName: 'INPUT', type: 'text' };
+  pwa.emitirAccion('click');
+  assert.equal(pwa.recargas(), 0, 'protege lo que se está escribiendo');
+  pwa.document.activeElement = pwa.nodos['accion-pwa'];
+  pwa.emitirAccion('click');
+  assert.equal(pwa.recargas(), 1);
+  assert.equal(pwa.mensajes.length, 0, 'no envía SKIP_WAITING a un worker ya activo');
+});
+
+test('en localhost no registra el service worker salvo con ?sw, para ver el código recién editado', () => {
+  const abrir = (location) => {
+    let registros = 0, quitados = 0;
+    const nodos = { 'estado-pwa': { hidden: true }, 'mensaje-pwa': { textContent: '' }, 'accion-pwa': { hidden: true, textContent: '', dataset: {}, addEventListener: () => {} } };
+    vm.runInNewContext(leer('pwa.js'), {
+      document: { visibilityState: 'visible', activeElement: null, getElementById: (id) => nodos[id], addEventListener: () => {} },
+      localStorage: { getItem: () => null },
+      navigator: { onLine: true, serviceWorker: { controller: null, addEventListener: () => {}, register: () => { registros += 1; return new Promise(() => {}); }, getRegistrations: () => Promise.resolve([{ unregister: () => { quitados += 1; } }]) } },
+      window: { addEventListener: () => {}, location: { reload: () => {}, ...location } },
+      Date, Promise,
+    });
+    return () => ({ registros, quitados });
+  };
+  assert.equal(abrir({ hostname: 'localhost', search: '' })().registros, 0);
+  assert.equal(abrir({ hostname: '127.0.0.1', search: '?sw' })().registros, 1);
+  assert.equal(abrir({ hostname: 'trofaxis.github.io', search: '' })().registros, 1);
 });

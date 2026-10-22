@@ -1,6 +1,8 @@
 # ADR-0004: Sin build y sin dependencias externas
 
-**Estado:** Aceptado · **Registrado:** 2026-10-12 (después de tomada la decisión) · **Decide:** Diego Guevara
+**Estado:** Reemplazado en parte el 2026-10-22 ([build.md](../build.md)) · **Registrado:** 2026-10-12 (después de tomada la decisión) · **Decide:** Diego Guevara
+
+> Actualización 2026-10-22: Diego decidió publicar una copia armada con esbuild (versión fija, solo en GitHub Actions) porque la carga en 3G era lenta, que es la condición de «Cambiaría esta decisión si» de abajo. Sigue vigente lo demás: sin dependencias en tiempo de ejecución, código propio en lugar de paquetes y se programa sin compilar.
 
 > Nota: este ADR documenta una decisión que ya está en el código. Las alternativas son las que el código y los documentos permiten reconstruir, no un acta de la discusión original.
 

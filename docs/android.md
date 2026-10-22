@@ -1,6 +1,6 @@
 # Trofaxis para Android
 
-Esta carpeta prepara una app Android con Capacitor que empaqueta la misma web de Trofaxis. GitHub Pages sigue publicando desde la raíz del repositorio; este flujo no crea `dist/` ni cambia el proceso web. La app Android todavía no está publicada en Google Play.
+Esta carpeta prepara una app Android con Capacitor que empaqueta la misma web de Trofaxis. La web publicada en GitHub Pages sale de `npm run build` ([build.md](build.md)); este flujo no usa ese build: copia `src/` tal cual y no cambia el proceso web. La app Android todavía no está publicada en Google Play.
 
 ## Requisitos
 

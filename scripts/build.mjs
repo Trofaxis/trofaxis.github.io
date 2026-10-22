@@ -1,6 +1,6 @@
 // Prepara la copia que se publica en GitHub Pages (ver docs/build.md).
-// Copia a dist/ los archivos del repo, junta en app/app.js los módulos que src/app.js carga al abrir
-// y genera el sw.js de esa copia. src/ se sigue publicando porque el panel de administración lo importa.
+// Copia a dist/ los archivos del repo, junta en app/<versión>/app.js los módulos que src/app.js carga al
+// abrir y genera el sw.js de esa copia. src/ se sigue publicando porque el panel de administración lo importa.
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -8,13 +8,14 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const CARPETA_APP = 'app';
 const SCRIPT_FUENTE = '<script type="module" src="src/app.js"></script>';
-const SCRIPT_PUBLICADO = `<script type="module" src="${CARPETA_APP}/app.js"></script>`;
+// Archivos que el panel de administración importa en vivo desde trofaxis.github.io.
+export const ARCHIVOS_DEL_PANEL = ['src/nube/cliente.js', 'src/admin/cerebro.js', 'src/styles.css', 'src/admin/cerebro.css'];
 
 // Las vistas que se cargan al abrirlas usan import(conIntento('./ruta.js', intento)) (ver
 // src/core/carga-diferida.js). Cada destino se empaqueta como su propio archivo en la misma ruta
-// relativa, así el import() del código, que esbuild no toca, lo encuentra también con ?r=N.
+// relativa, así el import() del código, que esbuild no toca, lo encuentra también con ?r=N. Por eso solo
+// se aceptan en src/app.js: desde otro archivo la ruta relativa apuntaría a otra carpeta de dist.
 const IMPORT_DIFERIDO = /\bimport\(\s*conIntento\(\s*'([^']+)'/g;
 const IMPORT_LITERAL = /\bimport\(\s*(['"`])[^'"`$]+\1\s*\)/g;
 const CUALQUIER_IMPORT = /\bimport\(\s*(?!\))/g;
@@ -42,7 +43,9 @@ export function entradasDiferidas(raiz = RAIZ) {
   const src = path.join(raiz, 'src');
   const entradas = new Set();
   for (const archivo of archivosJs(src)) {
-    for (const destino of importsDiferidos(fs.readFileSync(archivo, 'utf8'), path.relative(raiz, archivo))) {
+    const relativo = path.relative(raiz, archivo).split(path.sep).join('/');
+    for (const destino of importsDiferidos(fs.readFileSync(archivo, 'utf8'), relativo)) {
+      if (relativo !== 'src/app.js') throw new Error(`${relativo}: las vistas diferidas se importan solo desde src/app.js (ver docs/build.md).`);
       const absoluto = path.resolve(path.dirname(archivo), destino);
       if (!fs.existsSync(absoluto)) throw new Error(`${path.relative(raiz, archivo)} importa ${destino}, que no existe.`);
       entradas.add(path.relative(src, absoluto).split(path.sep).join('/'));
@@ -53,12 +56,23 @@ export function entradasDiferidas(raiz = RAIZ) {
 
 // `precargas`: los archivos comunes que app.js importa al abrir. Con modulepreload el navegador los
 // pide junto con app.js, en vez de esperar a leer app.js para descubrirlos (una vuelta de red menos).
-export function reescribirIndex(html, precargas = []) {
+// Cada publicación usa su propia carpeta app/<versión>/: una ventana que siga con la versión anterior
+// nunca mezcla sus archivos con los nuevos (los nombres de los archivos comunes cambian con cada build).
+export function versionApp(raiz = RAIZ) {
+  const hash = createHash('sha256');
+  for (const archivo of archivosJs(path.join(raiz, 'src')).sort()) {
+    hash.update(path.relative(raiz, archivo).split(path.sep).join('/')).update('\0')
+      .update(fs.readFileSync(archivo, 'utf8').replace(/\r\n?/g, '\n')).update('\0');
+  }
+  return hash.digest('hex').slice(0, 10);
+}
+
+export function reescribirIndex(html, precargas = [], principal = 'app/app.js') {
   const partes = html.split(SCRIPT_FUENTE);
   if (partes.length !== 2) throw new Error(`index.html debe tener una sola vez ${SCRIPT_FUENTE}`);
   const sangria = partes[0].match(/[\t ]*$/)[0];
   const enlaces = precargas.map((ruta) => `<link rel="modulepreload" href="${ruta}">\n${sangria}`).join('');
-  return partes.join(enlaces + SCRIPT_PUBLICADO);
+  return partes.join(`${enlaces}<script type="module" src="${principal}"></script>`);
 }
 
 export function leerAppShell(sw) {
@@ -112,8 +126,12 @@ export async function construir({ raiz = RAIZ, destino = path.join(raiz, 'dist')
   fs.rmSync(destino, { recursive: true, force: true });
   copiarSitio(raiz, destino);
 
+  for (const archivo of ARCHIVOS_DEL_PANEL) {
+    if (!fs.existsSync(path.join(destino, archivo))) throw new Error(`falta ${archivo} en dist: lo importa el panel de administración`);
+  }
   const diferidas = entradasDiferidas(raiz);
-  const salidaApp = path.join(destino, CARPETA_APP);
+  const carpetaApp = `app/${versionApp(raiz)}`;
+  const salidaApp = path.join(destino, carpetaApp);
   const resultado = await build({
     absWorkingDir: raiz,
     entryPoints: ['app.js', ...diferidas].map((entrada) => path.join(raiz, 'src', entrada)),
@@ -134,17 +152,17 @@ export async function construir({ raiz = RAIZ, destino = path.join(raiz, 'dist')
   });
 
   for (const entrada of diferidas) {
-    if (!fs.existsSync(path.join(salidaApp, entrada))) throw new Error(`falta ${CARPETA_APP}/${entrada} en dist`);
+    if (!fs.existsSync(path.join(salidaApp, entrada))) throw new Error(`falta ${carpetaApp}/${entrada} en dist`);
   }
   // El metafile da las rutas relativas a absWorkingDir (raiz); aquí se pasan a rutas dentro de dist.
   const aDist = (salida) => path.relative(destino, path.resolve(raiz, salida)).split(path.sep).join('/');
   const archivosApp = Object.keys(resultado.metafile.outputs).map(aDist);
-  const salidaPrincipal = Object.keys(resultado.metafile.outputs).find((salida) => aDist(salida) === `${CARPETA_APP}/app.js`);
+  const salidaPrincipal = Object.keys(resultado.metafile.outputs).find((salida) => aDist(salida) === `${carpetaApp}/app.js`);
   const precargas = resultado.metafile.outputs[salidaPrincipal].imports
     .filter((i) => i.kind === 'import-statement')
     .map((i) => aDist(i.path));
   const rutaIndex = path.join(destino, 'index.html');
-  fs.writeFileSync(rutaIndex, reescribirIndex(fs.readFileSync(rutaIndex, 'utf8'), precargas));
+  fs.writeFileSync(rutaIndex, reescribirIndex(fs.readFileSync(rutaIndex, 'utf8'), precargas, `${carpetaApp}/app.js`));
 
   const rutaSw = path.join(destino, 'sw.js');
   const swFuente = fs.readFileSync(rutaSw, 'utf8');
