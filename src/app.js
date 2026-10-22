@@ -95,7 +95,7 @@ function sesionLista() {
   return renovando;
 }
 
-function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
+function applyTheme(){const r=document.documentElement;r.setAttribute('data-theme',S.theme==='dark'?'dark':'light');
 }
 // Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
 const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());if(S.nube.sesion)subidor.pedir();});
@@ -299,7 +299,7 @@ const terminarBienvenida = () => {
 const accionesCuenta = {
   'cuenta-menu': () => { S.cuentaMenu = !S.cuentaMenu; },
   'cuenta-entrar': () => { S.cuentaMenu = false; S.entrarCorreo = false; S.view = 'entrar'; },
-  'tema-set': (a) => { S.theme = ['system', 'light', 'dark'].includes(a.dataset.tema) ? a.dataset.tema : 'system'; },
+  'tema-set': (a) => { S.theme = a.dataset.tema === 'dark' ? 'dark' : 'light'; },
   'entrar-cuenta': () => {
     if (S.cuenta.proveedor === 'google') { nubeAccion('nube-google'); return false; }
     S.nube.email = S.cuenta.email; S.entrarCorreo = true;

@@ -60,7 +60,7 @@ import { guardado } from '../src/core/aviso-guardado.js';
 const TPL = { tipo: 'mec', objetivo: 0, rows: [], paste: '' };
 test('guardarLocal avisa cuando el navegador no deja guardar y se recupera cuando vuelve a poder', () => {
   const previo = globalThis.localStorage;
-  const estado = { farm: emptyFarm(), ajustes: configBase(), demo: false, tpl: TPL, done: {}, theme: 'system' };
+  const estado = { farm: emptyFarm(), ajustes: configBase(), demo: false, tpl: TPL, done: {}, theme: 'light' };
   try {
     globalThis.localStorage = { getItem: () => null, setItem: () => { throw new DOMException('lleno', 'QuotaExceededError'); }, removeItem() {} };
     assert.equal(guardarLocal(estado), false);
@@ -90,7 +90,7 @@ function conAlmacen(fn) {
   globalThis.localStorage = { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) };
   try { return fn(m); } finally { globalThis.localStorage = previo; }
 }
-const estado = (riego) => ({ farm: emptyFarm(), ajustes: configBase(), demo: false, tpl: TPL, done: {}, theme: 'system', riego });
+const estado = (riego) => ({ farm: emptyFarm(), ajustes: configBase(), demo: false, tpl: TPL, done: {}, theme: 'light', riego });
 
 test('los datos de riego cargados por el usuario sobreviven a recargar la página', () => conAlmacen(() => {
   const datos = { ...casoEjemplo(), cultivo: 'Tomate', eto: 5.5 };
