@@ -19,7 +19,8 @@ import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDat
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 import { pasosFinca } from '../core/completitud.js';
-import { esquemaFinca, finca3d, leyendaFinca, orbe, prisma, defsPrisma, anioFinca } from './finca3d.js';
+import { esquemaFinca, finca3d, leyendaFinca } from './finca3d.js';
+import { ruedaAnio } from './rueda.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -67,20 +68,35 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
     <details><summary>Ver los ${pasos.length} pasos</summary><ul class="pasos">${pasos.map(filaPaso).join('')}</ul></details>
   </section>`:''}
   <div class="inicio">
+  <section class="panel hoy">
+    <div class="hoy-estado">
+      <p class="hoy-kicker">Índice ambiental de tu finca</p>
+      ${R.sinDatos?'<p class="hoy-frase">Todavía faltan datos para calificar tu finca</p>'
+        :`<p class="hoy-frase">Tu finca está en <em class="nivel-${lvO}">riesgo ${lvO.toLowerCase()}</em></p><p class="hoy-sub">${R.overall} de 100. ${TEXTO_NIVEL[lvO].split(': ')[1].replace(/^./,c=>c.toUpperCase())}.</p>`}
+      <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
+        ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
+      <div class="hoy-mes">
+        <h2>Este mes: ${nombreMes}</h2>
+        ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul class="hoy-alertas">${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
+          :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
+      </div>
+      <details><summary>¿Cómo se calcula el índice?</summary><p class="muted small">${notaIndice}</p></details>
+    </div>
+    <div class="hoy-rueda">
+      <h2 class="sr-only">Tu año en la finca</h2>
+      ${ruedaAnio(R,S.farm,mes,{v:R.overall,nivel:lvO,sinDatos:R.sinDatos})}
+      <p class="muted small">Cada anillo es una parte de tu año; el centro marca los meses donde se juntan riesgos. Toca un mes para ver qué pasa.</p>
+    </div>
+  </section>
   <section class="panel escena">
-    <div><p class="label">Tu finca en 3D</p><h2>Tu finca de un vistazo</h2></div>
-    <div class="escena3d" data-inclinar>${finca3d(esq)}${orbe(R.overall,lvO,R.sinDatos)}</div>${leyendaFinca(esq)}
-    <p class="muted small">Esquema, no a escala: cada lote mide según sus hectáreas; agua, árboles y fauna salen de lo que respondiste.</p>
-    <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
-      ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
-    <details><summary>¿Cómo se calcula el índice?</summary><p class="muted small">${notaIndice}</p></details>
+    <div><h2>Tu finca de un vistazo</h2><p class="muted small">Esquema, no a escala: cada lote mide según sus hectáreas; agua, árboles y fauna salen de lo que respondiste.</p></div>
+    <div class="escena3d" data-inclinar>${finca3d(esq)}</div>${leyendaFinca(esq)}
   </section>
   <section class="panel sem">
-    ${defsPrisma}
-    <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema; la columna sube con el riesgo. Abre «¿Por qué?» para ver de dónde sale.</p>
+    <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un tema por fila: la barra crece con el riesgo. Abre «¿Por qué?» para ver de dónde sale.</p>
       <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
         <div class="row between gap-4"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${m.suficiente?m.level:'Sin datos'}</span></div>
-        <div class="mod-cuerpo"><span class="score"${m.suficiente?` data-contar="${m.score}"`:''}>${m.suficiente?m.score:'—'}</span>${prisma(m.suficiente?m.score:null,m.level)}</div>
+        <div class="mod-cuerpo"><span class="score"${m.suficiente?` data-contar="${m.score}"`:''}>${m.suficiente?m.score:'—'}</span><div class="regla" aria-hidden="true">${m.suficiente?`<span class="fill-${m.level}" style="width:${m.score}%"></span>`:''}</div></div>
         <p class="small muted">${TEXTO_NIVEL[lv]}</p>
         <details><summary>¿Por qué?</summary>${m.suficiente
           ?`<p class="small">Puntaje ${m.score} de 100. Causa principal: ${esc(m.driver)}. Confianza de los datos: ${Math.round(m.conf*100)} %.</p>${tablaRubrica(m,cfg)}`
@@ -88,17 +104,10 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
       </li>`;}).join('')}</ul></div>
   </section>
   <section class="panel urg">
-    <div class="row between"><div><p class="label">Qué hacer primero</p><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
+    <div class="row between"><div><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
     ${top.length?`<ul class="plan urgentes">${top.map((x,i)=>filaAccion(x,i,'urg',`<details><summary>¿Por qué?</summary><p class="small">Sale del tema ${esc(x.m)}${x.score!=null?`, con riesgo ${x.lv.toLowerCase()} (${x.score} de 100)`:''}.${x.driver?` Causa principal: ${esc(x.driver)}.`:''}</p></details>`)).join('')}</ul>`
       :`<p class="muted">${recs.length?'Ya marcaste todas las acciones como hechas.':'No hay acciones pendientes con los datos actuales.'}</p>`}
     ${resto.length?`<details><summary>Ver las otras ${resto.length} acciones</summary><ul class="plan">${resto.map((x,i)=>filaAccion(x,i,'resto')).join('')}</ul></details>`:''}
-  </section>
-  <section class="panel mes">
-    <div class="stack gap-8"><p class="label">Tu año en la finca</p><h2>Este mes: ${nombreMes}</h2>
-    ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul>${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
-      :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
-      <p class="muted small">Cada barra es un mes; su altura, cuántas coincidencias de riesgo tiene.</p></div>
-    ${anioFinca(R.mh,mes)}
   </section>
   </div>`;
 }

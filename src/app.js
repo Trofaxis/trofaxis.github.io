@@ -35,7 +35,7 @@ import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
 import { montarEfectos } from './ui/efectos.js';
-import { montarPolen } from './ui/polen.js';
+import { montarRueda } from './ui/rueda.js';
 import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 import { crearPuenteCapacitor, sesionDeURLProfunda, urlRetornoAuth } from './core/capacitor-auth.js';
@@ -176,7 +176,7 @@ function render(){
   const grupo=grupoDe(S.view)?.id;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.grupo===grupo?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
-  montarEfectos(app,entrando?tEntrada:null);
+  montarEfectos(app,entrando?tEntrada:null);montarRueda(app);
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
@@ -554,7 +554,7 @@ function cambioPlag(bind,v){
 function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaUI=ll.length?{estado:'ok',msg:'Se usó el clima de tu ubicación.',llenos:ll}:{estado:'',msg:'',llenos:[]};}
 // La descarga del clima y el mapa piden volver a dibujar cuando terminan.
 document.addEventListener('biogap:render',()=>render());
-applyTheme();render();montarPolen(document.getElementById('polen'));
+applyTheme();render();
 if(nube.activo&&S.nube.sesion)sincronizarAlEntrar(); // renueva la sesión al abrir y compara la finca con la de la nube
 addEventListener('online',()=>{
   if(!nube.activo||!S.nube.sesion)return;
