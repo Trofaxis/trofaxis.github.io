@@ -29,7 +29,7 @@ import { borrarCuentaRemota, ErrorBorrarCuenta } from './nube/borrar-cuenta.js';
 import { riegoVacio } from './riego/calculo.js';
 import { riegoInicial } from './riego/guardado.js';
 import { normalizarPlag, plagBorrador, componenteVacio } from './plag/modelo.js';
-import { desdeSag, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
+import { desdeSag, desdeBusqueda, alElegirIngrediente, alElegirFormulacion } from './plag/calculo.js';
 import { ingrediente } from './plag/catalogo.js';
 import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
@@ -405,7 +405,7 @@ const accionesApiRadar = {
 const accionesPlaguicidas = {
   'add-plag': (a, f) => {
     const d = S.draftPlag;
-    if (!d.producto.trim()) { S.plagMsg = { nivel: 'error', texto: 'Escribe el nombre del producto.' }; document.getElementById('pq-prod')?.focus(); }
+    if (!d.producto.trim()) { S.plagMsg = { nivel: 'error', texto: 'Escribe el nombre del producto.' }; document.getElementById(S.plagEdit != null ? 'pq-prod' : 'pqr-buscar')?.focus(); }
     else if (!d.meses.length) { S.plagMsg = { nivel: 'error', texto: 'Marca al menos un mes de aplicación.' }; }
     else {
       const x = normalizarPlag(d), ed = S.plagEdit != null && S.plagEdit < f.plaguicidas.length;
@@ -529,7 +529,8 @@ document.addEventListener('change',e=>{const el=e.target;
   if(vuelve)queueMicrotask(render);}); // diferido: el cambio puede llegar durante un blur
 // Pestaña Plaguicidas: lo que se llena solo al elegir un producto del cuadro SAG o un ingrediente del catálogo.
 function cambioPlag(bind,v){
-  if(bind==='draftPlag.sag'){const r=desdeSag(S.draftPlag,v===''?null:Number(v));S.draftPlag=r.borrador;S.plagNotas=r.notas;}
+  if(bind==='draftPlag.buscar'){const r=desdeBusqueda(S.draftPlag,v,new Date().getMonth());S.draftPlag=r.borrador;S.plagNotas=r.notas;}
+  else if(bind==='draftPlag.sag'){const r=desdeSag(S.draftPlag,v===''?null:Number(v));S.draftPlag=r.borrador;S.plagNotas=r.notas;}
   else if(bind==='draftPlag.enfermedad')S.draftPlag.enfermedad=v===''?null:Number(v);
   else if(bind==='draftPlag.grupo')S.draftPlag.grupoAuto=!v.trim(); // escrito por el usuario: ya no se reemplaza
   else if(bind==='draftPlag.uso')S.draftPlag.usoAuto=!v;
