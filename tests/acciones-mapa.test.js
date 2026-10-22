@@ -55,5 +55,5 @@ test('las acciones que suben al inicio de la página siguen siendo las mismas', 
   const m = app.match(/ACCIONES_QUE_SUBEN = new Set\(\[([^\]]+)\]\)/);
   assert.ok(m);
   assert.deepEqual([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort(), ['bv-atras', 'bv-cuestionario', 'bv-saltar', 'bv-saltar-cuestionario', 'bv-siguiente', 'bv-ver',
-    'finish', 'load-demo', 'next', 'prev', 'rapido-listo', 'reset-yes', 'start-empty', 'wiz-modo', 'wiz-paso']);
+    'finish', 'load-demo', 'next', 'prev', 'rapido-ir', 'rapido-listo', 'reset-yes', 'start-empty', 'wiz-modo', 'wiz-paso']);
 });

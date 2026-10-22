@@ -14,12 +14,14 @@ import { conPlan } from '../fert/calculo.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
-import { pastillaPuntaje, estadoFuente, mas } from './components.js';
+import { pastillaPuntaje, estadoFuente, mas, ayuda, seccion, cabeza, cifras } from './components.js';
 import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDatos, masGlobalgap, masPerfil } from './explicaciones.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 import { pasosFinca } from '../core/completitud.js';
-import { esquemaFinca, finca3d, leyendaFinca, orbe, prisma, defsPrisma, anioFinca } from './finca3d.js';
+import { esquemaFinca, finca3d, leyendaFinca } from './finca3d.js';
+import { ruedaAnio } from './rueda.js';
+import { escalaIndice } from './indice.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -46,6 +48,9 @@ const filaAccion=(x,i,pref,porQue='')=>`<li class="${S.done[x.k]?'done':''}"><in
 // Botón que cambia entre la vista simple y la técnica; la elección se guarda en este navegador.
 const botonVista=()=>`<button class="btn" data-act="vista-tecnica" aria-pressed="${!!S.vistaTecnica}">${S.vistaTecnica?'Ver vista simple':'Ver detalle técnico'}</button>`;
 
+// Menú «Más» de la cabecera: exportar, importar y la vista técnica, juntos y fuera de la vista (como el «⋯» de las apps).
+const menuMas=(vista)=>`<details class="menu-mas" data-keep="menu-inicio"><summary class="btn">Más</summary><div class="menu-mas-caja"><button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${vista}</div></details>`;
+
 // Un paso para completar la finca (src/core/completitud.js), con el botón que lleva a donde se llena.
 const filaPaso=(p)=>`<li class="${p.hecho?'hecho':''}"><span class="marca" aria-hidden="true">${p.hecho?'✓':''}</span><div class="grow"><b>${p.titulo}</b>${p.hecho?'':`<span class="muted small block">${p.pista}</span>`}</div>${p.hecho?'<span class="sr-only">Hecho</span>':p.vista?`<button class="btn sm" data-view="${p.vista}">Completar</button>`:`<button class="btn sm" data-act="wiz-paso" data-step="${p.paso}">Completar</button>`}</li>`;
 
@@ -60,45 +65,50 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
   const esq=esquemaFinca(S.farm);
   return `
   ${faltan&&!S.demo?`<section class="panel completar" id="completar">
-    <div class="row between"><h2>Te faltan ${faltan} de ${pasos.length} pasos para completar tu finca</h2><span class="pill sin-datos txt-ink">${hechos} de ${pasos.length} hechos</span></div>
+    <div class="row between"><div class="cabeza-titulo"><h2>Te faltan ${faltan} de ${pasos.length} pasos para completar tu finca</h2>${ayuda('preliminar','<b>Este resultado es preliminar:</b> todavía no representa el riesgo real de tu finca. Completa los pasos que faltan para que sea preciso.')}</div><span class="pill sin-datos txt-ink">${hechos} de ${pasos.length} hechos</span></div>
     <div class="conf" aria-hidden="true"><span style="width:${hechos/pasos.length*100}%"></span></div>
-    <p><b>Este resultado es preliminar:</b> todavía no representa el riesgo real de tu finca. Completa los pasos que faltan para que sea preciso.</p>
     <ul class="pasos">${pasos.filter(p=>!p.hecho).slice(0,3).map(filaPaso).join('')}</ul>
     <details><summary>Ver los ${pasos.length} pasos</summary><ul class="pasos">${pasos.map(filaPaso).join('')}</ul></details>
   </section>`:''}
   <div class="inicio">
+  <section class="panel hoy">
+    <div class="hoy-estado">
+      <div class="cabeza-titulo"><p class="hoy-kicker">Índice ambiental de tu finca</p>${ayuda('indice',notaIndice)}</div>
+      ${R.sinDatos?'<p class="hoy-frase">Todavía faltan datos para calificar tu finca</p>'
+        :`<p class="hoy-frase">Tu finca está en <em class="nivel-${lvO}">riesgo ${lvO.toLowerCase()}</em></p>${escalaIndice(R.overall,lvO,TEXTO_NIVEL[lvO].split(': ')[1].replace(/^./,c=>c.toUpperCase()),cfg)}`}
+      <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
+        ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
+      <div class="hoy-mes">
+        <h2>Este mes: ${nombreMes}</h2>
+        ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul class="hoy-alertas">${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
+          :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
+      </div>
+    </div>
+    <div class="hoy-rueda">
+      <h2 class="sr-only">Tu año en la finca</h2>
+      ${ruedaAnio(R,S.farm,mes,{v:R.overall,nivel:lvO,sinDatos:R.sinDatos})}
+    </div>
+  </section>
   <section class="panel escena">
-    <div><p class="label">Tu finca en 3D</p><h2>Tu finca de un vistazo</h2></div>
-    <div class="escena3d" data-inclinar>${finca3d(esq)}${orbe(R.overall,lvO,R.sinDatos)}</div>${leyendaFinca(esq)}
-    <p class="muted small">Esquema, no a escala: cada lote mide según sus hectáreas; agua, árboles y fauna salen de lo que respondiste.</p>
-    <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
-      ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
-    <details><summary>¿Cómo se calcula el índice?</summary><p class="muted small">${notaIndice}</p></details>
+    <div class="cabeza-titulo"><h2>Tu finca de un vistazo</h2>${ayuda('escena','Esquema, no a escala: cada lote mide según sus hectáreas; agua, árboles y fauna salen de lo que respondiste.')}</div>
+    <div class="escena3d" data-inclinar>${finca3d(esq)}</div>${leyendaFinca(esq)}
   </section>
   <section class="panel sem">
-    ${defsPrisma}
-    <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema; la columna sube con el riesgo. Abre «¿Por qué?» para ver de dónde sale.</p>
+    <div class="minw-0"><h2>¿Cómo está tu finca?</h2>
       <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
         <div class="row between gap-4"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${m.suficiente?m.level:'Sin datos'}</span></div>
-        <div class="mod-cuerpo"><span class="score"${m.suficiente?` data-contar="${m.score}"`:''}>${m.suficiente?m.score:'—'}</span>${prisma(m.suficiente?m.score:null,m.level)}</div>
+        <div class="mod-cuerpo"><span class="score"${m.suficiente?` data-contar="${m.score}"`:''}>${m.suficiente?m.score:'—'}</span><div class="regla" aria-hidden="true">${m.suficiente?`<span class="fill-${m.level}" style="width:${m.score}%"></span>`:''}</div></div>
         <p class="small muted">${TEXTO_NIVEL[lv]}</p>
         <details><summary>¿Por qué?</summary>${m.suficiente
           ?`<p class="small">Puntaje ${m.score} de 100. Causa principal: ${esc(m.driver)}. Confianza de los datos: ${Math.round(m.conf*100)} %.</p>${tablaRubrica(m,cfg)}`
           :`<p class="small">Con lo que respondiste todavía no alcanza para calificar este tema (confianza ${Math.round(m.conf*100)} %).</p><button class="btn sm" data-view="wizard">Completar respuestas</button>`}</details>
       </li>`;}).join('')}</ul></div>
   </section>
-  <section class="panel urg">
-    <div class="row between"><div><p class="label">Qué hacer primero</p><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
+  <section class="panel urg" id="urgentes">
+    <div class="row between"><h2>Lo más urgente</h2>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
     ${top.length?`<ul class="plan urgentes">${top.map((x,i)=>filaAccion(x,i,'urg',`<details><summary>¿Por qué?</summary><p class="small">Sale del tema ${esc(x.m)}${x.score!=null?`, con riesgo ${x.lv.toLowerCase()} (${x.score} de 100)`:''}.${x.driver?` Causa principal: ${esc(x.driver)}.`:''}</p></details>`)).join('')}</ul>`
       :`<p class="muted">${recs.length?'Ya marcaste todas las acciones como hechas.':'No hay acciones pendientes con los datos actuales.'}</p>`}
     ${resto.length?`<details><summary>Ver las otras ${resto.length} acciones</summary><ul class="plan">${resto.map((x,i)=>filaAccion(x,i,'resto')).join('')}</ul></details>`:''}
-  </section>
-  <section class="panel mes">
-    <div class="stack gap-8"><p class="label">Tu año en la finca</p><h2>Este mes: ${nombreMes}</h2>
-    ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul>${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
-      :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
-      <p class="muted small">Cada barra es un mes; su altura, cuántas coincidencias de riesgo tiene.</p></div>
-    ${anioFinca(R.mh,mes)}
   </section>
   </div>`;
 }
@@ -125,10 +135,10 @@ export function viewDashboard(){
     ['riego','Pasar a riego por goteo','Desde gravedad o aspersión',!(f.riego==='gravedad'||f.riego==='aspersion')],
     ['suelo','Cubrir el suelo en lluvias','Cobertura y labranza mínima',!(f.sueloDesnudoMeses.length||f.labranza==='convencional')]];
   const avisos=`${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
-  ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}`;
+  ${S.demo?`<div class="notice notice-corto"><span><b>Datos de ejemplo.</b> Finca ficticia.</span>${ayuda('demo','Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».')}</div>`:''}`;
   const cabecera=`<div class="row between">
       <div class="minw-0"><p class="label">Finca${S.demo?' <span class="badge ejemplo">Ejemplo</span>':''}</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
-      <div class="row">${S.demo?'<button class="btn primary" data-act="start-empty">Empezar con mi finca</button>':'<button class="btn" data-view="wizard">Editar respuestas</button>'}<button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${botonVista()}</div>
+      <div class="row">${S.demo?'<button class="btn primary" data-act="start-empty">Empezar con mi finca</button>':'<button class="btn" data-view="wizard">Editar respuestas</button>'}${menuMas(botonVista())}</div>
     </div>`;
   if(!S.vistaTecnica)return `${avisos}<section class="cabecera-inicio">${cabecera}</section>${vistaSimple(R,cfg,mods,recs,lvO,notaIndice)}${panelApiRadar(f,cfg,X)}${panelDatos()}`;
   return `${avisos}
@@ -202,64 +212,56 @@ function listaAcciones(mods){
   return mods.flatMap(m=>m.recs.map(r=>({k:m.id+'|'+r,m:m.nombre,lv:m.suficiente?m.level:'Sin datos',score:m.suficiente?m.score:null,driver:m.suficiente?m.driver:'',r}))).sort((a,b)=>ORDEN_NIVEL[a.lv]-ORDEN_NIVEL[b.lv]);
 }
 
-// Plan de acción completo, con la casilla de «hecha» de cada acción.
+// Plan de acción completo, con la casilla de «hecha» de cada acción. Plegado, dice cuántas van hechas.
 function panelPlan(recs){
-  return `<section class="panel"><div class="row between"><div><h2>Plan de acción</h2><p class="muted">Ordenado por riesgo del módulo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.filter(x=>S.done[x.k]).length} de ${recs.length} hechas</span>`:''}</div>
-    ${recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>'}
-  </section>`;
-}
-
-// Margen de Minor Musts, no conformidades abiertas y secciones de IFA v6 por módulo.
-function panelGlobalgap(f,mods){
-  const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
-  return `<section class="panel">
-    <div><h2>Panel GLOBALG.A.P. IFA v6</h2><p class="muted">Guía de referencia. No reemplaza la auditoría ni garantiza el resultado.</p></div>
-    <div class="grid2">
-      <div class="stack gap-12 minw-0">
-        <h3>Margen de Minor Musts</h3>
-        <div class="row">
-          <div class="f w-150"><label for="mm-apl">Aplicables</label><input id="mm-apl" type="number" min="0" data-bind="farm.minorAplicables" data-rerender value="${f.minorAplicables}"></div>
-          <div class="f w-150"><label for="mm-fal">Incumplidos</label><input id="mm-fal" type="number" min="0" data-bind="farm.minorFallas" data-rerender value="${f.minorFallas}"></div>
-        </div>
-        <p>Se permiten <b>${allowed}</b> incumplimientos (${Math.round(CONFIG.globalgap.margenMinorMusts*100)} % redondeado hacia abajo). ${remaining>=0?`Quedan <b>${remaining}</b>.`:`<b class="txt-crit">Se superó el margen por ${-remaining}: no se cumple la regla del 95 %.</b>`}</p>
-        <div class="meter" aria-label="Margen de Minor Musts">${Array.from({length:Math.max(allowed,f.minorFallas)},(_,i)=>`<i class="${i<f.minorFallas?'used':'free'}" title="${i<f.minorFallas?'Usado':'Disponible'}"></i>`).join('')||'<span class="muted">Sin margen con este número de criterios.</span>'}</div>
-        <p class="muted small">Los Major Musts deben cumplirse al 100 %; uno solo incumplido impide la certificación.</p>
-      </div>
-      <div class="stack gap-12 minw-0">
-        <h3>No conformidades abiertas</h3>
-        <div class="scroll"><table class="data"><thead><tr><th>Criterio</th><th class="num">Días abiertos</th><th class="num">Quedan</th><th></th></tr></thead><tbody>
-          ${f.nc.map((n,i)=>{const q=CONFIG.globalgap.diasCierreNC-n.dias;return`<tr><td>${esc(n.criterio)}</td><td class="num">${n.dias}</td><td class="num ${q<=7?'txt-crit':'txt-ink'}">${q>0?q+' días':'Vencida'}</td><td><button class="btn sm" data-act="rm-nc" data-i="${i}">Cerrar</button></td></tr>`}).join('')||'<tr><td colspan="4" class="muted">Ninguna.</td></tr>'}
-        </tbody></table></div>
-        <div class="row">
-          <input id="nc-crit" aria-label="Criterio o hallazgo" placeholder="Criterio o hallazgo" data-bind="draftNC.criterio" value="${esc(S.draftNC.criterio)}" class="nc-criterio">
-          <input id="nc-dias" aria-label="Días abiertos" type="number" min="0" placeholder="Días" data-bind="draftNC.dias" value="${S.draftNC.dias||''}" class="nc-dias">
-          <button class="btn sm" data-act="add-nc">Agregar</button>
-        </div>
-        <p class="muted small">Plazo máximo de ${CONFIG.globalgap.diasCierreNC} días para cerrar una no conformidad antes de la suspensión.</p>
-      </div>
-    </div>
-    <div class="scroll"><table class="data"><thead><tr><th>Módulo</th><th>Secciones de IFA v6 frutas y verduras (Smart)</th><th class="num">Riesgo</th></tr></thead><tbody>
-      ${mods.map(m=>`<tr><td>${m.nombre}</td><td>${m.ifa}</td><td class="num">${m.suficiente?`<span class="pill ${m.level}">${m.score}</span>`:'<span class="pill sin-datos">sin datos</span>'}</td></tr>`).join('')}
-    </tbody></table></div>
-    <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>
-  </section>`;
+  const hechas=recs.filter(x=>S.done[x.k]).length;
+  return seccion('plan-accion','Plan de acción',recs.length?`${hechas} de ${recs.length} hechas`:'Sin acciones',
+    recs.length?`<ul class="plan">${recs.map((x,i)=>`<li class="${S.done[x.k]?'done':''}"><input type="checkbox" id="rec-${i}" data-done="${esc(x.k)}" ${S.done[x.k]?'checked':''} aria-label="Marcar como hecha"><span class="tag">${x.m} · ${x.lv}</span><label class="txt" for="rec-${i}">${esc(x.r)}</label></li>`).join('')}</ul>`:'<p class="muted">No hay recomendaciones con los datos actuales.</p>',true,S.abiertos);
 }
 
 // Pestaña Auditoría: lo que se prepara para GLOBALG.A.P. IFA v6. Lee la misma evaluación que el dashboard.
+// Arriba, tres cifras (lo que te queda de margen, lo abierto y lo hecho); abajo, cada parte en su sección plegada.
 export function viewAuditoria(){
   const cfg=configEfectiva(normalizarAjustes(S.ajustes));
-  const f=conPlan(S.farm),R=evaluar(f,cfg,extraRiego()),mods=R.mods;
-  const cab=`<section class="panel flat"><p class="label">Auditoría</p><h1>Prepararte para GLOBALG.A.P.</h1><p class="muted">Tu margen de Minor Musts, las no conformidades abiertas y el plan de acción, en un solo lugar.</p></section>`;
-  const gg=f.gg!=='no'?panelGlobalgap(f,mods):`<section class="panel"><h2>Dijiste que tu finca no busca GLOBALG.A.P.</h2><p class="muted">Por eso el panel de certificación está oculto. Si cambias de idea, elige otra respuesta:</p>
-    <div class="choice" role="group" aria-label="¿Tu finca tiene GLOBALG.A.P.?"><button data-act="gg" data-v="si" aria-pressed="false">Sí, ya estoy certificado</button><button data-act="gg" data-v="quiero" aria-pressed="false">Quiero certificarme</button><button data-act="gg" data-v="no" aria-pressed="true">No por ahora</button></div></section>`;
-  return `${cab}${gg}${panelPlan(listaAcciones(mods))}`;
+  const f=conPlan(S.farm),R=evaluar(f,cfg,extraRiego()),mods=R.mods,recs=listaAcciones(mods);
+  const hechas=recs.filter(x=>S.done[x.k]).length;
+  const cab=cabeza({modulo:'Auditoría',titulo:'Prepararte para GLOBALG.A.P.',ayudaClave:'auditoria',ayudaTexto:'Tu margen de Minor Musts, las no conformidades abiertas y el plan de acción, en un solo lugar. Guía de referencia. No reemplaza la auditoría ni garantiza el resultado.'});
+  if(f.gg==='no')return `${cab}<section class="panel"><h2>Dijiste que tu finca no busca GLOBALG.A.P.</h2><p class="muted">Por eso el panel de certificación está oculto. Si cambias de idea, elige otra respuesta:</p>
+    <div class="choice" role="group" aria-label="¿Tu finca tiene GLOBALG.A.P.?"><button data-act="gg" data-v="si" aria-pressed="false">Sí, ya estoy certificado</button><button data-act="gg" data-v="quiero" aria-pressed="false">Quiero certificarme</button><button data-act="gg" data-v="no" aria-pressed="true">No por ahora</button></div></section>${panelPlan(recs)}`;
+  const allowed=Math.floor(Math.max(0,f.minorAplicables)*CONFIG.globalgap.margenMinorMusts);const remaining=allowed-f.minorFallas;
+  const vencen=f.nc.filter(n=>CONFIG.globalgap.diasCierreNC-n.dias<=7).length;
+  return `${cab}
+  ${cifras([['Fallas que aún te permiten',remaining>=0?remaining:0,remaining<0?'Alto':remaining<=1?'Medio':'Bajo'],['No conformidades abiertas',f.nc.length,vencen?'Alto':f.nc.length?'Medio':'Bajo'],['Acciones hechas',`${hechas} de ${recs.length}`]])}
+  ${seccion('aud-mm','Margen de Minor Musts',remaining>=0?`${remaining} de ${allowed} libres`:'Margen superado',`
+    <div class="row">
+      <div class="f w-150"><label for="mm-apl">Aplicables</label><input id="mm-apl" type="number" min="0" data-bind="farm.minorAplicables" data-rerender value="${f.minorAplicables}"></div>
+      <div class="f w-150"><label for="mm-fal">Incumplidos</label><input id="mm-fal" type="number" min="0" data-bind="farm.minorFallas" data-rerender value="${f.minorFallas}"></div>
+    </div>
+    <p>Se permiten <b>${allowed}</b> incumplimientos (${Math.round(CONFIG.globalgap.margenMinorMusts*100)} % redondeado hacia abajo). ${remaining>=0?`Quedan <b>${remaining}</b>.`:`<b class="txt-crit">Se superó el margen por ${-remaining}: no se cumple la regla del 95 %.</b>`}</p>
+    <div class="meter" aria-label="Margen de Minor Musts">${Array.from({length:Math.max(allowed,f.minorFallas)},(_,i)=>`<i class="${i<f.minorFallas?'used':'free'}" title="${i<f.minorFallas?'Usado':'Disponible'}"></i>`).join('')||'<span class="muted">Sin margen con este número de criterios.</span>'}</div>
+    <p class="muted small">Los Major Musts deben cumplirse al 100 %; uno solo incumplido impide la certificación.</p>`,true,S.abiertos)}
+  ${seccion('aud-nc','No conformidades',`${f.nc.length} abiertas`,`
+    <div class="scroll"><table class="data"><thead><tr><th>Criterio</th><th class="num">Días abiertos</th><th class="num">Quedan</th><th></th></tr></thead><tbody>
+      ${f.nc.map((n,i)=>{const q=CONFIG.globalgap.diasCierreNC-n.dias;return`<tr><td>${esc(n.criterio)}</td><td class="num">${n.dias}</td><td class="num ${q<=7?'txt-crit':'txt-ink'}">${q>0?q+' días':'Vencida'}</td><td><button class="btn sm" data-act="rm-nc" data-i="${i}">Cerrar</button></td></tr>`}).join('')||'<tr><td colspan="4" class="muted">Ninguna.</td></tr>'}
+    </tbody></table></div>
+    <div class="row">
+      <input id="nc-crit" aria-label="Criterio o hallazgo" placeholder="Criterio o hallazgo" data-bind="draftNC.criterio" value="${esc(S.draftNC.criterio)}" class="nc-criterio">
+      <input id="nc-dias" aria-label="Días abiertos" type="number" min="0" placeholder="Días" data-bind="draftNC.dias" value="${S.draftNC.dias||''}" class="nc-dias">
+      <button class="btn sm" data-act="add-nc">Agregar</button>
+    </div>
+    <p class="muted small">Plazo máximo de ${CONFIG.globalgap.diasCierreNC} días para cerrar una no conformidad antes de la suspensión.</p>`,f.nc.length>0,S.abiertos)}
+  ${panelPlan(recs)}
+  ${seccion('aud-ifa','Secciones de IFA v6',`${mods.length} módulos`,`
+    <div class="scroll"><table class="data"><thead><tr><th>Módulo</th><th>Secciones de IFA v6 frutas y verduras (Smart)</th><th class="num">Riesgo</th></tr></thead><tbody>
+      ${mods.map(m=>`<tr><td>${m.nombre}</td><td>${m.ifa}</td><td class="num">${m.suficiente?`<span class="pill ${m.level}">${m.score}</span>`:'<span class="pill sin-datos">sin datos</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="muted small">Secciones por verificar con el checklist oficial de IFA v6.</p>`,false,S.abiertos)}`;
 }
 
 // Respaldo y borrado de los datos: está en las dos vistas.
 function panelDatos(){
-  return `
-  <section class="panel flat">
-    <div><h3>Tus datos</h3><p class="muted small">Se guardan en este navegador (la nube es opcional, en Mi finca, «Fincas parecidas»). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p></div>
+  return seccion('tus-datos','Tus datos','Respaldo',`
+    <p class="muted small">Se guardan en este navegador (la nube es opcional, en Mi finca, «Fincas parecidas»). Para llevarlos a otro equipo, exporta un archivo o copia el respaldo en texto; para cargarlos, importa el archivo o pega el texto.</p>
     <div class="f"><label for="io-box">Respaldo en texto (JSON)</label><textarea id="io-box" data-bind="io" placeholder="Pega aquí un respaldo y pulsa Cargar">${esc(S.io)}</textarea></div>
     <div class="row">
       <button class="btn sm" data-act="io-copy">Copiar respaldo</button>
@@ -267,6 +269,5 @@ function panelDatos(){
       <button class="btn sm" data-act="load-demo">Ver finca de ejemplo</button>
       ${S.confirmReset?`<button class="btn sm danger" data-act="reset-yes">Confirmar: borrar todo</button><button class="btn sm" data-act="reset-no">Cancelar</button>`:`<button class="btn sm danger" data-act="reset">Borrar mis datos</button>`}
       <span class="muted small" id="io-msg">${esc(S.ioMsg)}</span>
-    </div>
-  </section>`;
+    </div>`,S.confirmReset||!!S.ioMsg,S.abiertos);
 }

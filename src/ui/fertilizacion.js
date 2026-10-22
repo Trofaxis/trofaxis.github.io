@@ -5,9 +5,8 @@ import { S } from '../core/state.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
 import { PRODUCTOS, METODOS, UNIDADES, UNIDADES_UI, producto } from '../fert/catalogo.js';
 import { resumen } from '../fert/calculo.js';
-import { field, select } from './components.js';
+import { field, select, cabeza, cifras, ayuda, secAbre, SEC_CIERRA, listaAlertas } from './components.js';
 
-const NIVEL = { error: 'Error', advertencia: 'Revisar', criterio: 'Criterio', ok: 'Bien' };
 const fmt = (x, d = 1) => (x == null || !Number.isFinite(x) ? '—' : x.toLocaleString('es-HN', { maximumFractionDigits: d }));
 const NUT = [['n', 'N', 'nObjetivo'], ['p', 'P₂O₅', 'pObjetivo'], ['k', 'K₂O', 'kObjetivo']];
 
@@ -18,33 +17,34 @@ export function viewFertilizacion() {
   const g = producto(d.producto);
   const lluvia = new Set(f.lluviaMeses);
   const maxMes = Math.max(...r.nMes, 1);
+  // Nivel de cada nutriente frente a su objetivo (el mismo corte de las barras de abajo).
+  const nivelNut = (q) => (q == null ? '' : q > 1.2 ? 'Alto' : q > 1 || q < 0.8 ? 'Medio' : 'Bajo');
+  const rojos = r.hallazgos.filter((a) => a.nivel === 'error').length, revisar = r.hallazgos.filter((a) => a.nivel === 'advertencia').length;
+  const objetivos = NUT.filter(([, , key]) => f[key] > 0).length;
   return `
   ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
-  <section class="panel">
-    <div><h2>Plan de fertilización</h2>
-    <p class="muted">Registra cada aplicación: producto, dosis, mes y método. La app calcula cuánto N, P₂O₅ y K₂O aplicas, lo compara con tu objetivo y revisa cuándo y cómo cae frente a la lluvia, el suelo desnudo y el agua: <b>qué tan sostenible es tu fertilización con el ecosistema</b>. ${f.fertPlan.length ? 'El dashboard usa este plan en lugar del N total del cuestionario.' : ''}</p></div>
-    <div class="row">
-      <span class="label">Unidad de dosis</span>
-      ${UNIDADES_UI.map((k) => [k, UNIDADES[k]]).map(([k, u]) => `<button class="btn sm ${S.fertUnidad === k ? 'primary' : ''}" data-act="fert-unidad" data-u="${k}">${u.nombre}</button>`).join('')}
-      <span class="muted small basis-100">1 qq/mz ≈ ${fmt(UNIDADES.qqmz.aKgHa)} kg/ha (quintal de 100 lb; manzana de 10 000 varas²)</span>
-    </div>
-    <div class="row"><button class="btn primary" data-act="fert-import">Cargar Excel o CSV</button><button class="btn" data-act="fert-plantilla">Descargar plantilla</button>
-      <span class="muted small">Columnas: Mes (o fecha), Producto (nombre o fórmula 15-15-15), Dosis, Unidad (kg/ha, qq/mz, qq/ha, kg/mz, lb/acre) y Método. El archivo no sale de tu navegador.</span></div>
-    ${S.fertImport ? `<div class="subform"><p class="small"><b>Último archivo:</b> ${esc(S.fertImport.archivo)} (hoja "${esc(S.fertImport.hoja)}").</p>
-      ${S.fertImport.avisos.map((a) => `<p class="warnmsg small">${esc(a)}</p>`).join('')}
-      ${S.fertImport.omitidas.length ? `<details><summary>${S.fertImport.omitidas.length} fila(s) no leídas</summary><ul class="small">${S.fertImport.omitidas.map((o) => `<li>Fila ${o.fila}: ${esc(o.motivo)}</li>`).join('')}</ul></details>` : ''}</div>` : ''}
-  </section>
-
-  <section class="panel">
-    <div><h2>Objetivos por nutriente</h2>
-    <p class="muted">Cuánto necesita tu cultivo, en kg por hectárea. <b>Sale de tu análisis de suelo o de la recomendación de tu agrónomo</b>; la app no lo inventa. Sin objetivo, la app no puede decir si te sobra o te falta.</p></div>
+  ${cabeza({ modulo: 'Fertilización', titulo: 'Plan de fertilización',
+    estado: r.filas.length ? (rojos ? `<b>${rojos} por corregir</b> · ${revisar} por revisar` : `<b>${r.filas.length} aplicaciones</b> · ${revisar} por revisar`) : 'Agrega tu primera aplicación',
+    acciones: `<button class="btn primary" data-act="fert-import">Cargar Excel o CSV</button><details class="menu-mas" data-keep="menu-fert"><summary class="btn">Más</summary><div class="menu-mas-caja"><button class="btn" data-act="fert-plantilla">Descargar plantilla</button></div></details>`,
+    ayudaClave: 'fert', ayudaTexto: `Registra cada aplicación: producto, dosis, mes y método. La app calcula cuánto N, P₂O₅ y K₂O aplicas, lo compara con tu objetivo y revisa cuándo y cómo cae frente a la lluvia, el suelo desnudo y el agua: <b>qué tan sostenible es tu fertilización con el ecosistema</b>. ${f.fertPlan.length ? 'El dashboard usa este plan en lugar del N total del cuestionario.' : ''} Plantilla: columnas Mes (o fecha), Producto (nombre o fórmula 15-15-15), Dosis, Unidad (kg/ha, qq/mz, qq/ha, kg/mz, lb/acre) y Método. El archivo no sale de tu navegador.` })}
+  ${r.filas.length ? cifras(NUT.map(([x, nom, key]) => [`${nom} de ${f[key] || '—'} kg/ha`, `${fmt(r.tot[x], 0)}${r.ratio[x] == null ? '' : ` · ${Math.round(r.ratio[x] * 100)} %`}`, nivelNut(r.ratio[x])])) : ''}
+  ${secAbre('fe-objetivos', 'Objetivos por nutriente', objetivos === 3 ? NUT.map(([, nom, key]) => `${nom} ${f[key]}`).join(' · ') : `Faltan ${3 - objetivos}`, objetivos < 3, S.abiertos, objetivos === 0)}
+    <p class="muted small">Cuánto necesita tu cultivo, en kg por hectárea. <b>Sale de tu análisis de suelo o de la recomendación de tu agrónomo</b>; la app no lo inventa. Sin objetivo, la app no puede decir si te sobra o te falta.</p>
     <div class="fields">
       ${NUT.map(([x, nom, key]) => `<div class="f"><label for="obj-${x}">Objetivo de ${nom}</label><input id="obj-${x}" type="number" min="0" data-bind="farm.${key}" data-rerender value="${f[key] || ''}"><span class="hint">kg ${nom}/ha por ciclo</span></div>`).join('')}
     </div>
-  </section>
-
+  ${SEC_CIERRA}
   <section class="panel">
     <h2>Aplicaciones</h2>
+    <div class="row unidades" role="group" aria-label="Unidad de dosis">
+      <span class="label">Unidad</span>
+      ${UNIDADES_UI.map((k) => [k, UNIDADES[k]]).map(([k, u]) => `<button class="btn sm ${S.fertUnidad === k ? 'primary' : ''}" data-act="fert-unidad" data-u="${k}">${u.nombre}</button>`).join('')}
+      ${ayuda('fert-unidad', `1 qq/mz ≈ ${fmt(UNIDADES.qqmz.aKgHa)} kg/ha (quintal de 100 lb; manzana de 10 000 varas²)`)}
+    </div>
+    ${S.fertImport ? `<div class="subform"><p class="small"><b>Último archivo:</b> ${esc(S.fertImport.archivo)} (hoja "${esc(S.fertImport.hoja)}").</p>
+      ${S.fertImport.avisos.map((a) => `<p class="warnmsg small">${esc(a)}</p>`).join('')}
+      ${S.fertImport.omitidas.length ? `<details><summary>${S.fertImport.omitidas.length} fila(s) no leídas</summary><ul class="small">${S.fertImport.omitidas.map((o) => `<li>Fila ${o.fila}: ${esc(o.motivo)}</li>`).join('')}</ul></details>` : ''}</div>` : ''}
+
     <div class="scroll"><table class="data"><thead><tr><th>Mes</th><th>Producto</th><th class="num">Dosis (${U.nombre})</th><th>Método</th><th class="num">N</th><th class="num">P₂O₅</th><th class="num">K₂O</th><th></th></tr></thead><tbody>
       ${r.filas.map((a, i) => `<tr><td>${M[a.mes]}${lluvia.has(a.mes) ? ' <span title="Mes de lluvia fuerte">🌧</span>' : ''}</td><td>${esc(a.nombre)}<div class="muted small">${a.n}-${a.p}-${a.k}</div></td><td class="num">${fmt(a.dosis / U.aKgHa)}</td><td class="small">${esc(METODOS[a.metodo])}</td><td class="num">${fmt(a.kgN)}</td><td class="num">${fmt(a.kgP)}</td><td class="num">${fmt(a.kgK)}</td>
         <td class="row gap-4 nowrap"><button class="btn sm" data-act="edit-fert" data-i="${i}">Editar</button><button class="btn sm" data-act="rm-fert" data-i="${i}">Quitar</button></td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin aplicaciones. Agrégalas abajo o carga tu plantilla.</td></tr>'}
@@ -62,16 +62,10 @@ export function viewFertilizacion() {
     </div>
   </section>
 
-  ${r.filas.length ? `<div class="grid2">
-    <section class="panel">
-      <div><h2>Hallazgos</h2><p class="muted">Qué está bien, qué revisar y por qué.</p></div>
-      <ul class="alertas">${r.hallazgos.map((a) => `<li class="alerta ${a.nivel}">
-        <div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
-        <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted fs-125">Fuente: ${esc(a.fuente.cita)}</p>` : ''}
-      </li>`).join('')}</ul>
-    </section>
-    <section class="panel">
-      <h2>Nutrientes frente al objetivo</h2>
+  ${r.filas.length ? `${secAbre('fe-hallazgos', 'Hallazgos', `${rojos} por corregir · ${revisar} por revisar`, rojos > 0, S.abiertos, rojos > 0)}
+      ${listaAlertas(r.hallazgos)}
+  ${SEC_CIERRA}
+  ${secAbre('fe-nutrientes', 'Nutrientes por mes', 'Frente al objetivo y la lluvia', false, S.abiertos)}
       ${NUT.map(([x, nom, key]) => { const q = r.ratio[x]; const w = q == null ? 0 : Math.min(q, 1.5) / 1.5 * 100; const lv = q == null ? '' : q > 1.2 ? 'Alto' : q > 1 || q < 0.8 ? 'Medio' : 'Bajo';
         return `<div><div class="row between small"><b>${nom}</b><span>${fmt(r.tot[x])} de ${f[key] || '—'} kg/ha${q == null ? '' : ` · ${Math.round(q * 100)} %`}</span></div>
         <div class="bar-track rel"><span class="fill-${lv || 'Bajo'}${q == null ? ' tenue' : ''}" style="width:${w}%"></span><i class="meta-objetivo" title="Objetivo"></i></div></div>`; }).join('')}
@@ -81,6 +75,5 @@ export function viewFertilizacion() {
         ${r.nMes.map((x, i) => `<td class="${x ? (lluvia.has(i) ? 'hit' : 'on-gen') : ''}" title="${fmt(x)} kg N/ha"${x ? ` style="opacity:${0.45 + 0.55 * x / maxMes}"` : ''}>${x ? fmt(x, 0) : ''}</td>`).join('')}
       </tr></tbody></table></div>
       <p class="muted small">kg N/ha por mes. En rojo: N aplicado en un mes de lluvia fuerte.</p>
-    </section>
-  </div>` : ''}`;
+  ${SEC_CIERRA}` : ''}`;
 }

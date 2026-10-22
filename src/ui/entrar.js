@@ -34,7 +34,7 @@ export function viewEntrar() {
   </section>`;
 }
 
-const TEMAS = [['system', 'Sistema'], ['light', 'Claro'], ['dark', 'Oscuro']];
+const TEMAS = [['light', 'Claro'], ['dark', 'Oscuro']];
 
 // Bloque de cuenta al pie de la barra lateral: botón, menú desplegable y confirmación de cierre de sesión.
 export function htmlCuenta() {

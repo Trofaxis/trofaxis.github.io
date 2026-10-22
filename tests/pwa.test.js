@@ -18,8 +18,8 @@ test('index.html enlaza el manifiesto y el control PWA sin ampliar la CSP', () =
   assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
   assert.match(html, /<link rel="stylesheet" href="pwa\.css">/);
   assert.match(html, /<script type="module" src="pwa\.js"><\/script>/);
-  assert.match(html, /<meta name="theme-color" content="#EDF2EC" media="\(prefers-color-scheme: light\)">/);
-  assert.match(html, /<meta name="theme-color" content="#06110D" media="\(prefers-color-scheme: dark\)">/);
+  assert.match(html, /<meta name="theme-color" content="#F3F5EF" media="\(prefers-color-scheme: light\)">/);
+  assert.match(html, /<meta name="theme-color" content="#0B1712" media="\(prefers-color-scheme: dark\)">/);
   assert.match(html, /<meta http-equiv="Content-Security-Policy" content="default-src 'self';/);
 });
 

@@ -35,7 +35,8 @@ import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
 import { montarEfectos } from './ui/efectos.js';
-import { montarPolen } from './ui/polen.js';
+import { montarRueda } from './ui/rueda.js';
+import { montarIndice } from './ui/indice.js';
 import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 import { crearPuenteCapacitor, sesionDeURLProfunda, urlRetornoAuth } from './core/capacitor-auth.js';
@@ -94,7 +95,7 @@ function sesionLista() {
   return renovando;
 }
 
-function applyTheme(){const r=document.documentElement;if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
+function applyTheme(){const r=document.documentElement;r.setAttribute('data-theme',S.theme==='dark'?'dark':'light');
 }
 // Guardado en el navegador con espera: tras ~500 ms sin cambios y siempre al ocultar o cerrar la página (issue 49).
 const guardador=crearGuardado(()=>{guardarLocal(S);anunciar(avisoGuardado());if(S.nube.sesion)subidor.pedir();});
@@ -176,18 +177,18 @@ function render(){
   const grupo=grupoDe(S.view)?.id;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.grupo===grupo?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
-  montarEfectos(app,entrando?tEntrada:null);
+  montarEfectos(app,entrando?tEntrada:null);montarRueda(app);montarIndice(app);
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
-const alFormPlag=()=>queueMicrotask(()=>document.getElementById('plag-form')?.scrollIntoView({block:'start'}));
+const alFormPlag=(id='plag-form')=>queueMicrotask(()=>document.getElementById(id)?.scrollIntoView({block:'start'}));
 const limpiarPlag=()=>{S.draftPlag=plagBorrador();S.plagEdit=null;S.plagNotas=[];};
 const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.componentes.length)d.componentes=[componenteVacio()];
   d.grupoAuto=!d.grupo;d.usoAuto=!d.uso;return d;}; // lo ya guardado se respeta al cambiar de ingrediente
 // Acciones de los botones con data-act. Cada una recibe el botón pulsado `a` y la finca `f`.
 // Al terminar, el manejador de clics vuelve a dibujar la pantalla; una acción que devuelve `false`
 // (porque no cambió nada o porque ya dibujó o delega en otra función) evita ese dibujo.
-const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'rapido-listo', 'wiz-modo', 'wiz-paso', 'start-empty', 'load-demo', 'reset-yes',
+const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'rapido-listo', 'rapido-ir', 'wiz-modo', 'wiz-paso', 'start-empty', 'load-demo', 'reset-yes',
   'bv-siguiente', 'bv-atras', 'bv-saltar', 'bv-cuestionario', 'bv-saltar-cuestionario', 'bv-ver']);
 
 const accionesGenerales = {
@@ -229,12 +230,15 @@ const accionesCuestionario = {
   'finish': () => { S.view = 'dashboard'; },
   'wiz-paso': (a) => { S.wizModo = 'completo'; S.step = +a.dataset.step || 0; S.view = 'wizard'; },
   'rapido-opc': (a) => { S.rapido[a.dataset.k] = a.dataset.v; },
+  // Cuestionario rápido: una pregunta por pantalla.
+  'rapido-ir': (a) => { S.preg = Math.max(0, +a.dataset.i || 0); },
+  'riego-tipo': (a) => { S.farm.riego = a.dataset.v; },
   'rapido-listo': () => { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; S.demo = false; S.view = 'dashboard'; },
   'wiz-modo': (a) => {
     if (S.rapido && S.rapidoDe === S.farm && a.dataset.v === 'completo') { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; }
     S.wizModo = a.dataset.v === 'completo' ? 'completo' : 'rapido'; S.view = 'wizard';
   },
-  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; S.wizModo = 'rapido'; },
+  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; S.preg = 0; S.wizModo = 'rapido'; },
   'load-demo': () => {
     reiniciarMapa(); S.farm = demoFarm(); S.demo = true; S.done = {}; S.view = 'dashboard'; S.msg = 'Se cargó la finca de ejemplo.';
   },
@@ -295,7 +299,7 @@ const terminarBienvenida = () => {
 const accionesCuenta = {
   'cuenta-menu': () => { S.cuentaMenu = !S.cuentaMenu; },
   'cuenta-entrar': () => { S.cuentaMenu = false; S.entrarCorreo = false; S.view = 'entrar'; },
-  'tema-set': (a) => { S.theme = ['system', 'light', 'dark'].includes(a.dataset.tema) ? a.dataset.tema : 'system'; },
+  'tema-set': (a) => { S.theme = a.dataset.tema === 'dark' ? 'dark' : 'light'; },
   'entrar-cuenta': () => {
     if (S.cuenta.proveedor === 'google') { nubeAccion('nube-google'); return false; }
     S.nube.email = S.cuenta.email; S.entrarCorreo = true;
@@ -431,9 +435,11 @@ const accionesPlaguicidas = {
     const i = +a.dataset.i; if (!f.plaguicidas[i]) return false;
     S.draftPlag = { ...aBorrador(f.plaguicidas[i]), meses: [] }; S.plagEdit = null; S.plagNotas = [];
     S.plagMsg = { nivel: 'ok', texto: `Copia de ${f.plaguicidas[i].producto || 'la aplicación'} lista: marca los meses de la nueva aplicación y agrégala.` };
-    alFormPlag();
+    alFormPlag('plag-rapido');
   },
   'plag-cancel': () => { limpiarPlag(); },
+  // Abre una sección plegada y baja hasta ella (por ejemplo «Agregar más detalles» en Plaguicidas).
+  'abrir-sec': (a) => { S.abiertos[a.dataset.k] = true; if (a.dataset.ir) alFormPlag(a.dataset.ir); },
   'plag-rm': (a, f) => {
     const i = +a.dataset.i; f.plaguicidas.splice(i, 1);
     if (S.plagEdit === i) limpiarPlag(); else if (S.plagEdit != null && S.plagEdit > i) S.plagEdit--;
@@ -554,7 +560,7 @@ function cambioPlag(bind,v){
 function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaUI=ll.length?{estado:'ok',msg:'Se usó el clima de tu ubicación.',llenos:ll}:{estado:'',msg:'',llenos:[]};}
 // La descarga del clima y el mapa piden volver a dibujar cuando terminan.
 document.addEventListener('biogap:render',()=>render());
-applyTheme();render();montarPolen(document.getElementById('polen'));
+applyTheme();render();
 if(nube.activo&&S.nube.sesion)sincronizarAlEntrar(); // renueva la sesión al abrir y compara la finca con la de la nube
 addEventListener('online',()=>{
   if(!nube.activo||!S.nube.sesion)return;

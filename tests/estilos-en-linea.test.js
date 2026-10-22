@@ -44,11 +44,11 @@ test('los anchos de los campos de riego (w-N) existen en styles.css', () => {
 
 test('cada clase de utilidad que usan las vistas está definida en styles.css', () => {
   const definidas = new Set([...css.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-  const nuevas = ['stack', 'nowrap', 'basis-100', 'maxw-110', 'w-auto', 'mt-8', 'pl-18', 'block', 'inline', 'rel', 'pointer', 't-der', 't-centro',
+  const nuevas = ['stack', 'nowrap', 'maxw-110', 'w-auto', 'mt-8', 'pl-18', 'block', 'inline', 'rel', 'pointer', 't-der', 't-centro',
     'fw-400', 'fw-700', 'fs-125', 'txt-crit', 'txt-warn', 'txt-good', 'txt-ink', 'tenue', 'sprite', 'grafico', 'grafico-centrado',
     'grafico-480', 'grafico-340', 'grafico-min480', 'leyenda', 'plan-compacto', 'notice-col', 'editando', 'lista-nota', 'campo-coord',
     'nc-criterio', 'nc-dias', 'meta-objetivo', 'minw-0', 'minw-120', 'minw-260'];
-  for (const gap of [4, 8, 10, 12]) nuevas.push(`gap-${gap}`);
+  for (const gap of [4, 10]) nuevas.push(`gap-${gap}`);
   const faltan = nuevas.filter((c) => !definidas.has(c));
   assert.deepEqual(faltan, []);
   // y cada una se usa en alguna vista (si no, sobra en styles.css)

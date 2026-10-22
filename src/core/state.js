@@ -90,7 +90,8 @@ export const tiposPlantilla = () => Object.keys(TPL).filter((k) => !TPL[k].pesta
 // Estado global único de la app.
 export const S = {
   farm: demoFarm(), demo: true, view: 'dashboard', step: 0,
-  theme: 'system', // tema visual: system | light | dark
+  theme: 'light', // tema visual: light | dark (claro por defecto: se lee mejor al sol)
+  preg: 0, // pregunta que se ve del cuestionario rápido (una por pantalla)
   wizModo: 'rapido', // cuestionario: rapido (lo básico, src/core/rapido.js) | completo (los 6 pasos)
   rapido: null, rapidoDe: null, // respuestas rápidas y la finca de la que salieron
   vistaTecnica: false, // dashboard: false = vista simple (semáforo y acciones), true = todo el detalle técnico

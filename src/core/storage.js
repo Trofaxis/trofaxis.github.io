@@ -127,7 +127,7 @@ export function normalizarTpl(o, base) {
 // Recomendaciones marcadas como hechas: { clave: true }.
 const normalizarHechas = (o) => (o && typeof o === 'object' && !Array.isArray(o)
   ? Object.fromEntries(Object.entries(o).filter(([k, v]) => typeof k === 'string' && k.length < 400 && v === true).slice(0, 500)) : {});
-const TEMAS = ['system', 'light', 'dark'];
+const TEMAS = ['light', 'dark']; // «system» se quitó: un respaldo viejo con «system» carga en claro
 
 export function exportarTexto(farm, ajustes, tpl) {
   return JSON.stringify({ formato: FORMATO, version: VERSION, guardado: new Date().toISOString(), finca: farm, ajustes, ...(tpl ? { plantillas: { ...tpl, paste: '' } } : {}) }, null, 2);
@@ -165,7 +165,7 @@ export function cargarLocal(tplBase) {
     const riego = normalizarRiego(o.riego); // sin datos propios guardados, S.riego se queda con el ejemplo
     return {
       farm: normalizarFinca(o.farm), ajustes: normalizarAjustes(o.ajustes), demo: o.demo === true,
-      tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'system'), vistaTecnica: o.vistaTecnica === true,
+      tpl: normalizarTpl(o.tpl, tplBase), done: normalizarHechas(o.done), theme: opcion(o.theme, TEMAS, 'light'), vistaTecnica: o.vistaTecnica === true,
       ...(riego ? { riego } : {}),
     };
   } catch { return null; }
