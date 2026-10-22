@@ -36,6 +36,7 @@ import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
 import { montarEfectos } from './ui/efectos.js';
 import { montarRueda } from './ui/rueda.js';
+import { montarIndice } from './ui/indice.js';
 import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 import { crearPuenteCapacitor, sesionDeURLProfunda, urlRetornoAuth } from './core/capacitor-auth.js';
@@ -176,7 +177,7 @@ function render(){
   const grupo=grupoDe(S.view)?.id;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.grupo===grupo?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
-  montarEfectos(app,entrando?tEntrada:null);montarRueda(app);
+  montarEfectos(app,entrando?tEntrada:null);montarRueda(app);montarIndice(app);
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.

@@ -21,6 +21,7 @@ import { panelApiRadar } from './apiradar.js';
 import { pasosFinca } from '../core/completitud.js';
 import { esquemaFinca, finca3d, leyendaFinca } from './finca3d.js';
 import { ruedaAnio } from './rueda.js';
+import { escalaIndice } from './indice.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -72,7 +73,7 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
     <div class="hoy-estado">
       <p class="hoy-kicker">Índice ambiental de tu finca</p>
       ${R.sinDatos?'<p class="hoy-frase">Todavía faltan datos para calificar tu finca</p>'
-        :`<p class="hoy-frase">Tu finca está en <em class="nivel-${lvO}">riesgo ${lvO.toLowerCase()}</em></p><p class="hoy-sub">${R.overall} de 100. ${TEXTO_NIVEL[lvO].split(': ')[1].replace(/^./,c=>c.toUpperCase())}.</p>`}
+        :`<p class="hoy-frase">Tu finca está en <em class="nivel-${lvO}">riesgo ${lvO.toLowerCase()}</em></p>${escalaIndice(R.overall,lvO,TEXTO_NIVEL[lvO].split(': ')[1].replace(/^./,c=>c.toUpperCase()),cfg)}`}
       <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
         ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
       <div class="hoy-mes">
@@ -103,7 +104,7 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
           :`<p class="small">Con lo que respondiste todavía no alcanza para calificar este tema (confianza ${Math.round(m.conf*100)} %).</p><button class="btn sm" data-view="wizard">Completar respuestas</button>`}</details>
       </li>`;}).join('')}</ul></div>
   </section>
-  <section class="panel urg">
+  <section class="panel urg" id="urgentes">
     <div class="row between"><div><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
     ${top.length?`<ul class="plan urgentes">${top.map((x,i)=>filaAccion(x,i,'urg',`<details><summary>¿Por qué?</summary><p class="small">Sale del tema ${esc(x.m)}${x.score!=null?`, con riesgo ${x.lv.toLowerCase()} (${x.score} de 100)`:''}.${x.driver?` Causa principal: ${esc(x.driver)}.`:''}</p></details>`)).join('')}</ul>`
       :`<p class="muted">${recs.length?'Ya marcaste todas las acciones como hechas.':'No hay acciones pendientes con los datos actuales.'}</p>`}

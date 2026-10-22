@@ -606,7 +606,33 @@ body.en-bienvenida main{padding-block:0}
 /* El nivel va subrayado con su color, como marcado a mano en la libreta de campo. */
 .hoy-frase em{font-style:normal;--c:var(--ink);color:var(--c);background:linear-gradient(transparent 70%,color-mix(in srgb,var(--c) 20%,transparent) 0);padding-inline:2px}
 .hoy-frase em.nivel-Alto{--c:var(--crit)}.hoy-frase em.nivel-Medio{--c:var(--warn)}.hoy-frase em.nivel-Bajo{--c:var(--good)}
-.hoy-sub{font-size:18px;color:var(--muted);margin-top:-6px}
+/* Escala del índice (src/ui/indice.js): puntaje, regla de 0 a 100 con los tres niveles y nota del tramo que se toca. */
+.indice{display:flex;flex-direction:column;gap:10px;max-width:460px}
+.indice-num{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.indice-num b{font:600 40px/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.indice-num span{font:500 15px var(--f-mono);color:var(--muted)}
+.indice-num em{font-style:normal;font-size:19px;font-weight:600}
+.indice-escala{display:flex;flex-direction:column;gap:6px}
+.indice-regla{position:relative;display:flex;gap:3px;height:14px}
+.indice-regla i{flex:none;height:100%;border-radius:4px;opacity:.28}
+.indice-regla i:first-child{border-radius:99px 4px 4px 99px}.indice-regla i:last-child{border-radius:4px 99px 99px 4px}
+.tr-Bajo{--c:var(--good)}.tr-Medio{--c:var(--warn)}.tr-Alto{--c:var(--crit)}
+.indice-regla i{background:var(--c)}
+/* La marca es una barra invisible hasta el puntaje: su punta lleva la perilla. Así basta un ancho en línea. */
+.indice-marca{position:absolute;left:0;top:0;height:100%;pointer-events:none}
+.indice-marca::after{content:"";position:absolute;right:-11px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:var(--surface);border:5px solid var(--c,var(--ink));box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.indice-marca.nivel-Alto{--c:var(--crit)}.indice-marca.nivel-Medio{--c:var(--warn)}.indice-marca.nivel-Bajo{--c:var(--good)}
+.indice-tramos{display:flex;gap:3px}
+.tramo{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:6px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);font:600 14px var(--f-body);cursor:pointer;text-align:left;transition:background .15s ease-out,color .15s ease-out,border-color .15s ease-out}
+.tramo small{font:500 12px var(--f-mono)}
+.tramo:hover{background:var(--surface-2);color:var(--ink)}
+.tramo[aria-pressed="true"]{color:var(--ink);background:color-mix(in srgb,var(--c) 12%,var(--surface));border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+.indice-notas{display:flex;flex-direction:column;gap:6px;font-size:15px}
+.indice-notas b{color:var(--ink)}
+.indice-ir{align-self:flex-start;font-weight:600}
+#urgentes{scroll-margin-top:84px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}#app.entrando .indice-marca{animation:llenar .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.2s - var(--t,0ms))}}
+@keyframes llenar{from{width:0}}
 .hoy .completo{margin-top:0;max-width:420px}
 .hoy-mes{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:8px}
 .hoy-alertas{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}

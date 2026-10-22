@@ -1,6 +1,6 @@
 // Este prefijo agrupa las cachés propias para retirar versiones anteriores.
 const CACHE_PREFIX = 'trofaxis-shell-';
-const CACHE_NAME = 'trofaxis-shell-606bebc4b7c4';
+const CACHE_NAME = 'trofaxis-shell-b6f4acd9e8e3';
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -93,6 +93,7 @@ const APP_SHELL = [
   "/src/ui/fertilizacion.js",
   "/src/ui/foco.js",
   "/src/ui/grupos.js",
+  "/src/ui/indice.js",
   "/src/ui/mapa.js",
   "/src/ui/mapariesgo.js",
   "/src/ui/plaguicidas.js",
