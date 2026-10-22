@@ -19,6 +19,7 @@ import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDat
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
 import { pasosFinca } from '../core/completitud.js';
+import { esquemaFinca, finca3d, leyendaFinca, orbe, prisma, defsPrisma, anioFinca } from './finca3d.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -56,6 +57,7 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
   const mes=new Date().getMonth(),coinc=R.mh[mes]||[];
   const nombreMes=MFULL[mes];
   const pasos=pasosFinca(S.farm),hechos=pasos.filter(p=>p.hecho).length,faltan=pasos.length-hechos;
+  const esq=esquemaFinca(S.farm);
   return `
   ${faltan&&!S.demo?`<section class="panel completar" id="completar">
     <div class="row between"><h2>Te faltan ${faltan} de ${pasos.length} pasos para completar tu finca</h2><span class="pill sin-datos txt-ink">${hechos} de ${pasos.length} hechos</span></div>
@@ -64,32 +66,41 @@ function vistaSimple(R,cfg,mods,recs,lvO,notaIndice){
     <ul class="pasos">${pasos.filter(p=>!p.hecho).slice(0,3).map(filaPaso).join('')}</ul>
     <details><summary>Ver los ${pasos.length} pasos</summary><ul class="pasos">${pasos.map(filaPaso).join('')}</ul></details>
   </section>`:''}
-  <section class="panel">
-    <div class="resumen-simple">
-      <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}
-        <details><summary>¿Cómo se calcula?</summary><p class="muted small">${notaIndice}</p></details>
-        <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
-        ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div></div>
-      <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema. Abre «¿Por qué?» para ver de dónde sale.</p>
-        <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
-          <div class="row between"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${TEXTO_NIVEL[lv]}</span></div>
-          <details><summary>¿Por qué?</summary>${m.suficiente
-            ?`<p class="small">Puntaje ${m.score} de 100. Causa principal: ${esc(m.driver)}. Confianza de los datos: ${Math.round(m.conf*100)} %.</p>${tablaRubrica(m,cfg)}`
-            :`<p class="small">Con lo que respondiste todavía no alcanza para calificar este tema (confianza ${Math.round(m.conf*100)} %).</p><button class="btn sm" data-view="wizard">Completar respuestas</button>`}</details>
-        </li>`;}).join('')}</ul></div>
-    </div>
+  <div class="inicio">
+  <section class="panel escena">
+    <div><p class="label">Tu finca en 3D</p><h2>Tu finca de un vistazo</h2></div>
+    <div class="escena3d" data-inclinar>${finca3d(esq)}${orbe(R.overall,lvO,R.sinDatos)}</div>${leyendaFinca(esq)}
+    <p class="muted small">Esquema, no a escala: cada lote mide según sus hectáreas; agua, árboles y fauna salen de lo que respondiste.</p>
+    <div class="completo"><p class="small">Tu resultado usa el <b>${Math.round(R.conf*100)} % de los datos</b>.</p><div class="conf"><span style="width:${R.conf*100}%"></span></div>
+      ${R.conf<1?'<button class="btn sm" data-act="wiz-modo" data-v="completo">Mejora tu resultado</button>':''}</div>
+    <details><summary>¿Cómo se calcula el índice?</summary><p class="muted small">${notaIndice}</p></details>
   </section>
-  <section class="panel">
-    <div class="row between"><div><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
+  <section class="panel sem">
+    ${defsPrisma}
+    <div class="minw-0"><h2>¿Cómo está tu finca?</h2><p class="muted">Un color por tema; la columna sube con el riesgo. Abre «¿Por qué?» para ver de dónde sale.</p>
+      <ul class="semaforo">${sem.map(m=>{const lv=m.suficiente?m.level:'Sin datos';return `<li>
+        <div class="row between gap-4"><b>${m.nombre}</b><span class="pill ${m.suficiente?m.level:'sin-datos'}">${m.suficiente?m.level:'Sin datos'}</span></div>
+        <div class="mod-cuerpo"><span class="score"${m.suficiente?` data-contar="${m.score}"`:''}>${m.suficiente?m.score:'—'}</span>${prisma(m.suficiente?m.score:null,m.level)}</div>
+        <p class="small muted">${TEXTO_NIVEL[lv]}</p>
+        <details><summary>¿Por qué?</summary>${m.suficiente
+          ?`<p class="small">Puntaje ${m.score} de 100. Causa principal: ${esc(m.driver)}. Confianza de los datos: ${Math.round(m.conf*100)} %.</p>${tablaRubrica(m,cfg)}`
+          :`<p class="small">Con lo que respondiste todavía no alcanza para calificar este tema (confianza ${Math.round(m.conf*100)} %).</p><button class="btn sm" data-view="wizard">Completar respuestas</button>`}</details>
+      </li>`;}).join('')}</ul></div>
+  </section>
+  <section class="panel urg">
+    <div class="row between"><div><p class="label">Qué hacer primero</p><h2>Lo más urgente</h2><p class="muted">Las acciones de los temas con más riesgo. Marca lo que ya hiciste.</p></div>${recs.length?`<span class="pill Bajo txt-ink">${recs.length-pendientes.length} de ${recs.length} hechas</span>`:''}</div>
     ${top.length?`<ul class="plan urgentes">${top.map((x,i)=>filaAccion(x,i,'urg',`<details><summary>¿Por qué?</summary><p class="small">Sale del tema ${esc(x.m)}${x.score!=null?`, con riesgo ${x.lv.toLowerCase()} (${x.score} de 100)`:''}.${x.driver?` Causa principal: ${esc(x.driver)}.`:''}</p></details>`)).join('')}</ul>`
       :`<p class="muted">${recs.length?'Ya marcaste todas las acciones como hechas.':'No hay acciones pendientes con los datos actuales.'}</p>`}
     ${resto.length?`<details><summary>Ver las otras ${resto.length} acciones</summary><ul class="plan">${resto.map((x,i)=>filaAccion(x,i,'resto')).join('')}</ul></details>`:''}
   </section>
-  <section class="panel">
-    <h2>Este mes: ${nombreMes}</h2>
+  <section class="panel mes">
+    <div class="stack gap-8"><p class="label">Tu año en la finca</p><h2>Este mes: ${nombreMes}</h2>
     ${coinc.length?`<p class="muted">En ${nombreMes} coinciden en tu finca:</p><ul>${coinc.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`
       :`<p class="muted">No hay coincidencias de riesgo en ${nombreMes} con lo que respondiste.</p>`}
-  </section>`;
+      <p class="muted small">Cada barra es un mes; su altura, cuántas coincidencias de riesgo tiene.</p></div>
+    ${anioFinca(R.mh,mes)}
+  </section>
+  </div>`;
 }
 
 const kpi=(clave,k,v,cuerpo)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div>${mas(clave,k.toLowerCase(),cuerpo,S.abiertos[`mas-${clave}`])}</div>`;
@@ -116,10 +127,10 @@ export function viewDashboard(){
   const avisos=`${S.msg?`<div class="notice"><span>${esc(S.msg)}</span></div>`:''}
   ${S.demo?`<div class="notice"><span><b>Datos de ejemplo.</b> Esta finca es ficticia: los meses, dosis, medidas y especies sirven para mostrar cómo funciona la app, no son mediciones ni vienen de ningún estudio. Los datos reales, con su fuente, están en Memoria de casos, «Casos de referencia».</span><button class="btn sm" data-act="start-empty">Empezar con mi finca</button></div>`:''}`;
   const cabecera=`<div class="row between">
-      <div class="minw-0"><p class="label">Finca</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
+      <div class="minw-0"><p class="label">Finca${S.demo?' <span class="badge ejemplo">Ejemplo</span>':''}</p><h1>${esc(f.nombre||'Finca sin nombre')}</h1><p class="muted">${esc(f.depto||'Sin departamento')} · ${f.area||0} ha · ${f.altitud||0} msnm · pendiente ${f.pendiente||'sin responder'}${!f.tieneCultivos&&f.proposito.length?` · propósito: ${CONFIG.propositos.filter(p=>f.proposito.includes(p.id)).map(p=>p.nombre.toLowerCase()).join(', ')}`:''}</p></div>
       <div class="row">${S.demo?'<button class="btn primary" data-act="start-empty">Empezar con mi finca</button>':'<button class="btn" data-view="wizard">Editar respuestas</button>'}<button class="btn" data-act="export">Exportar finca</button><button class="btn" data-act="import">Importar finca</button>${botonVista()}</div>
     </div>`;
-  if(!S.vistaTecnica)return `${avisos}<section class="panel flat">${cabecera}</section>${vistaSimple(R,cfg,mods,recs,lvO,notaIndice)}${panelApiRadar(f,cfg,X)}${panelDatos()}`;
+  if(!S.vistaTecnica)return `${avisos}<section class="cabecera-inicio">${cabecera}</section>${vistaSimple(R,cfg,mods,recs,lvO,notaIndice)}${panelApiRadar(f,cfg,X)}${panelDatos()}`;
   return `${avisos}
   <section class="panel">
     ${cabecera}

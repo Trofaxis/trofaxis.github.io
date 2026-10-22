@@ -31,13 +31,13 @@ test('fuentes.css apunta a archivos que existen, en formato woff2', () => {
 
 test('las familias declaradas son las que usa styles.css', () => {
   const declaradas = [...css.matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]).sort();
-  assert.deepEqual(declaradas, ['Inter', 'JetBrains Mono']);
+  assert.deepEqual(declaradas, ['Fraunces', 'Inter', 'JetBrains Mono']);
   const estilos = leer('src/styles.css');
   for (const f of declaradas) assert.ok(estilos.includes(`'${f}'`), `styles.css ya no usa ${f}`);
 });
 
 test('cada fuente alojada trae su licencia OFL junto al archivo', () => {
-  for (const f of ['OFL-Inter.txt', 'OFL-JetBrainsMono.txt']) {
+  for (const f of ['OFL-Fraunces.txt', 'OFL-Inter.txt', 'OFL-JetBrainsMono.txt']) {
     const txt = leer(path.join('src/fonts', f));
     assert.match(txt, /SIL OPEN FONT LICENSE Version 1\.1/);
     assert.match(txt, /Copyright/);
