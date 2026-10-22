@@ -92,6 +92,31 @@ function climaMeses(meses) {
   return `<p class="small"><b>Clima típico de ${mlist(meses)} en tu finca:</b> máxima ${v('tmax', '°C')}, mínima ${v('tmin', '°C')}, humedad ${v('hr', '%', 0)}, viento ${v('viento2', 'km/h')} a 2 m, lluvia ${v('lluvia', 'mm/mes', 0)}. Es el promedio de los últimos años: sirve para planear; el día de la aplicación, anota las condiciones reales.</p>`;
 }
 
+// Registro rápido: buscar el producto, escribir la dosis y guardar. Usa el mismo borrador que el formulario completo.
+function panelRapido(d, cfg) {
+  const U = UNIDADES_DOSIS[d.dosisUnidad] ?? UNIDADES_DOSIS.mlBarril;
+  const c0 = d.componentes[0];
+  const pideConc = d.sag == null && d.componentes.length === 1 && ingrediente(c0?.ia);
+  const opciones = [...PRODUCTOS_SAG.map((p) => `<option value="${esc(p.nombre)}">Fungicida del cuadro SAG · ${esc(p.ia)}</option>`),
+    ...INGREDIENTES.map((x) => `<option value="${esc(x.nombre)}">Ingrediente activo · ${esc(x.uso)}</option>`)].join('');
+  return `<section class="panel" id="plag-rapido">
+    <div><h2>Registro rápido</h2><p class="muted">Busca el producto, escribe la dosis y guarda. Lo demás se llena solo o lo completas en el formulario de abajo.</p></div>
+    <datalist id="pq-lista">${opciones}</datalist>
+    <div class="f"><label for="pqr-buscar">1. Producto o ingrediente activo</label><input id="pqr-buscar" type="search" list="pq-lista" autocomplete="off" data-bind="draftPlag.buscar" data-rerender value="${esc(d.producto)}" placeholder="Por ejemplo: mancozeb o imidacloprid"><span class="hint">Reconoce los fungicidas del cuadro SAG y ${INGREDIENTES.length} ingredientes activos. Si no está, escribe el nombre y sigue.</span></div>
+    ${S.plagNotas.length ? `<ul class="small lista-nota">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    <div class="fields">
+      ${numero('pqr-dosis', '2. Dosis', 'draftPlag.dosis', d.dosis, 'La que aplicas; si viene del cuadro SAG, cámbiala si aplicas otra')}
+      ${sel('pqr-du', 'Unidad de la dosis', 'draftPlag.dosisUnidad', d.dosisUnidad, Object.entries(UNIDADES_DOSIS).map(([k, u]) => [k, u.nombre]))}
+      ${U.tanque ? numero('pqr-vol', 'Agua por hectárea (L/ha)', 'draftPlag.volumen', d.volumen, 'Para pasar la dosis por tanque a dosis por hectárea') : ''}
+      ${pideConc ? numero('pqr-conc', `Concentración de ${esc(ingrediente(c0.ia).nombre)}`, 'draftPlag.componentes.0.conc', c0.conc, d.concUnidad === 'pct' ? '% en la etiqueta' : 'g/L o g/kg en la etiqueta') : ''}
+      ${numero('pqr-etq', 'Dosis máxima de la etiqueta (opcional)', 'draftPlag.dosisEtiqueta', d.dosisEtiqueta, 'En la misma unidad. Si la pasas, la app te avisa')}
+    </div>
+    <div class="f"><span class="label">Mes de aplicación</span>${months('draftPlag.meses', d.meses)}</div>
+    <div class="row"><button class="btn primary" data-act="add-plag">3. Guardar</button><a class="btn" href="#plag-form">Agregar más detalles</a></div>
+    ${S.plagMsg ? `<p class="${S.plagMsg.nivel === 'error' ? 'warnmsg' : 'okmsg'}" role="${S.plagMsg.nivel === 'error' ? 'alert' : 'status'}">${esc(S.plagMsg.texto)}</p>` : ''}
+  </section>`;
+}
+
 export function viewPlaguicidas() {
   const f = S.farm, d = S.draftPlag;
   const cfg = configEfectiva(normalizarAjustes(S.ajustes));
@@ -120,6 +145,8 @@ export function viewPlaguicidas() {
     </div>
   </section>
 
+  ${editando ? '' : panelRapido(d, cfg)}
+
   <section class="panel">
     <h2>Aplicaciones registradas</h2>
     <div class="list">
@@ -143,7 +170,7 @@ export function viewPlaguicidas() {
     <div class="f"><label for="pq-sag">¿Es un fungicida del cuadro de la SAG? Elígelo y la app llena lo que trae la tabla</label>
       <select id="pq-sag" data-bind="draftPlag.sag"><option value="">No, lo escribo yo</option>${sagOrden.map((p) => `<option value="${p.id}" ${prodSag && prodSag.id === p.id ? 'selected' : ''}>${esc(p.nombre)} · ${esc(p.ia)}</option>`).join('')}</select>
       <span class="hint">Cuadro de referencia de fungicidas de la SAG (2021). Siempre manda la etiqueta.</span></div>
-    ${S.plagNotas.length ? `<ul class="small lista-nota">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${editando && S.plagNotas.length ? `<ul class="small lista-nota">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <div class="fields">
       ${texto('pq-prod', 'Producto comercial *', 'draftPlag.producto', d.producto, 'El nombre de la etiqueta')}
       ${sel('pq-uso', 'Uso', 'draftPlag.uso', d.uso, USOS)}
@@ -173,10 +200,11 @@ export function viewPlaguicidas() {
     </div>
     ${vistaPrevia(d, f, cfg)}
 
-    <details ${plegable('pq-etiqueta', d.etiquetaAbejas || d.noFloracion || d.diasCosecha != null || d.reingreso != null || d.aplicMax != null || d.franja != null)}><summary>Lo que dice la etiqueta</summary>
+    <details ${plegable('pq-etiqueta', d.etiquetaAbejas || d.noFloracion || d.dosisEtiqueta != null || d.diasCosecha != null || d.reingreso != null || d.aplicMax != null || d.franja != null)}><summary>Lo que dice la etiqueta</summary>
       <div class="subform mt-8">
         <div class="row">${casilla('pq-abejas', 'draftPlag.etiquetaAbejas', d.etiquetaAbejas, 'Trae el pictograma "tóxico para abejas"')}${casilla('pq-noflor', 'draftPlag.noFloracion', d.noFloracion, 'Dice "no aplicar en floración"')}</div>
         <div class="fields">
+          ${numero('pq-etq', 'Dosis máxima de la etiqueta', 'draftPlag.dosisEtiqueta', d.dosisEtiqueta, 'En la misma unidad que la dosis. Si la pasas, la app te avisa')}
           ${numero('pq-cos', 'Días a cosecha', 'draftPlag.diasCosecha', d.diasCosecha, 'Intervalo de seguridad para tu cultivo')}
           ${numero('pq-rei', 'Horas de reingreso', 'draftPlag.reingreso', d.reingreso, 'Antes de volver a entrar al lote')}
           ${numero('pq-max', 'Aplicaciones por ciclo', 'draftPlag.aplicMax', d.aplicMax, 'Máximo que permite la etiqueta')}
@@ -209,7 +237,7 @@ export function viewPlaguicidas() {
       </div></details>
     <div class="row"><button class="btn primary" data-act="add-plag">${editando ? 'Guardar cambios' : 'Agregar aplicación'}</button>
       <button class="btn" data-act="plag-cancel">${editando ? 'Cancelar' : 'Limpiar el formulario'}</button></div>
-    ${S.plagMsg ? `<p class="${S.plagMsg.nivel === 'error' ? 'warnmsg' : 'okmsg'}" role="${S.plagMsg.nivel === 'error' ? 'alert' : 'status'}">${esc(S.plagMsg.texto)}</p>` : ''}
+    ${editando && S.plagMsg ? `<p class="${S.plagMsg.nivel === 'error' ? 'warnmsg' : 'okmsg'}" role="${S.plagMsg.nivel === 'error' ? 'alert' : 'status'}">${esc(S.plagMsg.texto)}</p>` : ''}
   </section>
 
   ${f.plaguicidas.length ? `<section class="panel">

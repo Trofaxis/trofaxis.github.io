@@ -10,7 +10,7 @@ import { CONFIG } from '../core/config.js';
 import { M, inter, uniq } from '../core/utils.js';
 import { UNIDADES_DOSIS, esLiquida, plagBorrador, componenteVacio } from './modelo.js';
 import { ingrediente, buscarIngrediente, normalizar } from './catalogo.js';
-import { productoSag, eficacia, ENFERMEDADES, FUENTE_SAG } from './sag.js';
+import { productoSag, eficacia, ENFERMEDADES, FUENTE_SAG, PRODUCTOS_SAG } from './sag.js';
 import { tieneClima } from '../clima/normales.js';
 
 export const FUENTES_PLAG = {
@@ -70,6 +70,17 @@ export function productoPorHa(a, cfg = CONFIG) {
   const tanque = U.tanque === 'barril' ? P.barrilL : P.bombaL;
   const porTanque = U.medida === 'copas' ? a.dosis * P.copaMl : a.dosis; // ml o g por tanque
   return { valor: (porTanque / 1000) * (a.volumen / tanque), medida: U.volumen ? 'L' : 'kg' };
+}
+
+// ¿La dosis aplicada pasa la de referencia (etiqueta o cuadro SAG)? Compara las dos en producto por hectárea;
+// si no se puede (por ejemplo, falta el agua por hectárea), las compara tal cual cuando están en la misma unidad.
+// Devuelve { veces } si la pasa, false si no, y null si no se pueden comparar.
+export function sobreDosis(a, ref, cfg = CONFIG) {
+  if (!(ref?.dosis > 0) || !(a.dosis > 0)) return null;
+  const x = productoPorHa(a, cfg), y = productoPorHa({ ...a, ...ref }, cfg);
+  const [v, r] = x.valor != null && y.valor != null && x.medida === y.medida ? [x.valor, y.valor] : ref.dosisUnidad === a.dosisUnidad ? [a.dosis, ref.dosis] : [];
+  if (v == null) return null;
+  return v > r * (1 + 1e-9) ? { veces: v / r } : false;
 }
 
 // Dosis de cada ingrediente en g/ha y su HQ. Devuelve el detalle por ingrediente y el resultado del producto.
@@ -204,6 +215,17 @@ export function revisarAplicacion(a, f, cfg = CONFIG, ctx = {}) {
   // 2. La etiqueta.
   if ((a.etiquetaAbejas || a.noFloracion) && enFlor.length) out.push(aviso('error', 'La etiqueta advierte por las abejas y aplicas en floración',
     `La etiqueta trae ${a.noFloracion ? '"no aplicar en floración"' : 'el pictograma "tóxico para abejas"'} y aplicas en ${mesesTxt(enFlor)}, meses con floración visitada.`, 'etiquetas'));
+  // La dosis frente a la etiqueta (manda) o, si no se anotó, frente al cuadro SAG (referencia).
+  const unidad = UNIDADES_DOSIS[a.dosisUnidad]?.nombre ?? '';
+  const masPct = (x) => `${fmt((x.veces - 1) * 100, 0)} % más`;
+  const sobreEtq = sobreDosis(a, { dosis: a.dosisEtiqueta, dosisUnidad: a.dosisUnidad }, cfg);
+  const prodSag = a.dosisEtiqueta == null && a.sag != null ? productoSag(a.sag) : null;
+  const refSag = prodSag ? dosisSag(prodSag, a.formulacion) : null;
+  const sobreSag = refSag ? sobreDosis(a, refSag, cfg) : null;
+  if (sobreEtq) out.push(aviso('error', 'Dosis mayor que la de la etiqueta',
+    `Aplicas ${fmt(a.dosis)} ${unidad} y la etiqueta indica hasta ${fmt(a.dosisEtiqueta)} (${masPct(sobreEtq)}). La etiqueta manda: aplicar más de lo que indica no está autorizado y sube el peligro para abejas.`, 'etiquetas'));
+  else if (sobreSag) out.push(aviso('advertencia', 'Dosis mayor que la del cuadro SAG',
+    `Aplicas ${fmt(a.dosis)} ${unidad} y el cuadro SAG da ${fmt(refSag.dosis)} ${UNIDADES_DOSIS[refSag.dosisUnidad]?.nombre ?? ''} (${masPct(sobreSag)}). El cuadro es de referencia: confirma la dosis máxima en la etiqueta y anótala en «Lo que dice la etiqueta».`, 'sag'));
   // 3. Hora y condiciones del día (clase: Correcta aplicación).
   if (a.hora) {
     const h = horaNum(a.hora);
@@ -447,6 +469,29 @@ export function alElegirIngrediente(d) {
   if (d.grupoAuto !== false || !out.grupo) out.grupo = uniq0(cats.map((c) => c.grupo)).join(' + ');
   if (d.usoAuto !== false || !out.uso) out.uso = cats[0].uso;
   return out;
+}
+
+// Registro rápido: lo que el usuario buscó (un fungicida del cuadro SAG o un ingrediente del catálogo) llena el
+// borrador como si lo hubiera elegido en el formulario completo. Si no hay mes marcado, marca el mes actual.
+export function desdeBusqueda(d, texto, mes = null, cfg = CONFIG) {
+  const t = String(texto ?? '').trim();
+  const base = { ...d };
+  delete base.buscar;
+  if (!t) return { borrador: base, notas: [] };
+  const n = normalizar(t);
+  const prod = PRODUCTOS_SAG.find((p) => normalizar(p.nombre) === n);
+  let r;
+  if (prod) r = desdeSag(base, prod.id, cfg);
+  else {
+    const cat = buscarIngrediente(t);
+    const b = { ...base, producto: t, sag: null };
+    if (cat) {
+      b.componentes = [{ ...componenteVacio(), ia: cat.id }];
+      r = { borrador: alElegirIngrediente(b), notas: [`${cat.nombre}: la app ya conoce su peligro para abejas. Escribe la concentración que trae la etiqueta para calcularlo.`] };
+    } else r = { borrador: b, notas: ['No está en el cuadro SAG ni en el catálogo: se guarda con el nombre que escribiste. Para calcular el peligro para abejas, completa el ingrediente en el formulario completo.'] };
+  }
+  if (!r.borrador.meses.length && Number.isInteger(mes)) r.borrador.meses = [mes];
+  return r;
 }
 
 export const nuevoBorrador = plagBorrador;

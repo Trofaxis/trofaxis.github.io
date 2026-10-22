@@ -30,6 +30,8 @@ function prepararBorrado() {
 }
 
 const proximoTurno = () => new Promise((resolve) => setImmediate(resolve));
+// Espera a que se cumpla una condición (el aviso sale con un retraso de 50 ms desde el redibujado; en CI lento no basta un tiempo fijo).
+const hasta = async (cond, ms = 2000) => { const fin = Date.now() + ms; while (!cond() && Date.now() < fin) await new Promise((r) => setTimeout(r, 10)); };
 
 test('«Borrar cuenta» es una opción nueva que solo aparece con sesión', () => {
   S.cuentaMenu = true;
@@ -83,7 +85,7 @@ test('si el servidor confirma el borrado, limpia sesión y cuenta recordada y co
   try {
     dom.clic('cuenta-borrar'); dom.escribir('cuenta-borrar-confirmacion', 'BORRAR'); dom.clic('cuenta-borrar-confirmar');
     await proximoTurno();
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await hasta(() => /La cuenta se borró/.test(dom.avisos.textContent));
     assert.equal(S.nube.sesion, null);
     assert.equal(S.borrarCuentaUI.abierto, false);
     assert.equal(dom.almacen.has(CLAVE_SESION), false);
