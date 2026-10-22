@@ -34,6 +34,8 @@ import { ingrediente } from './plag/catalogo.js';
 import { crearCargador, conIntento } from './core/carga-diferida.js';
 import { crearGuardado } from './core/guardado-diferido.js';
 import { anunciar } from './ui/avisos.js';
+import { montarEfectos } from './ui/efectos.js';
+import { montarPolen } from './ui/polen.js';
 import { htmlErrorVista } from './ui/error-vista.js';
 import { selectorDeFoco, controlParaFoco } from './ui/foco.js';
 import { crearPuenteCapacitor, sesionDeURLProfunda, urlRetornoAuth } from './core/capacitor-auth.js';
@@ -153,6 +155,7 @@ const cargador=crearCargador({
 const htmlCargando=(fallo)=>fallo
   ?'<div class="notice" role="alert"><span>No se pudo descargar esta pestaña. Revisa la conexión.</span><button class="btn sm" data-act="reintentar-vista">Reintentar</button></div>'
   :'<p class="muted" aria-busy="true">Cargando…</p>';
+let vistaAnterior=null,inicioEntrada=0;const DURA_ENTRADA=1500;
 function render(){
   // Conserva el foco y el cursor del control que se estaba usando (campo, botón de mes, simulador o acción de fila).
   const app=document.getElementById('app');
@@ -162,12 +165,18 @@ function render(){
   let html;
   try{html=vista?vista():htmlCargando(cargador.fallo(S.view));}catch(e){console.error(e);html=htmlErrorVista(S.view,e);}
   app.innerHTML=subMenu(S.view)+html;
+  // Animación de entrada al cambiar de vista. render() también corre al escribir o cuando llega algo de la nube: si redibuja
+  // durante la entrada, --t (ms desde que empezó) hace que la animación siga donde iba en lugar de empezar de nuevo.
+  const ahora=performance.now();if(vista&&S.view!==vistaAnterior){vistaAnterior=S.view;inicioEntrada=ahora;}
+  const tEntrada=vista?ahora-inicioEntrada:Infinity,entrando=tEntrada<DURA_ENTRADA;
+  app.classList.toggle('entrando',entrando);app.style.setProperty?.('--t',`${Math.round(entrando?tEntrada:0)}ms`);
   const msg=S.msg;S.msg='';
   document.body.classList.toggle('en-bienvenida',S.view==='bienvenida'||S.view==='entrar');
   const cta=document.getElementById('cuenta');if(cta)cta.innerHTML=htmlCuenta();
   const grupo=grupoDe(S.view)?.id;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.grupo===grupo?'page':'false'));
   montarMapa();applyTheme();guardador.pedir();anunciar([msg,avisoGuardado()].filter(Boolean).join(' '));
   const el=controlParaFoco(app,sel);if(el){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,ss);}catch(e){}}
+  montarEfectos(app,entrando?tEntrada:null);
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
@@ -545,7 +554,7 @@ function cambioPlag(bind,v){
 function climaARiego(){const ll=llenarRiego(S.riego.datos,S.farm.clima);S.climaUI=ll.length?{estado:'ok',msg:'Se usó el clima de tu ubicación.',llenos:ll}:{estado:'',msg:'',llenos:[]};}
 // La descarga del clima y el mapa piden volver a dibujar cuando terminan.
 document.addEventListener('biogap:render',()=>render());
-applyTheme();render();
+applyTheme();render();montarPolen(document.getElementById('polen'));
 if(nube.activo&&S.nube.sesion)sincronizarAlEntrar(); // renueva la sesión al abrir y compara la finca con la de la nube
 addEventListener('online',()=>{
   if(!nube.activo||!S.nube.sesion)return;

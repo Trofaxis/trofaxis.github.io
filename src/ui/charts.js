@@ -7,7 +7,7 @@ export function gauge(v,level){
   return `<div class="gauge"><svg viewBox="0 0 200 118" role="img" aria-label="Índice ambiental ${v} de 100, riesgo ${level.toLowerCase()}">
     <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="var(--chip)" stroke-width="16" stroke-linecap="round"/>
     <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${Math.max(v,1)} 100"/>
-    <text x="100" y="88" text-anchor="middle" font-size="38" font-weight="600" fill="var(--ink)" font-family="JetBrains Mono, monospace">${v}</text>
+    <text class="gauge-num" x="100" y="88" text-anchor="middle" font-size="44" fill="var(--ink)">${v}</text>
     <text x="20" y="116" text-anchor="middle" font-size="12" fill="var(--muted)">0</text>
     <text x="180" y="116" text-anchor="middle" font-size="12" fill="var(--muted)">100</text></svg>
     <span class="pill ${level}">Riesgo ${level.toLowerCase()}</span></div>`;
@@ -16,7 +16,7 @@ export function gauge(v,level){
 export function gaugeSinDatos(){
   return `<div class="gauge"><svg viewBox="0 0 200 118" role="img" aria-label="Índice ambiental sin datos suficientes">
     <path d="M20 100 A80 80 0 0 1 180 100" pathLength="100" fill="none" stroke="var(--chip)" stroke-width="16" stroke-linecap="round"/>
-    <text x="100" y="88" text-anchor="middle" font-size="38" font-weight="600" fill="var(--muted)" font-family="JetBrains Mono, monospace">—</text></svg>
+    <text class="gauge-num" x="100" y="88" text-anchor="middle" font-size="44" fill="var(--muted)">—</text></svg>
     <span class="pill sin-datos">Sin datos suficientes</span></div>`;
 }
 export function radar(mods){
