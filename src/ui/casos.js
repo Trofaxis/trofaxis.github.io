@@ -14,6 +14,7 @@ import { relaciones, frase } from '../casos/relaciones.js';
 
 const NOMBRE_RASGO = { cultivo: 'cultivo', riego: 'riego', pendiente: 'pendiente', distAgua: 'distancia al agua', propNativas: 'especies nativas', mesesCoincidencia: 'meses con coincidencias', scores: 'riesgo por módulo' };
 import { dispersion, leyendaDispersion } from './charts.js';
+import { cabeza, ayuda, secAbre, SEC_CIERRA, metodo } from './components.js';
 
 const ORIGEN = { ejemplo: 'Ejemplo', propio: 'Tu caso', nube: 'Comunidad', referencia: 'Datos reales' };
 
@@ -117,18 +118,18 @@ function panelNube() {
       <button class="btn sm danger" data-act="nube-retirar" ${dis}>Retirar todos mis casos compartidos</button>
     </div>
     ${S.demo ? '<p class="muted small">La finca demostrativa es ficticia y no se comparte. Carga o escribe tu finca para compartirla.</p>' : ''}` : '';
-  return `<section class="panel">
-    <div><h2>Nube y comunidad</h2><p class="muted">Opcional. Sin iniciar sesión, la app funciona igual que siempre en este navegador y verás los casos de la comunidad (lectura pública y anónima).</p></div>
+  return `${secAbre('cs-nube', 'Nube y comunidad', n.sesion ? 'Sesión iniciada' : 'Opcional', !!n.conflicto, S.abiertos)}
+    <p class="muted small">Opcional. Sin iniciar sesión, la app funciona igual que siempre en este navegador y verás los casos de la comunidad (lectura pública y anónima).</p>
     ${cuenta}
     ${compartir}
     <div class="row"><button class="btn sm" data-act="nube-comunidad" ${dis}>Actualizar casos de la comunidad</button><span class="muted small">${S.nube.comunidad.length} caso(s) descargados.</span></div>
-  </section>`;
+  ${SEC_CIERRA}`;
 }
 
 // Casos de referencia: datos reales con su fuente y página. No son fincas: no entran a la búsqueda de parecidas.
 export function panelReferencia() {
-  return `<section class="panel" id="casos-referencia">
-    <div><h2>Casos de referencia: datos reales</h2><p class="muted">Lo que midieron estudios reales, cada dato con su fuente y su página. No se editan ni se mezclan con la finca de ejemplo, y no llevan coordenadas.</p></div>
+  return `<div id="casos-referencia">${secAbre('cs-referencia', 'Casos de referencia: datos reales', `${CASOS_REFERENCIA.length} ${CASOS_REFERENCIA.length === 1 ? 'estudio' : 'estudios'}`, false, S.abiertos)}
+    <p class="muted small">Lo que midieron estudios reales, cada dato con su fuente y su página. No se editan ni se mezclan con la finca de ejemplo, y no llevan coordenadas.</p>
     ${CASOS_REFERENCIA.map((c) => `<details class="ref-caso">
       <summary><span class="badge referencia">${ORIGEN.referencia}</span> <b>${esc(c.etiqueta)}</b> <span class="muted small">· ${c.datos.length} datos</span></summary>
       <p class="small">${esc(c.resumen)} <span class="muted">${esc(c.lugar)}.</span></p>
@@ -138,41 +139,28 @@ export function panelReferencia() {
       ${c.pendientes.length ? `<p class="muted small"><b>Falta:</b> ${c.pendientes.map(esc).join(' ')}</p>` : ''}
       <p class="muted small">${c.citas.map(esc).join(' ')}</p>
     </details>`).join('')}
-  </section>`;
+  ${SEC_CIERRA}</div>`;
 }
 
 export function viewCasos() {
   const { cfg, lista } = vecinosActuales();
   const f = S.farm, r = f.resultado;
   const todos = [...CASOS_EJEMPLO, ...S.casos];
-  const propios = S.casos.length;
   return `
   ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
+  ${cabeza({ modulo: 'Memoria de casos', titulo: 'Cada finca es un caso', estado: lista.length ? `Las <b>${lista.length}</b> fincas más parecidas a «${esc(f.nombre || 'tu finca')}»` : 'Todavía no hay casos comparables',
+    ayudaClave: 'casos', ayudaTexto: 'Cada finca evaluada guarda su situación, lo que hizo y cómo le fue. La app busca las fincas más parecidas a la tuya para que veas qué hicieron y cómo les fue. La búsqueda se hace en tu navegador. Mientras más fincas reales se registran, mejores son las comparaciones.' })}
   <section class="panel">
-    <div><p class="label">Memoria de casos</p><h1>Cada finca es un caso</h1>
-    <p class="muted">Cada finca evaluada guarda su situación, lo que hizo y cómo le fue. La app busca las fincas más parecidas a la tuya para que veas qué hicieron y cómo les fue. La búsqueda se hace en tu navegador. Mientras más fincas reales se registran, mejores son las comparaciones.</p></div>
-    <div class="stats">
-      <div><div class="k">Casos en memoria</div><div class="v">${todos.length}</div></div>
-      <div><div class="k">De ejemplo</div><div class="v">${CASOS_EJEMPLO.length}</div></div>
-      <div><div class="k">De referencia (reales)</div><div class="v">${CASOS_REFERENCIA.length}</div></div>
-      <div><div class="k">Guardados por ti</div><div class="v">${propios}</div></div>
-      <div><div class="k">De la comunidad</div><div class="v">${S.nube.comunidad.length}</div></div>
-      <div><div class="k">Vecinos mostrados</div><div class="v">${cfg.casos.k}</div></div>
-    </div>
-  </section>
-  ${panelReferencia()}
-  <section class="panel">
-    <div><h2>Las fincas más parecidas a «${esc(f.nombre || 'tu finca')}»</h2><p class="muted">Ordenadas por similitud. Cada tarjeta dice en qué se parecen, qué hicieron y cómo les fue.</p></div>
+    <div class="cabeza-titulo"><h2>Las fincas más parecidas a «${esc(f.nombre || 'tu finca')}»</h2>${ayuda('casos-ejemplo', 'Ordenadas por similitud. Cada tarjeta dice en qué se parecen, qué hicieron y cómo les fue. Los casos marcados <b>Ejemplo</b> son fincas ficticias: demuestran el método (perfil, similitud y vecinos), no qué funciona en campo. Con casos reales, las mismas fórmulas dan recomendaciones respaldadas.')}</div>
     ${tarjetasVecinos(lista, cfg)}
-    ${notaEjemplos}
-    <details><summary>¿Cómo se calcula la similitud?</summary><div class="formula">Perfil de cada finca: cultivo principal, tipo de riego, pendiente, distancia al agua (tope ${cfg.casos.topeDistAgua} m), proporción de especies nativas, meses con coincidencias de riesgo y el riesgo de cada módulo.
+    ${metodo('casos-similitud', `<div class="formula">Perfil de cada finca: cultivo principal, tipo de riego, pendiente, distancia al agua (tope ${cfg.casos.topeDistAgua} m), proporción de especies nativas, meses con coincidencias de riesgo y el riesgo de cada módulo.
 Distancia por rasgo (0 a 1): categoría igual = 0, distinta = 1; números = diferencia absoluta.
 Similitud = 1 − Σ peso·distancia / Σ peso (solo rasgos que ambas fincas tienen).
 Pesos: ${Object.entries(cfg.casos.pesos).map(([k, w]) => `${NOMBRE_RASGO[k] ?? k} ${w}`).join(', ')}.
-Pesos y umbrales: criterio propio, por calibrar con casos reales.</div></details>
+Pesos y umbrales: criterio propio, por calibrar con casos reales.</div>`)}
   </section>
-  <section class="panel">
-    <div><h2>Tu finca como caso</h2><p class="muted">Registra lo que hiciste y cómo te fue. Esto es lo que otras fincas verán cuando se parezcan a la tuya.</p></div>
+  ${secAbre('cs-propio', 'Tu finca como caso', f.acciones.length ? `${f.acciones.length} acciones` : 'Sin registrar', false, S.abiertos)}
+    <p class="muted small">Registra lo que hiciste y cómo te fue. Esto es lo que otras fincas verán cuando se parezcan a la tuya.</p>
     <div class="f"><label for="c-acc">Acciones tomadas (una por línea)</label><textarea id="c-acc" data-bind="farm.acciones" data-lines placeholder="Ej.: Franja de protección de 30 m en la quebrada">${esc(f.acciones.join('\n'))}</textarea></div>
     <div class="fields">
       ${numCampo('c-nca', 'No conformidades antes', 'farm.resultado.ncAntes', r.ncAntes, 1, 'GLOBALG.A.P., n.º')}
@@ -180,13 +168,13 @@ Pesos y umbrales: criterio propio, por calibrar con casos reales.</div></details
       ${numCampo('c-la', 'Lámina antes', 'farm.resultado.laminaAntes', r.laminaAntes, 0.01, 'Aplicada / requerida; ideal 0.9-1.2')}
       ${numCampo('c-ld', 'Lámina después', 'farm.resultado.laminaDespues', r.laminaDespues, 0.01, 'Aplicada / requerida; ideal 0.9-1.2')}
     </div>
-    <div class="row"><button class="btn primary" data-act="caso-guardar">Guardar mi finca como caso</button><span class="muted small">Se guarda en este navegador${S.demo ? ' y queda marcado como Ejemplo, porque la finca actual es la demostrativa' : ''}. Para compartirlo con otras fincas, usa el panel de la nube de abajo (con tu consentimiento y anonimizado).</span></div>
-  </section>
+    <div class="row"><button class="btn primary" data-act="caso-guardar">Guardar mi finca como caso</button><span class="muted small">Se guarda en este navegador${S.demo ? ' y queda marcado como Ejemplo, porque la finca actual es la demostrativa' : ''}. Para compartirlo, usa «Nube y comunidad».</span></div>
+  ${SEC_CIERRA}
   ${panelNube()}
-  <section class="panel">
-    <h2>Todos los casos</h2>
+  ${panelReferencia()}
+  ${secAbre('cs-todos', 'Todos los casos', `${todos.length} casos`, false, S.abiertos)}
     <div class="scroll"><table class="data"><thead><tr><th>Caso</th><th>Origen</th><th>Cultivo</th><th class="num">Índice</th><th>Resultado</th><th></th></tr></thead><tbody>
       ${todos.map((c) => { const p = perfil(c.finca, cfg); return `<tr><td>${esc(c.etiqueta)}</td><td><span class="badge ${c.origen}">${ORIGEN[c.origen]}</span></td><td>${esc(p.cultivoNombre || 'Sin dato')}</td><td class="num"><span class="pill ${nivel(p.overall, cfg)}">${p.overall}</span></td><td class="small">${resumenResultado(c.finca.resultado).map(esc).join('<br>')}</td><td>${S.casos.includes(c) ? `<button class="btn sm danger" data-act="caso-rm" data-id="${esc(c.id)}">Quitar</button>` : ''}</td></tr>`; }).join('')}
     </tbody></table></div>
-  </section>`;
+  ${SEC_CIERRA}`;
 }

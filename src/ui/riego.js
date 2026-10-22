@@ -7,8 +7,8 @@ import { CONFIG } from '../core/config.js';
 import { validar } from '../riego/reglas.js';
 import { tieneClima } from '../clima/normales.js';
 import { estadoClima } from './clima.js';
+import { cabeza, cifras, ayuda, secAbre, SEC_CIERRA, metodo, listaAlertas } from './components.js';
 
-const NIVEL = { error: 'Error', advertencia: 'Revisar', criterio: 'Criterio', ok: 'Bien' };
 const fmt = (x, d = 1) => (typeof x === 'number' && Number.isFinite(x) ? x.toLocaleString('es-HN', { maximumFractionDigits: d }) : '—');
 
 function campo(id, label, path, valor, unidad, origen, ref) {
@@ -46,38 +46,19 @@ export function viewRiego() {
 
   return `
   ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
-  <section class="panel">
-    <div class="row between">
-      <div><p class="label">Riego por goteo</p><h1>${esc(d.cultivo || 'Diseño sin cultivo')}${d.areaLote ? ` · ${fmt(d.areaLote, 2)} ha` : ''}</h1>
-      <p class="muted">Sube tu Excel o CSV, o escribe tus datos. La app recalcula el diseño y revisa cada valor contra referencias con fuente.</p></div>
-      <div class="row">
-        <button class="btn primary" data-act="riego-import">Cargar Excel o CSV</button>
-        <button class="btn" data-act="riego-ejemplo">Caso real del Lab de Riego</button>
-        <button class="btn" data-act="riego-blanco">En blanco</button>
-      </div>
-    </div>
-    <div class="notice"><span>${aviso}</span></div>
-    <div class="summary">
-      <div><div class="k">ETc pico</div><div class="v">${fmt(r.etc, 2)} mm/día</div></div>
-      <div><div class="k">Riego por sector</div><div class="v">${fmt(r.tiempoRiego, 2)} h</div></div>
-      <div><div class="k">Sectores</div><div class="v">${fmt(r.sectores, 0)}</div></div>
-      <div><div class="k">Caudal por sector</div><div class="v">${fmt(r.caudalSector)} m³/h</div></div>
-      <div><div class="k">Máximo sin regar</div><div class="v">${r.intervaloMax !== undefined ? `${r.intervaloMax} día(s)` : '—'}</div></div>
-    </div>
-  </section>
+  ${cabeza({ modulo: 'Riego por goteo', titulo: `${esc(d.cultivo || 'Diseño sin cultivo')}${d.areaLote ? ` · ${fmt(d.areaLote, 2)} ha` : ''}`,
+    estado: cuenta('error') + cuenta('advertencia') ? `<b>${cuenta('error')} errores</b> · ${cuenta('advertencia')} por revisar` : alertas.length ? '<b>Tu diseño está bien</b>' : 'Carga tus datos para revisarlos',
+    acciones: `<button class="btn primary" data-act="riego-import">Cargar Excel o CSV</button><details class="menu-mas" data-keep="menu-riego"><summary class="btn">Más</summary><div class="menu-mas-caja"><button class="btn" data-act="riego-ejemplo">Caso real del Lab de Riego</button><button class="btn" data-act="riego-blanco">En blanco</button></div></details>`,
+    ayudaClave: 'riego', ayudaTexto: 'Sube tu Excel o CSV, o escribe tus datos. La app recalcula el diseño y revisa cada valor contra referencias con fuente.' })}
+  <div class="notice notice-corto"><span>${R.fuente === 'ejemplo' ? '<b>Caso de referencia, datos reales.</b>' : R.fuente === 'archivo' ? `<b>Datos de ${esc(R.archivo)}.</b>` : '<b>Datos ingresados a mano.</b>'}</span>${ayuda('riego-fuente', aviso)}</div>
+  ${cifras([['Horas de riego por sector', `${fmt(r.tiempoRiego, 2)} h`], ['Días máximo sin regar', r.intervaloMax !== undefined ? r.intervaloMax : '—'], ['Sectores', fmt(r.sectores, 0)], ['ETc pico, mm/día', fmt(r.etc, 2)]])}
 
-  <div class="grid2">
-    <section class="panel">
-      <div><h2>Alertas</h2><p class="muted">${cuenta('error')} errores · ${cuenta('advertencia')} por revisar · ${cuenta('criterio')} criterios · ${cuenta('ok')} bien</p></div>
-      <ul class="alertas">${alertas.map((a) => `<li class="alerta ${a.nivel}">
-        <div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
-        <p>${esc(a.detalle)}</p>
-        ${a.fuente ? `<p class="muted fs-125">Fuente: ${a.fuente.url ? `<a href="${esc(a.fuente.url)}" target="_blank" rel="noopener">${esc(a.fuente.cita)}</a>` : esc(a.fuente.cita)}</p>` : ''}
-      </li>`).join('') || '<li class="muted">Ingresa datos para ver alertas.</li>'}</ul>
-    </section>
+  ${secAbre('rg-alertas', 'Alertas', `${cuenta('error')} errores · ${cuenta('advertencia')} por revisar`, cuenta('error') + cuenta('advertencia') > 0, S.abiertos, cuenta('error') > 0)}
+      <p class="muted small">${cuenta('error')} errores · ${cuenta('advertencia')} por revisar · ${cuenta('criterio')} criterios · ${cuenta('ok')} bien</p>
+      ${listaAlertas(alertas, 'Ingresa datos para ver alertas.')}
+  ${SEC_CIERRA}
 
-    <section class="panel">
-      <h2>Datos del diseño</h2>
+  ${secAbre('rg-datos', 'Datos del diseño', 'Cultivo, emisor y operación', false, S.abiertos)}
       <h3>Cultivo</h3>
       <div class="fields">
         <div class="f"><label for="rg-cultivo">Cultivo</label><input id="rg-cultivo" data-bind="riego.datos.cultivo" data-rerender value="${esc(d.cultivo)}"><span class="hint">${ref ? `Referencia: ${esc(ref.nombre)}` : 'Sin referencia: no se comparan Kc ni etapas'}</span></div>
@@ -106,11 +87,10 @@ export function viewRiego() {
         ${campo('rg-horas', 'Horas laborales', 'riego.datos.horasLaborales', d.horasLaborales, 'h/día', o.horasLaborales)}
         ${campo('rg-frec', 'Riego cada', 'riego.datos.frecuenciaDias', d.frecuenciaDias, 'días', null, 1)}
       </div>
-    </section>
-  </div>
+  ${SEC_CIERRA}
 
-  <section class="panel">
-    <div><h2>Suelo por sección</h2><p class="muted">La lámina aprovechable se calcula en la zona radicular, con la fracción p ajustada por ETc${r.pAjustada !== null ? ` (p = ${fmt(r.pAjustada, 2)})` : ''}. Si dejas vacíos Da, CC, PMP o infiltración, se toman de la textura.</p></div>
+  ${secAbre('rg-suelo', 'Suelo por sección', `${d.suelo.length} ${d.suelo.length === 1 ? 'sección' : 'secciones'}`, false, S.abiertos)}
+    ${metodo('rg-suelo', `La lámina aprovechable se calcula en la zona radicular, con la fracción p ajustada por ETc${r.pAjustada !== null ? ` (p = ${fmt(r.pAjustada, 2)})` : ''}. Si dejas vacíos Da, CC, PMP o infiltración, se toman de la textura.`)}
     <div class="scroll"><table class="data"><thead><tr>
       <th>Sección</th><th class="num">Área (ha)</th><th>Textura</th><th class="num">Da (g/cm³)</th><th class="num">CC (%W)</th><th class="num">PMP (%W)</th><th class="num">Piedras (%)</th><th class="num">Infiltración (mm/h)</th><th class="num">Lámina aprovechable (mm)</th><th></th>
     </tr></thead><tbody>
@@ -137,10 +117,10 @@ export function viewRiego() {
       ${r.suelo.map((x) => `<tr><td>${esc(x.nombre)}</td><td class="num">${fmt(x.laaPorMetro)} mm</td><td class="num">${fmt(x.laaSinAjuste)} mm</td><td class="num"><b>${fmt(x.laa)} mm</b></td></tr>`).join('')}
     </tbody></table></div>
     <p class="muted small">La primera ignora que las raíces solo llegan a ${fmt(d.profRaiz, 2)} m. La segunda es la fórmula del cálculo manual habitual. La tercera además baja p porque con ETc alta la planta se estresa antes (FAO-56, Tabla 22); la app la usa para el intervalo entre riegos porque es la más segura.</p>` : ''}
-  </section>
+  ${SEC_CIERRA}
 
-  <section class="panel">
-    <div><h2>Consumo del ciclo</h2><p class="muted">ETc de cada etapa = Kc promedio de la etapa × suma de la ETo de sus días. Ingresa la fecha de siembra y la ETo media diaria de cada mes; los meses vacíos usan la ETo pico.</p></div>
+  ${secAbre('rg-ciclo', 'Consumo del ciclo', c ? `${fmt(c.etcCiclo)} mm` : 'Faltan datos', false, S.abiertos)}
+    ${metodo('rg-ciclo', 'ETc de cada etapa = Kc promedio de la etapa × suma de la ETo de sus días. Ingresa la fecha de siembra y la ETo media diaria de cada mes; los meses vacíos usan la ETo pico.')}
     ${lineaClima}
     <div class="fields">
       <div class="f"><label for="rg-siembra">Fecha de siembra</label><input id="rg-siembra" type="date" data-bind="riego.datos.siembra" data-rerender value="${esc(d.siembra)}"></div>
@@ -160,10 +140,10 @@ export function viewRiego() {
     </div>
     <p class="muted small">1 mm en 1 ha = 10 m³. El bruto es el agua que hay que tener disponible. No descuenta lluvia efectiva.</p>`
     : '<p class="muted">Faltan Kc, duración de etapas o ETo para calcular el ciclo.</p>'}
-  </section>
+  ${SEC_CIERRA}
 
-  <section class="panel">
-    <div><h2>Hidráulica del sector más desfavorable</h2><p class="muted">Pérdidas por Hazen-Williams (K = 3163, caudal en L/h, diámetro interno en mm) con factor F de Christiansen. Límite de pérdida: ${Math.round(CONFIG.riego.hfMaxFraccion * 100)} % de la presión de operación. Usa el sector más lejos o más alto de la bomba.</p></div>
+  ${secAbre('rg-hidraulica', 'Hidráulica', h?.cdt ? `Bomba: ${fmt(h.cdt, 1)} m` : `${fmt(r.caudalSector)} m³/h por sector`, false, S.abiertos)}
+    ${metodo('rg-hidraulica', `Sector más desfavorable: el más lejos o más alto de la bomba. Pérdidas por Hazen-Williams (K = 3163, caudal en L/h, diámetro interno en mm) con factor F de Christiansen. Límite de pérdida: ${Math.round(CONFIG.riego.hfMaxFraccion * 100)} % de la presión de operación. Caudal por sector: ${fmt(r.caudalSector)} m³/h.`)}
     <h3>Lateral (cinta o manguera)</h3>
     <div class="fields">
       ${campo('rg-po', 'Presión de operación', 'riego.datos.hidraulica.presionOperacion', hd.presionOperacion, 'mca (1 bar = 10.2 mca)')}
@@ -206,10 +186,10 @@ export function viewRiego() {
       <tr><td><b>CDT</b></td><td class="num"><b>${fmt(h.cdt, 1)} m</b></td></tr>
       ${h.potenciaHp ? `<tr><td>Potencia = Q (L/s) × CDT / (76 × eficiencia)</td><td class="num"><b>${fmt(h.potenciaHp, 1)} HP</b></td></tr>` : ''}
     </tbody></table></div>` : '<p class="muted">Ingresa la presión de operación para sumar la carga de la bomba.</p>'}
-  </section>
+  ${SEC_CIERRA}
 
-  <section class="panel">
-    <div><h2>Reservorio</h2><p class="muted">Volumen = demanda del ciclo (ETc × (1 − aporte de la fuente) ÷ eficiencia × 10 × área) + evaporación del espejo. Evaporación diaria (mm) = radiación (MJ/m²/día) × ${CONFIG.riego.fraccionEvaporacion} ÷ calor latente (2.501 − 0.002361 × temperatura), en los días del ciclo. Necesita la fecha de siembra de "Consumo del ciclo".</p></div>
+  ${secAbre('rg-reservorio', 'Reservorio', res ? `${fmt(res.volumen, 0)} m³` : 'Faltan datos', false, S.abiertos)}
+    ${metodo('rg-reservorio', `Volumen = demanda del ciclo (ETc × (1 − aporte de la fuente) ÷ eficiencia × 10 × área) + evaporación del espejo. Evaporación diaria (mm) = radiación (MJ/m²/día) × ${CONFIG.riego.fraccionEvaporacion} ÷ calor latente (2.501 − 0.002361 × temperatura), en los días del ciclo. Necesita la fecha de siembra de "Consumo del ciclo".`)}
     ${tieneClima(clima) ? '' : lineaClima}
     <div class="fields">
       ${campo('rg-ap', 'Aporte de la fuente', 'riego.datos.reservorio.aporteFuente', rv.aporteFuente, 'fracción de la ETc (0 si no aporta)')}
@@ -230,14 +210,14 @@ export function viewRiego() {
       <div><div class="k">Volumen total</div><div class="v">${fmt(res.volumen, 0)} m³</div></div>
       <div><div class="k">Profundidad</div><div class="v">${res.profundidad ? `${fmt(res.profundidad, 2)} m · con borde ${fmt(res.profundidadTotal, 2)} m` : '—'}</div></div>
     </div>` : '<p class="muted">Falta el consumo del ciclo o el área del lote.</p>'}
-  </section>
+  ${SEC_CIERRA}
 
-  ${R.fuente === 'archivo' ? `<section class="panel">
-    <div><h2>Qué se leyó del archivo</h2><p class="muted">Cada dato con la celda de donde salió. Si algo quedó mal, corrígelo arriba.</p></div>
+  ${R.fuente === 'archivo' ? `${secAbre('rg-archivo', 'Qué se leyó del archivo', `${Object.keys(o).length} datos`, false, S.abiertos)}
+    <p class="muted small">Cada dato con la celda de donde salió. Si algo quedó mal, corrígelo arriba.</p>
     <div class="scroll"><table class="data"><thead><tr><th>Dato</th><th>Etiqueta en el archivo</th><th class="num">Valor</th><th>Celda</th></tr></thead><tbody>
       ${Object.values(o).map((x) => `<tr><td>${esc(x.nombre)}</td><td>${esc(x.etiqueta)}</td><td class="num">${esc(String(x.valor))}</td><td>${esc(x.celda)}</td></tr>`).join('')}
     </tbody></table></div>
     ${R.faltan?.length ? `<p><b>No se encontraron:</b> ${esc(R.faltan.join(', '))}. Complétalos arriba o se usará la referencia cuando exista.</p>` : '<p>Se encontraron todos los datos de entrada.</p>'}
     ${R.omitidas?.length ? `<p class="muted">Hojas no analizadas: ${R.omitidas.map((h) => `${esc(h.nombre.trim())} (${esc(h.motivo)})`).join('; ')}.</p>` : ''}
-  </section>` : ''}`;
+  ${SEC_CIERRA}` : ''}`;
 }

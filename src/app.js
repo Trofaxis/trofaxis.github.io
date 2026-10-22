@@ -181,14 +181,14 @@ function render(){
 }
 const DRAFTS={cultivos:'draftCult',especies:'draftEsp',plagas:'draftPlaga',cultivosAledanos:'draftVecino'};
 // Pestaña Plaguicidas: el formulario edita una copia; la aplicación queda en la lista hasta guardar los cambios.
-const alFormPlag=()=>queueMicrotask(()=>document.getElementById('plag-form')?.scrollIntoView({block:'start'}));
+const alFormPlag=(id='plag-form')=>queueMicrotask(()=>document.getElementById(id)?.scrollIntoView({block:'start'}));
 const limpiarPlag=()=>{S.draftPlag=plagBorrador();S.plagEdit=null;S.plagNotas=[];};
 const aBorrador=(x)=>{const d={...plagBorrador(),...structuredClone(x)};if(!d.componentes.length)d.componentes=[componenteVacio()];
   d.grupoAuto=!d.grupo;d.usoAuto=!d.uso;return d;}; // lo ya guardado se respeta al cambiar de ingrediente
 // Acciones de los botones con data-act. Cada una recibe el botón pulsado `a` y la finca `f`.
 // Al terminar, el manejador de clics vuelve a dibujar la pantalla; una acción que devuelve `false`
 // (porque no cambió nada o porque ya dibujó o delega en otra función) evita ese dibujo.
-const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'rapido-listo', 'wiz-modo', 'wiz-paso', 'start-empty', 'load-demo', 'reset-yes',
+const ACCIONES_QUE_SUBEN = new Set(['next', 'prev', 'finish', 'rapido-listo', 'rapido-ir', 'wiz-modo', 'wiz-paso', 'start-empty', 'load-demo', 'reset-yes',
   'bv-siguiente', 'bv-atras', 'bv-saltar', 'bv-cuestionario', 'bv-saltar-cuestionario', 'bv-ver']);
 
 const accionesGenerales = {
@@ -230,12 +230,15 @@ const accionesCuestionario = {
   'finish': () => { S.view = 'dashboard'; },
   'wiz-paso': (a) => { S.wizModo = 'completo'; S.step = +a.dataset.step || 0; S.view = 'wizard'; },
   'rapido-opc': (a) => { S.rapido[a.dataset.k] = a.dataset.v; },
+  // Cuestionario rápido: una pregunta por pantalla.
+  'rapido-ir': (a) => { S.preg = Math.max(0, +a.dataset.i || 0); },
+  'riego-tipo': (a) => { S.farm.riego = a.dataset.v; },
   'rapido-listo': () => { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; S.demo = false; S.view = 'dashboard'; },
   'wiz-modo': (a) => {
     if (S.rapido && S.rapidoDe === S.farm && a.dataset.v === 'completo') { S.farm = aplicarRapido(S.farm, S.rapido); S.rapidoDe = S.farm; }
     S.wizModo = a.dataset.v === 'completo' ? 'completo' : 'rapido'; S.view = 'wizard';
   },
-  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; S.wizModo = 'rapido'; },
+  'start-empty': () => { reiniciarMapa(); S.farm = emptyFarm(); S.demo = false; S.done = {}; S.view = 'wizard'; S.step = 0; S.preg = 0; S.wizModo = 'rapido'; },
   'load-demo': () => {
     reiniciarMapa(); S.farm = demoFarm(); S.demo = true; S.done = {}; S.view = 'dashboard'; S.msg = 'Se cargó la finca de ejemplo.';
   },
@@ -432,9 +435,11 @@ const accionesPlaguicidas = {
     const i = +a.dataset.i; if (!f.plaguicidas[i]) return false;
     S.draftPlag = { ...aBorrador(f.plaguicidas[i]), meses: [] }; S.plagEdit = null; S.plagNotas = [];
     S.plagMsg = { nivel: 'ok', texto: `Copia de ${f.plaguicidas[i].producto || 'la aplicación'} lista: marca los meses de la nueva aplicación y agrégala.` };
-    alFormPlag();
+    alFormPlag('plag-rapido');
   },
   'plag-cancel': () => { limpiarPlag(); },
+  // Abre una sección plegada y baja hasta ella (por ejemplo «Agregar más detalles» en Plaguicidas).
+  'abrir-sec': (a) => { S.abiertos[a.dataset.k] = true; if (a.dataset.ir) alFormPlag(a.dataset.ir); },
   'plag-rm': (a, f) => {
     const i = +a.dataset.i; f.plaguicidas.splice(i, 1);
     if (S.plagEdit === i) limpiarPlag(); else if (S.plagEdit != null && S.plagEdit > i) S.plagEdit--;

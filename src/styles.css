@@ -341,9 +341,9 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 /* Utilidades (issue 52): antes eran estilos en línea dentro de src/ui/*.js. Van al final para ganar a las reglas base
    con la misma especificidad. Quedan en línea solo los valores que dependen de un dato (ancho de barra, opacidad). */
 .stack{display:flex;flex-direction:column}
-.gap-4{gap:4px} .gap-8{gap:8px} .gap-10{gap:10px} .gap-12{gap:12px}
+.gap-4{gap:4px} .gap-10{gap:10px}
 .nowrap{flex-wrap:nowrap}
-.basis-100{flex-basis:100%}
+
 .minw-0{min-width:0} .minw-120{min-width:120px} .minw-260{min-width:260px}
 .maxw-110{max-width:110px}
 .w-auto{width:auto} .w-64{width:64px} .w-66{width:66px} .w-70{width:70px} .w-72{width:72px} .w-80{width:80px} .w-110{width:110px} .w-150{width:150px}
@@ -757,3 +757,97 @@ body.en-bienvenida main{padding-block:0}
 @keyframes zumbar{0%{transform:translate(0,0)}35%{transform:translate(7px,-5px)}70%{transform:translate(-4px,-9px)}100%{transform:translate(5px,3px)}}
 @media (max-width:560px){.stats .v{font-size:17px}}
 @media print{body{background:#fff}.side{display:none}.panel,.card,.semaforo li{box-shadow:none}}
+
+/* Patrón de pantalla «menos palabras» (src/ui/components.js): cabeza con estado y acción, «?» en lugar de párrafos,
+   secciones plegadas que dicen lo que traen y cifras grandes. Referencias: Apple Salud (estado arriba, detalle abajo),
+   Duolingo y Airbnb (una pregunta por pantalla), Revolut (registros en lista con una acción principal). */
+.cabeza{display:flex;justify-content:space-between;align-items:flex-end;gap:14px 20px;flex-wrap:wrap;padding:4px 2px 0}
+.cabeza-txt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 320px}
+.cabeza-titulo{display:flex;align-items:flex-start;gap:10px}
+.cabeza-titulo>h1,.cabeza-titulo>h2,.cabeza-titulo>h3{min-width:0}
+.cabeza-estado{font-size:18px;color:var(--muted)}
+.cabeza-estado b{color:var(--ink)}
+.cabeza-acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ayuda{position:relative;flex:none;margin-top:4px}
+.ayuda>summary{list-style:none;cursor:pointer;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 15px/1 var(--f-body);color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.ayuda>summary::-webkit-details-marker{display:none}
+.ayuda[open]>summary{background:var(--accent);color:var(--accent-ink)}
+.ayuda-caja{position:absolute;z-index:20;top:calc(100% + 8px);left:-12px;width:min(340px,calc(100vw - 40px));padding:12px 14px;border-radius:14px;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);box-shadow:0 18px 40px -16px rgba(0,0,0,.4);font:400 15px/1.5 var(--f-body);letter-spacing:0}
+@media (max-width:560px){.ayuda{position:static}.cabeza-titulo{position:relative}.ayuda-caja{left:0;right:0;width:auto}}
+@media (prefers-reduced-motion:no-preference){.ayuda[open] .ayuda-caja{animation:aparecer .18s ease-out}}
+/* Secciones plegadas: una fila por tema, como en Ajustes del teléfono. Cerradas dicen cuánto traen. */
+details.sec{padding:0;gap:0}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:18px 22px;min-height:64px}
+details.sec>summary::-webkit-details-marker{display:none}
+.sec-t{font:600 20px/1.2 var(--f-display);letter-spacing:-.01em;flex:1;min-width:0}
+.sec-r{font:600 13px var(--f-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.sec-r.alerta-r{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent);background:color-mix(in srgb,var(--crit) 8%,var(--surface))}
+.sec-flecha{flex:none;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);rotate:45deg;translate:0 -3px;transition:rotate .2s ease-out}
+details.sec[open]>summary .sec-flecha{rotate:225deg;translate:0 2px}
+details.sec>summary:hover .sec-t{color:var(--accent)}
+.sec-cuerpo{display:flex;flex-direction:column;gap:14px;padding:4px 22px 22px;border-top:1px solid var(--line)}
+.sec-cuerpo>:first-child{margin-top:14px}
+@media (max-width:560px){details.sec>summary{padding:16px}.sec-cuerpo{padding:4px 16px 18px}.sec-t{font-size:18px}}
+/* Cifras grandes */
+.cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.cifra{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);min-width:0}
+.cifra-v{font:600 28px/1.1 var(--f-display);letter-spacing:-.02em;overflow-wrap:anywhere}
+.cifra-k{font-size:14px;color:var(--muted)}
+.cifra.nivel-Alto .cifra-v{color:var(--crit)}.cifra.nivel-Medio .cifra-v{color:var(--warn)}.cifra.nivel-Bajo .cifra-v{color:var(--good)}
+@media (max-width:560px){.cifras{grid-template-columns:repeat(2,minmax(0,1fr))}.cifra-v{font-size:22px}}
+/* Una pregunta por pantalla */
+.paso{gap:16px;max-width:720px;width:100%;margin-inline:auto}
+.paso-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.enlace{border:none;background:none;padding:6px 0;color:var(--accent);font:600 15px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.progreso{height:10px;border-radius:99px;background:var(--chip);overflow:hidden}
+.progreso span{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.paso-n{font:600 14px var(--f-mono);color:var(--muted)}
+.paso-pregunta{font-size:clamp(26px,3.4vw,34px);line-height:1.15}
+.paso-cuerpo{display:flex;flex-direction:column;gap:16px;min-height:120px}
+.paso-nav{display:flex;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--line)}
+.paso-nav .btn{min-height:52px;min-width:120px;font-size:16px;border-radius:14px}
+.paso-nav .btn.primary{flex:1;max-width:320px}
+.choice-grande{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.choice-grande button{min-height:64px;font-size:17px}
+.paso .choice button{min-height:56px;padding-inline:22px;font-size:16px}
+@media (max-width:700px){
+  .paso-nav{position:sticky;bottom:84px;z-index:4;background:var(--surface);margin:0 -24px -24px;padding:12px 16px;border-radius:0 0 var(--radius) var(--radius)}
+  .paso .steps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .paso .steps button{flex:none}
+}
+/* Menú «Más»: lo que se usa poco (exportar, importar, cargar un ejemplo) junto y fuera de la vista. */
+.menu-mas{position:relative}
+.menu-mas>summary{list-style:none}
+.menu-mas>summary::-webkit-details-marker{display:none}
+.menu-mas>summary::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;rotate:45deg;translate:0 -3px}
+.menu-mas-caja{position:absolute;right:0;top:calc(100% + 6px);z-index:20;display:flex;flex-direction:column;gap:4px;min-width:220px;padding:8px;border-radius:14px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 18px 40px -16px rgba(0,0,0,.4)}
+.menu-mas-caja .btn{border-color:transparent;text-align:left;width:100%}
+.menu-mas-caja .btn:hover{border-color:transparent}
+@media (max-width:560px){.menu-mas-caja{left:0;right:auto}}
+.notice-corto{padding:10px 14px}
+.notice-corto span{min-width:0}
+.metodo{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);position:relative}
+.metodo .ayuda{margin-top:0}
+.unidades{gap:8px}
+.paso .choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
+@media (max-width:560px){
+  details.sec>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  details.sec>summary .sec-t{grid-column:1}
+  details.sec>summary .sec-r{grid-column:1;grid-row:2;justify-self:start}
+  details.sec>summary .sec-flecha{grid-column:2;grid-row:1/3;align-self:center}
+}
+/* Avisos plegables: fila con nivel y título; se abre para ver el porqué y la fuente. */
+.alertas>li{list-style:none}
+details.alerta{border:1px solid var(--line);border-left-width:4px;border-radius:12px;background:var(--surface)}
+details.alerta>summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;min-height:48px}
+details.alerta>summary::-webkit-details-marker{display:none}
+details.alerta>summary b{flex:1;min-width:0;font-weight:600}
+details.alerta>summary::after{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);rotate:45deg;transition:rotate .2s ease-out}
+details.alerta[open]>summary::after{rotate:225deg;margin-top:10px}
+details.alerta.error{border-left-color:var(--crit)}details.alerta.advertencia{border-left-color:var(--warn)}details.alerta.criterio{border-left-color:var(--muted)}details.alerta.ok{border-left-color:var(--good)}
+.alerta-cuerpo{display:flex;flex-direction:column;gap:6px;padding:0 14px 12px}
+.alertas-mas{margin-top:8px}
+.alertas-mas>summary{font-size:15px;font-weight:600;color:var(--accent);padding:8px 0}
+.alertas-mas>.alertas{margin-top:6px}
+/* El bloque con un «?» abierto pasa al frente: la animación de entrada crea una capa por bloque y la explicación quedaba detrás del siguiente. */
+#app>:has(.ayuda[open]),.inicio>:has(.ayuda[open]),.sec-cuerpo>:has(.ayuda[open]){position:relative;z-index:10}

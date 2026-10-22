@@ -7,12 +7,12 @@ import { S } from '../core/state.js';
 import { configEfectiva, normalizarAjustes } from '../core/storage.js';
 import { months } from './components.js';
 import { calRow } from './charts.js';
+import { cabeza, cifras, ayuda, secAbre, SEC_CIERRA, listaAlertas } from './components.js';
 import { USOS, CLASES, REGISTROS, FORMULACIONES, UNIDADES_DOSIS, METODOS, DIRECCIONES, normalizarPlag } from '../plag/modelo.js';
 import { INGREDIENTES, ingrediente, CONSULTA_PPDB } from '../plag/catalogo.js';
 import { PRODUCTOS_SAG, ENFERMEDADES, productoSag } from '../plag/sag.js';
 import { resumenPlag, peligroAbejas, productoPorHa, claseEPA, CLASE_EPA, FUENTES_PLAG, fmtHQ, nombreComp } from '../plag/calculo.js';
 
-const NIVEL = { error: 'Error', advertencia: 'Revisar', criterio: 'Criterio', ok: 'Bien' };
 const fmt = (x, d = 1) => (x == null || !Number.isFinite(x) ? '—' : x.toLocaleString('es-HN', { maximumFractionDigits: d }));
 const mlist = (a) => (a.length ? a.map((m) => M[m]).join(', ') : 'sin meses');
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
@@ -24,8 +24,6 @@ const numero = (id, label, bind, val, hint = '', extra = '') => `<div class="f">
 const texto = (id, label, bind, val, hint = '', extra = '') => `<div class="f"><label for="${id}">${label}</label><input id="${id}" type="text" data-bind="${bind}" value="${esc(val)}" ${extra}>${hint ? `<span class="hint">${hint}</span>` : ''}</div>`;
 const casilla = (id, bind, val, label) => `<label class="check"><input id="${id}" type="checkbox" data-bind="${bind}" data-rerender ${val ? 'checked' : ''}> ${label}</label>`;
 const fuenteTxt = (f) => (!f ? '' : f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.cita)}</a>` : esc(f.cita));
-const alerta = (a) => `<li class="alerta ${a.nivel}"><div class="row gap-8"><span class="pill ${a.nivel}">${NIVEL[a.nivel]}</span><b>${esc(a.titulo)}</b></div>
-  <p>${esc(a.detalle)}</p>${a.fuente ? `<p class="muted fs-125">Fuente: ${fuenteTxt(a.fuente)}</p>` : ''}</li>`;
 
 // Píldora del peligro para abejas de una aplicación.
 function pildora(r) {
@@ -100,19 +98,19 @@ function panelRapido(d, cfg) {
   const opciones = [...PRODUCTOS_SAG.map((p) => `<option value="${esc(p.nombre)}">Fungicida del cuadro SAG · ${esc(p.ia)}</option>`),
     ...INGREDIENTES.map((x) => `<option value="${esc(x.nombre)}">Ingrediente activo · ${esc(x.uso)}</option>`)].join('');
   return `<section class="panel" id="plag-rapido">
-    <div><h2>Registro rápido</h2><p class="muted">Busca el producto, escribe la dosis y guarda. Lo demás se llena solo o lo completas en el formulario de abajo.</p></div>
+    <div class="cabeza-titulo"><h2>Registro rápido</h2>${ayuda('plag-rapido', `Busca el producto, escribe la dosis y guarda. Lo demás se llena solo o lo completas en «Todos los detalles». Reconoce los fungicidas del cuadro SAG y ${INGREDIENTES.length} ingredientes activos; si no está, escribe el nombre y sigue. Si la dosis viene del cuadro SAG y aplicas otra, cámbiala. Con dosis por tanque, el agua por hectárea la pasa a dosis por hectárea.`)}</div>
     <datalist id="pq-lista">${opciones}</datalist>
-    <div class="f"><label for="pqr-buscar">1. Producto o ingrediente activo</label><input id="pqr-buscar" type="search" list="pq-lista" autocomplete="off" data-bind="draftPlag.buscar" data-rerender value="${esc(d.producto)}" placeholder="Por ejemplo: mancozeb o imidacloprid"><span class="hint">Reconoce los fungicidas del cuadro SAG y ${INGREDIENTES.length} ingredientes activos. Si no está, escribe el nombre y sigue.</span></div>
+    <div class="f"><label for="pqr-buscar">1. Producto o ingrediente activo</label><input id="pqr-buscar" type="search" list="pq-lista" autocomplete="off" data-bind="draftPlag.buscar" data-rerender value="${esc(d.producto)}" placeholder="Por ejemplo: mancozeb o imidacloprid"></div>
     ${S.plagNotas.length ? `<ul class="small lista-nota">${S.plagNotas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <div class="fields">
-      ${numero('pqr-dosis', '2. Dosis', 'draftPlag.dosis', d.dosis, 'La que aplicas; si viene del cuadro SAG, cámbiala si aplicas otra')}
+      ${numero('pqr-dosis', '2. Dosis', 'draftPlag.dosis', d.dosis)}
       ${sel('pqr-du', 'Unidad de la dosis', 'draftPlag.dosisUnidad', d.dosisUnidad, Object.entries(UNIDADES_DOSIS).map(([k, u]) => [k, u.nombre]))}
-      ${U.tanque ? numero('pqr-vol', 'Agua por hectárea (L/ha)', 'draftPlag.volumen', d.volumen, 'Para pasar la dosis por tanque a dosis por hectárea') : ''}
+      ${U.tanque ? numero('pqr-vol', 'Agua por hectárea (L/ha)', 'draftPlag.volumen', d.volumen) : ''}
       ${pideConc ? numero('pqr-conc', `Concentración de ${esc(ingrediente(c0.ia).nombre)}`, 'draftPlag.componentes.0.conc', c0.conc, d.concUnidad === 'pct' ? '% en la etiqueta' : 'g/L o g/kg en la etiqueta') : ''}
-      ${numero('pqr-etq', 'Dosis máxima de la etiqueta (opcional)', 'draftPlag.dosisEtiqueta', d.dosisEtiqueta, 'En la misma unidad. Si la pasas, la app te avisa')}
+      ${numero('pqr-etq', 'Dosis máxima de la etiqueta (opcional)', 'draftPlag.dosisEtiqueta', d.dosisEtiqueta, 'Si la pasas, te avisa')}
     </div>
     <div class="f"><span class="label">Mes de aplicación</span>${months('draftPlag.meses', d.meses)}</div>
-    <div class="row"><button class="btn primary" data-act="add-plag">3. Guardar</button><a class="btn" href="#plag-form">Agregar más detalles</a></div>
+    <div class="row"><button class="btn primary" data-act="add-plag">3. Guardar</button><button class="btn" data-act="abrir-sec" data-k="pq-form" data-ir="plag-form">Agregar más detalles</button></div>
     ${S.plagMsg ? `<p class="${S.plagMsg.nivel === 'error' ? 'warnmsg' : 'okmsg'}" role="${S.plagMsg.nivel === 'error' ? 'alert' : 'status'}">${esc(S.plagMsg.texto)}</p>` : ''}
   </section>`;
 }
@@ -133,17 +131,13 @@ export function viewPlaguicidas() {
 
   return `
   ${S.msg ? `<div class="notice"><span>${esc(S.msg)}</span></div>` : ''}
-  <section class="panel">
-    <div><p class="label">Plaguicidas</p><h1>Aplicaciones y peligro para polinizadores</h1>
-    <p class="muted">Registra cada aplicación: producto, ingrediente activo, dosis y meses. La app calcula el peligro para abejas y otros himenópteros polinizadores, revisa lo que dice la etiqueta y las condiciones de aplicación, y lo cruza con la floración, la cosecha, el riego y la fertilización de tu finca. Solo el producto y los meses son obligatorios: con más datos, la app calcula más.</p></div>
-    ${S.demo ? '<div class="notice"><span><b>Datos de ejemplo.</b> Las aplicaciones de la finca demostrativa son ficticias: sus dosis no son recomendaciones.</span></div>' : ''}
-    <div class="stats">
-      <div><div class="k">Aplicaciones</div><div class="v">${f.plaguicidas.length}</div></div>
-      <div><div class="k">Meses en floración</div><div class="v">${R.enFlor.length ? mlist(R.enFlor) : 'Ninguno'}</div></div>
-      <div><div class="k">Mayor peligro</div><div class="v">${R.peor ? `${esc(R.peor.a.producto || 'Sin nombre')} · HQ ${R.peor.peligro.cota ? '≤ ' : ''}${fmtHQ(R.peor.peligro.hqEf)}` : 'Sin dato'}</div></div>
-      <div><div class="k">Avisos</div><div class="v">${plural(R.errores, 'rojo', 'rojos')} · ${R.revisar} por revisar</div></div>
-    </div>
-  </section>
+  ${cabeza({ modulo: 'Plaguicidas', titulo: 'Aplicaciones y peligro para polinizadores',
+    estado: f.plaguicidas.length ? (R.errores ? `<b>${plural(R.errores, 'aviso rojo', 'avisos rojos')}</b> · ${R.revisar} por revisar` : `<b>Sin avisos rojos</b> · ${R.revisar} por revisar`) : 'Registra tu primera aplicación',
+    ayudaClave: 'plaguicidas', ayudaTexto: 'Registra cada aplicación: producto, ingrediente activo, dosis y meses. La app calcula el peligro para abejas y otros himenópteros polinizadores, revisa lo que dice la etiqueta y las condiciones de aplicación, y lo cruza con la floración, la cosecha, el riego y la fertilización de tu finca. Solo el producto y los meses son obligatorios: con más datos, la app calcula más.' })}
+  ${S.demo ? `<div class="notice notice-corto"><span><b>Datos de ejemplo.</b> Dosis ficticias.</span>${ayuda('plag-demo', 'Las aplicaciones de la finca demostrativa son ficticias: sus dosis no son recomendaciones.')}</div>` : ''}
+  ${cifras([['Aplicaciones', f.plaguicidas.length], ['Meses en floración', R.enFlor.length ? mlist(R.enFlor) : 'Ninguno', R.enFlor.length ? 'Alto' : 'Bajo'],
+    ['Mayor peligro', R.peor ? `HQ ${R.peor.peligro.cota ? '≤ ' : ''}${fmtHQ(R.peor.peligro.hqEf)}` : 'Sin dato', R.peor?.peligro.supera === true ? 'Alto' : R.peor?.peligro.supera === false ? 'Bajo' : ''],
+    ['Avisos rojos', R.errores, R.errores ? 'Alto' : 'Bajo']])}
 
   ${editando ? '' : panelRapido(d, cfg)}
 
@@ -165,8 +159,7 @@ export function viewPlaguicidas() {
     </div>
   </section>
 
-  <section class="panel" id="plag-form">
-    <div class="row between"><h2>${editando ? 'Editar aplicación' : 'Agregar aplicación'}</h2>${editando ? '<span class="pill Medio">Editando</span>' : ''}</div>
+  <div id="plag-form">${secAbre('pq-form', editando ? 'Editar aplicación' : 'Todos los detalles', editando ? 'Editando' : 'Etiqueta, dosis y condiciones', editando, editando ? { 'pq-form': true } : S.abiertos)}
     <div class="f"><label for="pq-sag">¿Es un fungicida del cuadro de la SAG? Elígelo y la app llena lo que trae la tabla</label>
       <select id="pq-sag" data-bind="draftPlag.sag"><option value="">No, lo escribo yo</option>${sagOrden.map((p) => `<option value="${p.id}" ${prodSag && prodSag.id === p.id ? 'selected' : ''}>${esc(p.nombre)} · ${esc(p.ia)}</option>`).join('')}</select>
       <span class="hint">Cuadro de referencia de fungicidas de la SAG (2021). Siempre manda la etiqueta.</span></div>
@@ -179,8 +172,7 @@ export function viewPlaguicidas() {
     </div>
     <div class="f"><span class="label">Meses de aplicación *</span>${months('draftPlag.meses', d.meses)}</div>
 
-    <h3>Ingrediente activo y dosis</h3>
-    <p class="muted small">Con el ingrediente, su concentración y la dosis, la app calcula cuántos gramos de ingrediente caen por hectárea y el peligro para abejas.</p>
+    <div class="cabeza-titulo"><h3>Ingrediente activo y dosis</h3>${ayuda('plag-ia', 'Con el ingrediente, su concentración y la dosis, la app calcula cuántos gramos de ingrediente caen por hectárea y el peligro para abejas.')}</div>
     ${d.componentes.map((c, i) => filaIngrediente(c, i, d, d.componentes.length)).join('')}
     ${d.componentes.length < 3 ? '<div><button class="btn sm" data-act="plag-add-comp">Agregar otro ingrediente (mezcla)</button></div>' : ''}
     <div class="fields">
@@ -238,17 +230,17 @@ export function viewPlaguicidas() {
     <div class="row"><button class="btn primary" data-act="add-plag">${editando ? 'Guardar cambios' : 'Agregar aplicación'}</button>
       <button class="btn" data-act="plag-cancel">${editando ? 'Cancelar' : 'Limpiar el formulario'}</button></div>
     ${editando && S.plagMsg ? `<p class="${S.plagMsg.nivel === 'error' ? 'warnmsg' : 'okmsg'}" role="${S.plagMsg.nivel === 'error' ? 'alert' : 'status'}">${esc(S.plagMsg.texto)}</p>` : ''}
-  </section>
+  ${SEC_CIERRA}</div>
 
-  ${f.plaguicidas.length ? `<section class="panel">
-    <div><h2>Avisos</h2><p class="muted">Qué está bien, qué revisar y por qué. Cada aviso trae su fuente.</p></div>
-    ${R.generales.length ? `<h3>Para toda la finca</h3><ul class="alertas">${R.generales.map(alerta).join('')}</ul>` : ''}
+  ${f.plaguicidas.length ? `${secAbre('pq-avisos', 'Avisos', `${plural(R.errores, 'rojo', 'rojos')} · ${R.revisar} por revisar`, R.errores > 0, S.abiertos, R.errores > 0)}
+    <p class="muted small">Qué está bien, qué revisar y por qué. Cada aviso trae su fuente.</p>
+    ${R.generales.length ? `<h3>Para toda la finca</h3>${listaAlertas(R.generales)}` : ''}
     ${R.filas.map(({ a, i, avisos }) => `<details ${plegable(`pq-avisos-${i}`, avisos.some((x) => x.nivel === 'error' || x.nivel === 'advertencia'))}><summary><b>${esc(a.producto || 'Sin nombre')}</b> · ${mlist(a.meses)} · ${avisos.length} aviso(s)</summary>
-      <ul class="alertas mt-8">${avisos.map(alerta).join('') || '<li class="muted small">Sin avisos.</li>'}</ul></details>`).join('')}
-  </section>` : ''}
+      <div class="mt-8">${listaAlertas(avisos)}</div></details>`).join('')}
+  ${SEC_CIERRA}` : ''}
 
-  <section class="panel">
-    <div><h2>Cómo se cruza con tu finca</h2><p class="muted">Los meses marcados con ! son coincidencias de riesgo.</p></div>
+  ${secAbre('pq-cruce', 'Cómo se cruza con tu finca', R.enFlor.length ? `${plural(R.enFlor.length, 'mes', 'meses')} en floración` : 'Sin cruces en floración', false, S.abiertos, R.enFlor.length > 0)}
+    <p class="muted small">Los meses marcados con ! son coincidencias de riesgo.</p>
     <div class="scroll"><table class="cal"><thead><tr><th></th>${M.map((m) => `<th scope="col">${m}</th>`).join('')}</tr></thead><tbody>
       ${calRow('Floración visitada por polinizadores', R.atraeFlor, 'on-flor')}
       ${calRow('Floración de especies de riesgo', riesgoFlor, 'on-riesgo')}
@@ -266,10 +258,10 @@ export function viewPlaguicidas() {
       <li><b>Fertilización:</b> ${foliar.length ? `tienes foliares en ${mlist(foliar)}; si los mezclas con un plaguicida, haz antes una prueba de mezcla.` : 'sin foliares en el plan.'} <button class="btn sm" data-view="fertilizacion">Fertilización</button></li>
       <li><b>Enemigos naturales:</b> ${amplio} de ${f.plaguicidas.length} producto(s) de amplio espectro; esto alimenta el módulo Cadenas tróficas.</li>
     </ul>
-  </section>
+  ${SEC_CIERRA}
 
-  <section class="panel flat">
-    <div><h3>Fuentes</h3><p class="muted small">Ninguna dosis de esta pestaña es una recomendación: la que manda es la de la etiqueta del producto.</p></div>
+  ${secAbre('pq-fuentes', 'Fuentes', `${INGREDIENTES.length} ingredientes`, false, S.abiertos)}
+    <p class="muted small">Ninguna dosis de esta pestaña es una recomendación: la que manda es la de la etiqueta del producto.</p>
     <ul class="small lista-nota">${['fao', 'epa', 'arena', 'ppdb', 'gus', 'sag', 'etiquetas', 'aplicacion', 'muestreo', 'clima'].map((k) => `<li>${fuenteTxt(FUENTES_PLAG[k])}</li>`).join('')}</ul>
     <details><summary>Catálogo de ingredientes activos (${INGREDIENTES.length}), con su ficha del PPDB</summary>
       <div class="scroll"><table class="data small"><thead><tr><th>Ingrediente</th><th>Uso</th><th>Grupo</th><th class="num">DL50 contacto (µg/abeja)</th><th>Clase EPA</th><th class="num">GUS</th></tr></thead><tbody>
@@ -283,5 +275,5 @@ export function viewPlaguicidas() {
         ${PRODUCTOS_SAG.filter((p) => p.nota).map((p) => `<li><b>${esc(p.nombre)}:</b> ${esc(p.nota)}</li>`).join('')}
       </ul>
     </details>
-  </section>`;
+  ${SEC_CIERRA}`;
 }
