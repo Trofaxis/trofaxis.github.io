@@ -1,6 +1,6 @@
 // Este prefijo agrupa las cachés propias para retirar versiones anteriores.
 const CACHE_PREFIX = 'trofaxis-shell-';
-const CACHE_NAME = 'trofaxis-shell-6605b43c52b1';
+const CACHE_NAME = 'trofaxis-shell-7d7cdc2dadec';
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -104,8 +104,13 @@ const APP_SHELL = [
   "/src/ui/wizard.js"
 ];
 
+// `no-cache` hace que el navegador revalide cada archivo con el servidor al instalar una versión.
+// Sin eso podría guardar copias HTTP viejas (GitHub Pages permite reutilizarlas 10 minutos) y,
+// como la app abre desde esta caché, quedarse con ellas hasta la publicación siguiente.
 self.addEventListener('install', (evento) => {
-  evento.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  evento.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(
+    APP_SHELL.map((recurso) => new Request(recurso, { cache: 'no-cache' })),
+  )));
 });
 
 self.addEventListener('activate', (evento) => {
@@ -145,17 +150,35 @@ async function responderRedPrimero(request, respaldo) {
   }
 }
 
+// La app abre con la copia de esta versión, sin esperar a la red, que en el campo suele ser lenta o
+// intermitente. Solo busca en su propia caché para no mezclar archivos de dos versiones. La versión
+// nueva llega cuando cambia CACHE_NAME: el navegador instala otro sw.js y la persona toca «Actualizar».
+async function responderCachePrimero(request, { ignoreSearch = false, respaldo } = {}) {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const guardada = await cache.match(request, { ignoreSearch });
+    if (guardada) return guardada;
+  } catch {
+    // Si la caché no responde, se sigue con la red.
+  }
+  return responderRedPrimero(request, respaldo);
+}
+
 self.addEventListener('fetch', (evento) => {
   const request = evento.request;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    evento.respondWith(responderRedPrimero(request, '/'));
+    // La entrada a la app puede traer parámetros (por ejemplo, al volver del inicio de sesión).
+    const esEntrada = url.pathname === '/' || url.pathname === '/index.html';
+    evento.respondWith(esEntrada
+      ? responderCachePrimero(request, { ignoreSearch: true, respaldo: '/' })
+      : responderRedPrimero(request, '/'));
     return;
   }
 
   const esAppShell = APP_SHELL.some((recurso) => new URL(recurso, self.location.origin).pathname === url.pathname);
   if (!esAppShell) return;
-  evento.respondWith(responderRedPrimero(request));
+  evento.respondWith(responderCachePrimero(request));
 });

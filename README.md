@@ -47,12 +47,13 @@ Eso es la **memoria de casos**, y es el valor que crece con el uso. Desde la v0.
 
 ## Cómo verla
 
-- **En línea:** se publica con GitHub Pages desde la rama `main`.
+- **En línea:** cada cambio a `main` se publica en GitHub Pages con GitHub Actions, que antes junta los módulos en pocos archivos para que abra más rápido con red lenta ([docs/build.md](docs/build.md)).
 - **En local:** se necesita un servidor, porque los módulos de JavaScript no cargan con `file://`.
   ```bash
   python3 -m http.server 8000   # luego abrir http://localhost:8000
   ```
 - **Pruebas** (Node 20 o superior): `npm test`
+- **La copia que se publica:** `npm ci`, `npm run build` y abrir `dist/` con el mismo servidor.
 
 ## Estructura
 
@@ -105,7 +106,7 @@ Este repositorio es la **única versión oficial**. Cualquier asistente (Claude 
 
 1. Pídele que clone `trofaxis/trofaxis.github.io` y trabaje en una rama nueva (por ejemplo, `mejoras-diseno`).
 2. Que suba esa rama y deje las pruebas pasando (`npm test`).
-3. Luego se revisa y se une a `main`. GitHub Pages publica `main` sola.
+3. Luego se revisa y se une a `main`. GitHub Actions la publica sola en GitHub Pages.
 
 ## Cómo agregar un módulo
 

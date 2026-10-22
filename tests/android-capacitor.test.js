@@ -83,11 +83,14 @@ test('el regreso de Android analiza el fragmento con el mismo lector de sesión 
   assert.equal(sesionDeURLProfunda('https://otro-sitio.example/#access_token=x'), null);
 });
 
+// El package.json raíz solo suma esbuild para armar la copia que se publica (docs/build.md, decisión
+// de Diego del 2026-10-22). Android sigue sin añadir dependencias ni comandos aquí.
 test('la preparación Android no añade dependencias ni comandos al package.json raíz', () => {
   const paquete = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assert.equal(Object.hasOwn(paquete, 'dependencies'), false);
-  assert.equal(Object.hasOwn(paquete, 'devDependencies'), false);
-  assert.deepEqual(paquete.scripts, { test: 'node --test tests/*.test.js' });
+  assert.equal(Object.hasOwn(paquete, 'dependencies'), false, 'la app no lleva dependencias en tiempo de ejecución');
+  assert.deepEqual(Object.keys(paquete.devDependencies), ['esbuild']);
+  assert.match(paquete.devDependencies.esbuild, /^\d+\.\d+\.\d+$/, 'esbuild va con versión fija');
+  assert.deepEqual(paquete.scripts, { test: 'node --test tests/*.test.js', build: 'node scripts/build.mjs' });
 });
 
 test('gitignore excluye activos generados, compilaciones Android, llaves y paquetes', () => {
