@@ -4,5 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Trofaxis (antes BioG.A.P. Biodiversity Manager): riesgo ambiental de la finca alineado a GLOBALG.A.P. IFA v6",
-  "scripts": { "test": "node --test tests/*.test.js" }
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }

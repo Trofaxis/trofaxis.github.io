@@ -1,5 +1,6 @@
 # Corre la revisión de sintaxis y las pruebas (npm test) en cada PR y en cada cambio a main.
-# Node 20 y 22: la app no tiene build, así que lo que corre aquí es lo que se publica.
+# Node 20 y 22. En Node 22 también arma la copia empaquetada que se publica (npm run build), para
+# que un PR que rompa el build se vea aquí y no al publicar (ver docs/build.md).
 name: Pruebas
 on:
   pull_request:
@@ -25,6 +26,11 @@ jobs:
       - name: Revisar sintaxis de src/**/*.js
         run: find src -name '*.js' -print0 | xargs -0 -n1 node --check
       - run: npm test
+      - name: Armar la copia que se publica (Node 22)
+        if: matrix.node == 22
+        run: |
+          npm ci
+          npm run build
       # Informe de cobertura: solo informa, no fija ningún umbral ni hace fallar el trabajo.
       - name: Informe de cobertura (Node 22)
         if: matrix.node == 22
