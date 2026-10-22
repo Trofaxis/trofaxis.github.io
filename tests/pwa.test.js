@@ -148,12 +148,14 @@ test('el service worker precarga el app shell y sirve la página guardada sin re
   const contexto = {
     URL,
     Promise,
+    Request: class { constructor(url, opciones) { this.url = url; this.cache = opciones?.cache; } },
     fetch: () => Promise.reject(new Error('sin conexión')),
     caches: {
       match: (request) => Promise.resolve(request === '/' ? htmlLocal : null),
       open: () => Promise.resolve({
-        addAll: (rutas) => { archivosPrecargados = rutas; return Promise.resolve(); },
+        addAll: (solicitudes) => { archivosPrecargados = solicitudes; return Promise.resolve(); },
         put: () => Promise.resolve(),
+        match: (request) => Promise.resolve(new URL(request.url ?? request, 'https://trofaxis.github.io').pathname === '/' ? htmlLocal : undefined),
       }),
       keys: () => Promise.resolve([]),
       delete: () => Promise.resolve(true),
@@ -170,8 +172,9 @@ test('el service worker precarga el app shell y sirve la página guardada sin re
   let instalacion;
   listeners.install({ waitUntil: (promesa) => { instalacion = promesa; } });
   await instalacion;
-  assert.ok(archivosPrecargados.includes('/src/app.js'));
-  assert.ok(archivosPrecargados.includes('/manifest.webmanifest'));
+  const rutas = archivosPrecargados.map((solicitud) => solicitud.url);
+  assert.ok(rutas.includes('/src/app.js'));
+  assert.ok(rutas.includes('/manifest.webmanifest'));
 
   let respuesta;
   listeners.fetch({
@@ -181,19 +184,15 @@ test('el service worker precarga el app shell y sirve la página guardada sin re
   assert.equal(await respuesta, htmlLocal);
 });
 
-test('el service worker consulta primero la red para cada archivo del app shell y actualiza la caché', async () => {
+test('al instalar una versión revalida cada archivo con el servidor para no guardar copias HTTP viejas', async () => {
   const listeners = {};
-  const solicitud = { url: 'https://trofaxis.github.io/src/app.js', method: 'GET', mode: 'cors' };
-  const versionAnterior = { version: 'anterior' };
-  const versionActual = { ok: true, type: 'basic', version: 'actual', clone() { return this; } };
-  const guardados = [];
+  let precargadas = [];
   const contexto = {
     URL,
     Promise,
-    fetch: async () => versionActual,
+    Request: class { constructor(url, opciones) { this.url = url; this.cache = opciones?.cache; } },
     caches: {
-      match: async () => versionAnterior,
-      open: async () => ({ addAll: async () => {}, put: async (...args) => { guardados.push(args); } }),
+      open: async () => ({ addAll: async (solicitudes) => { precargadas = solicitudes; } }),
       keys: async () => [],
       delete: async () => true,
     },
@@ -204,22 +203,65 @@ test('el service worker consulta primero la red para cada archivo del app shell 
       skipWaiting: async () => {},
     },
   };
-  vm.runInNewContext(leer('sw.js'), contexto);
+  const sw = leer('sw.js');
+  const shell = JSON.parse(sw.match(/const APP_SHELL = (\[[\s\S]*?\]);/)[1]);
+  vm.runInNewContext(sw, contexto);
+
+  let instalacion;
+  listeners.install({ waitUntil: (promesa) => { instalacion = promesa; } });
+  await instalacion;
+  assert.deepEqual(Array.from(precargadas, (solicitud) => solicitud.url), shell);
+  assert.ok(precargadas.every((solicitud) => solicitud.cache === 'no-cache'), 'cada archivo debe pedirse con cache: no-cache');
+});
+
+test('el service worker abre cada archivo del app shell desde la caché de su versión sin esperar a la red', async () => {
+  const listeners = {};
+  const solicitud = { url: 'https://trofaxis.github.io/src/app.js', method: 'GET', mode: 'cors' };
+  const guardada = { version: 'guardada' };
+  const deLaRed = { ok: true, type: 'basic', version: 'red', clone() { return this; } };
+  const cachesAbiertas = [];
+  const guardados = [];
+  let copia = guardada;
+  let llamadasRed = 0;
+  const contexto = {
+    URL,
+    Promise,
+    fetch: async () => { llamadasRed += 1; return deLaRed; },
+    caches: {
+      match: async () => { throw new Error('no debe buscar en todas las cachés'); },
+      open: async (nombre) => {
+        cachesAbiertas.push(nombre);
+        return { addAll: async () => {}, put: async (...args) => { guardados.push(args); }, match: async () => copia };
+      },
+      keys: async () => [],
+      delete: async () => true,
+    },
+    self: {
+      location: { origin: 'https://trofaxis.github.io' },
+      clients: { claim: async () => {} },
+      addEventListener: (tipo, callback) => { listeners[tipo] = callback; },
+      skipWaiting: async () => {},
+    },
+  };
+  const sw = leer('sw.js');
+  const nombreCache = sw.match(/const CACHE_NAME = '([^']+)'/)[1];
+  vm.runInNewContext(sw, contexto);
 
   let respuesta;
   listeners.fetch({ request: solicitud, respondWith: (promesa) => { respuesta = promesa; } });
-  assert.equal(await respuesta, versionActual, 'debe entregar la copia actual de la red, no la guardada');
-  assert.equal(guardados.length, 1, 'debe reemplazar la copia guardada por la que llegó de la red');
-  assert.equal(guardados[0][0], solicitud);
-  assert.equal(guardados[0][1], versionActual);
+  assert.equal(await respuesta, guardada, 'debe entregar la copia guardada');
+  assert.equal(llamadasRed, 0, 'con copia guardada no consulta la red');
+  assert.deepEqual(cachesAbiertas, [nombreCache], 'solo busca en la caché de su propia versión');
 
-  contexto.fetch = async () => { throw new Error('sin conexión'); };
-  let respaldo;
-  listeners.fetch({ request: solicitud, respondWith: (promesa) => { respaldo = promesa; } });
-  assert.equal(await respaldo, versionAnterior, 'si falla la red, debe servir la copia guardada');
+  copia = undefined;
+  let sinCopia;
+  listeners.fetch({ request: solicitud, respondWith: (promesa) => { sinCopia = promesa; } });
+  assert.equal(await sinCopia, deLaRed, 'si falta la copia, la trae de la red');
+  assert.equal(guardados.length, 1, 'y la guarda para la próxima vez');
+  assert.equal(guardados[0][0], solicitud);
 });
 
-test('el service worker revalida por HTTP los recursos propios antes de usar su copia sin conexión', async () => {
+test('sin copia guardada, el service worker revalida por HTTP los recursos propios', async () => {
   const listeners = {};
   const cacheUsada = [];
   const respuesta = { ok: true, type: 'basic', clone() { return this; } };
@@ -229,7 +271,7 @@ test('el service worker revalida por HTTP los recursos propios antes de usar su 
     fetch: async (request, opciones) => { cacheUsada.push(opciones?.cache); return respuesta; },
     caches: {
       match: async () => null,
-      open: async () => ({ addAll: async () => {}, put: async () => {} }),
+      open: async () => ({ addAll: async () => {}, put: async () => {}, match: async () => undefined }),
       keys: async () => [],
       delete: async () => true,
     },
@@ -253,18 +295,23 @@ test('el service worker revalida por HTTP los recursos propios antes de usar su 
   assert.deepEqual(cacheUsada, ['no-cache', 'no-cache']);
 });
 
-test('el service worker consulta primero la red para navegar y usa la copia guardada si falla', async () => {
+test('la entrada a la app abre desde la caché aunque traiga parámetros, y las demás páginas consultan la red', async () => {
   const listeners = {};
-  const paginaAnterior = { version: 'guardada' };
-  const paginaActual = { ok: true, type: 'basic', version: 'publicada', clone() { return this; } };
-  const guardados = [];
+  const paginaGuardada = { version: 'guardada' };
+  const paginaPublicada = { ok: true, type: 'basic', version: 'publicada', clone() { return this; } };
+  const busquedas = [];
+  const pedidosRed = [];
   const contexto = {
     URL,
     Promise,
-    fetch: async () => paginaActual,
+    fetch: async (request) => { pedidosRed.push(request.url); return paginaPublicada; },
     caches: {
-      match: async () => paginaAnterior,
-      open: async () => ({ addAll: async () => {}, put: async (...args) => { guardados.push(args); } }),
+      match: async () => paginaGuardada,
+      open: async () => ({
+        addAll: async () => {},
+        put: async () => {},
+        match: async (request, opciones) => { busquedas.push([request.url, opciones?.ignoreSearch]); return paginaGuardada; },
+      }),
       keys: async () => [],
       delete: async () => true,
     },
@@ -276,12 +323,22 @@ test('el service worker consulta primero la red para navegar y usa la copia guar
     },
   };
   vm.runInNewContext(leer('sw.js'), contexto);
+  const navegar = async (url) => {
+    let respuesta;
+    listeners.fetch({ request: { url, method: 'GET', mode: 'navigate' }, respondWith: (promesa) => { respuesta = promesa; } });
+    return respuesta;
+  };
 
-  let respuesta;
-  const solicitud = { url: 'https://trofaxis.github.io/', method: 'GET', mode: 'navigate' };
-  listeners.fetch({ request: solicitud, respondWith: (promesa) => { respuesta = promesa; } });
-  assert.equal(await respuesta, paginaActual, 'la navegación debe entregar la versión actual de la red');
-  assert.equal(guardados.length, 1, 'la navegación debe actualizar la copia guardada');
+  assert.equal(await navegar('https://trofaxis.github.io/?code=prueba'), paginaGuardada);
+  assert.equal(await navegar('https://trofaxis.github.io/index.html'), paginaGuardada);
+  assert.deepEqual(busquedas.map(([, ignorar]) => ignorar), [true, true], 'la entrada ignora los parámetros de la dirección');
+  assert.deepEqual(pedidosRed, [], 'la entrada no espera a la red');
+
+  assert.equal(await navegar('https://trofaxis.github.io/trofaxis-guia/'), paginaPublicada, 'otras páginas siguen yendo a la red');
+  assert.deepEqual(pedidosRed, ['https://trofaxis.github.io/trofaxis-guia/']);
+
+  contexto.fetch = async () => { throw new Error('sin conexión'); };
+  assert.equal(await navegar('https://trofaxis.github.io/trofaxis-guia/'), paginaGuardada, 'sin red, otras páginas usan la copia guardada de la app');
 });
 
 test('el control PWA explica el uso sin conexión según haya una sesión y permite actualizar', () => {
