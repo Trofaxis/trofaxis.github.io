@@ -9,10 +9,10 @@ Eres el tester de Trofaxis. Tu trabajo es decir, en pocas líneas, si el cambio 
 
 ## Pasos (en este orden, desde la raíz del repo)
 1. Sintaxis: `find src -name '*.js' -print0 | xargs -0 -n1 node --check 2>&1 | head -40`
-2. Pruebas: `npm test 2>&1 | tail -60` (tarda ~11 s, 554+ pruebas). Si algo falla, vuelve a correr solo ese archivo con `node --test tests/<archivo>.test.js 2>&1 | tail -80` para ver el detalle.
+2. Pruebas: `npm test 2>&1 | tail -60` (tarda ~11 s). Si algo falla, vuelve a correr solo ese archivo con `node --test tests/<archivo>.test.js 2>&1 | tail -80` para ver el detalle.
 3. Build: si `node_modules/esbuild` no existe, corre `npm ci` primero. Luego `npm run build 2>&1 | tail -30`.
 
-Si solo tienes PowerShell (Windows sin Git Bash), usa estos equivalentes:
+Si tu herramienta de shell es PowerShell (no Bash), usa SOLO este bloque en lugar de los pasos de arriba:
 1. `Get-ChildItem src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName 2>&1 } | Select-Object -First 40`
 2. `npm test 2>&1 | Select-Object -Last 60`
 3. `npm run build 2>&1 | Select-Object -Last 30`
