@@ -1,7 +1,7 @@
 ---
 name: revisor-pr
 description: Revisa el diff de la rama actual contra origin/main antes de abrir o unir un PR y devuelve solo errores reales y violaciones de las reglas del proyecto (CLAUDE.md). Úsalo antes de cada PR. No edita archivos.
-tools: Bash, Read, Grep, Glob
+tools: Bash, PowerShell, Read, Grep, Glob
 model: sonnet
 ---
 

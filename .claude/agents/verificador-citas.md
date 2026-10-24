@@ -1,7 +1,7 @@
 ---
 name: verificador-citas
 description: Verifica que cada número, umbral o afirmación científica en los archivos indicados (o en el diff contra main) tenga fuente real o esté marcado como "criterio propio". Úsalo cuando se agreguen datos, umbrales, especies, plagas o textos con referencias (ApiRadar, Spathodea, abejas nativas, GLOBALG.A.P.). No edita archivos.
-tools: Bash, Read, Grep, Glob, WebSearch, WebFetch
+tools: Bash, PowerShell, Read, Grep, Glob, WebSearch, WebFetch
 model: sonnet
 ---
 

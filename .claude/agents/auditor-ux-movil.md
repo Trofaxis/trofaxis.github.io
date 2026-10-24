@@ -1,7 +1,7 @@
 ---
 name: auditor-ux-movil
 description: Audita los cambios de interfaz (src/ui, src/modules, styles.css, pwa.css, index.html) para uso en campo con el celular: contraste a pleno sol, tamaño de toque, texto legible y accesibilidad. Úsalo cuando cambie algo visual. No edita archivos.
-tools: Bash, Read, Grep, Glob
+tools: Bash, PowerShell, Read, Grep, Glob
 model: sonnet
 ---
 
