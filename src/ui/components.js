@@ -3,6 +3,7 @@ import { M, esc } from '../core/utils.js';
 import { nivel } from '../core/engine.js';
 import { CONFIG } from '../core/config.js';
 import { ESTADOS } from '../core/rubrica.js';
+import { evidencia } from '../core/evidencia.js';
 
 export function months(path,arr){return `<div class="months" role="group" aria-label="Meses">${M.map((m,i)=>`<button type="button" data-month="${i}" data-path="${path}" aria-pressed="${arr.includes(i)}">${m}</button>`).join('')}</div>`;}
 export function field(id,label,bind,val,type='text',hint='',nullable=false){return `<div class="f"><label for="${id}">${label}</label><input id="${id}" type="${type}" ${type==='number'?'min="0"':''} ${nullable?'data-nullable':''} data-bind="${bind}" value="${esc(val)}">${hint?`<span class="hint">${hint}</span>`:''}</div>`;}
@@ -19,6 +20,16 @@ export function estadoFuente(estado,fuente,clave,abierto=false){
   if(!fuente)return `<span class="${clase}">${ESTADOS[estado]}</span>`;
   return `<details class="${clase}" data-keep="${esc(clave)}" ${abierto?'open':''}><summary aria-label="${esc(ESTADOS[estado])}: ver la fuente">${ESTADOS[estado]} <span aria-hidden="true">ⓘ</span></summary><p class="fuente">${esc(fuente)}</p></details>`;
 }
+
+// Barra de evidencia de una rúbrica: cuánto del peso tiene fuente, cuánto es criterio propio y cuánto es hipótesis.
+// No cambia el puntaje; dice qué tan respaldado está. `e` sale de evidencia() (src/core/evidencia.js).
+export function barraEvidencia(e){
+  if(!e?.total)return '';
+  const partes=e.partes.filter(p=>p.pct>0);
+  return `<div class="evidencia"><p class="small"><b>Evidencia del puntaje:</b> ${e.partes.map(p=>`<span class="ev-${p.id}">${p.nombre} ${p.pct} %</span>`).join(' · ')}</p>
+    <div class="ev-barra" role="img" aria-label="${esc(e.partes.map(p=>`${p.nombre} ${p.pct} %`).join(', '))}">${partes.map(p=>`<span class="ev-${p.id}" style="width:${p.pct}%"></span>`).join('')}</div></div>`;
+}
+export const barraEvidenciaDe=(variables)=>barraEvidencia(evidencia(variables));
 
 // Patrón de pantalla (rediseño «menos palabras», 2026-10-22). Toda vista sigue lo mismo: cabeza con un estado corto y una
 // acción principal; lo que explica va detrás de un «?»; lo secundario va en secciones plegadas que dicen cuánto traen.

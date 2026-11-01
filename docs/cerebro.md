@@ -43,6 +43,15 @@ Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por valida
 **Acceso:** el panel pide inicio de sesión y solo entran las cuentas de la tabla `admins` de Supabase. La app ya no
 tiene `/admin/`.
 
+## Evidencia del puntaje en la app
+
+- `src/core/evidencia.js` suma el peso de cada variable de una rúbrica según su estado: **con fuente** (verificado o fuente
+  secundaria), **criterio propio** o **hipótesis** (no verificado). No cambia ningún puntaje.
+- En cada «¿Por qué?» y en «Ver rúbrica» sale una barra «Evidencia del puntaje». En la vista técnica, el KPI «Puntaje con
+  fuente» da la misma suma para todo el índice, ponderada por el peso de cada módulo.
+- Finca demo (2026-11-01): 11 % del índice con fuente, 78 % criterio propio, 11 % hipótesis. Fertilización, Suelo y
+  Cadenas tróficas son 100 % criterio propio. Para subir ese número hay que cargar fuentes reales, no cambiar el texto.
+
 ## Qué no puede hacer sin IA
 
 - Responder preguntas libres o explicar con sus propias palabras: solo encuentra hechos que contienen las palabras buscadas.
