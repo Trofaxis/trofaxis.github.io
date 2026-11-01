@@ -32,8 +32,8 @@ y evaluados en el navegador. El «cerebro» junta esos datos en una sola lista d
   para ver el hecho, su fuente y sus vecinos. Cada conteo (hechos, vínculos, «5 hipótesis»…) se toca y abre su lista;
   el buscador encuentra variables, vínculos, fuentes y hechos («hipótesis» trae los vínculos por validar) y resalta en el grafo
   lo que coincide. Una fuente muestra los hechos y vínculos que se apoyan en ella.
-- `src/cerebro/obsidian.js`: botón «Descargar para Obsidian (.zip)»: una nota .md por nodo con [[enlaces]]. Obsidian es
-  opcional; editar esas notas no cambia la app.
+- `src/cerebro/obsidian.js`: botón «Descargar para Obsidian (.zip)»: una copia para mirar, con una nota .md por nodo. Para cambiar
+  vínculos se edita la bóveda `cerebro/` (abajo).
 
 Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por validar.
 
@@ -42,6 +42,19 @@ Primera versión (184 hechos): 140 con fuente, 15 criterio propio, 29 por valida
 
 **Acceso:** el panel pide inicio de sesión y solo entran las cuentas de la tabla `admins` de Supabase. La app ya no
 tiene `/admin/`.
+
+## Bóveda de Obsidian (fuente de verdad de los vínculos)
+
+- La carpeta `cerebro/` es una bóveda de Obsidian. Cada vínculo tiene su nota en `cerebro/Vínculos/<id>.md`.
+- Ahí se editan el `estado`, `validado_por`, `validado_fecha` y la lista «## Evidencia» (`- postura | [[fuente]] | página | nota`).
+  Las fuentes nuevas se agregan como notas en `cerebro/Fuentes/` con `origen: bóveda`, `cita` y `acceso`.
+- `node scripts/cerebro.mjs` lee la bóveda, reescribe lo que viene del código (mecanismo, variables, dónde actúa, fuentes del código)
+  y genera `src/cerebro/boveda.js`, que es lo único que la app lee. Lista los pendientes (evidencias «a favor» sin página).
+- `tests/cerebro-boveda.test.js` falla si la bóveda y `boveda.js` no coinciden, si una evidencia enlaza una fuente que no existe,
+  si «con fuente» no tiene una evidencia «a favor» con página, si «por validar» tiene una «a favor», o si el estado del vínculo
+  contradice el que la app muestra en la rúbrica.
+- Al crear la bóveda (2026-11-01) se corrigió una contradicción: `agua-sistema` decía «con fuente» en el cerebro pero la app lo
+  muestra como «criterio propio» (las eficiencias son de FAO; pasarlas a 0, 50 y 100 puntos no). Quedó «criterio propio».
 
 ## Evidencia del puntaje en la app
 
