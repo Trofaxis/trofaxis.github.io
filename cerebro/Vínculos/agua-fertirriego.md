@@ -12,6 +12,7 @@ tipo: vínculo
 
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
+- menciona | [[vargas-2008]] | pág. 4 | El resumen afirma que la uniformidad del riego influye en la aplicación de fertilizantes; no lo midió. Umbrales de CU y UD en pág. 11 y 14.
 
 ## Del código (no editar aquí)
 

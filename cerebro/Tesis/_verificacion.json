@@ -1,0 +1,142 @@
+{
+  "castillo-2007": {
+    "texto_sha256": "4b5a3b0985cf3332925eff3418e164ab2dd5f064689a0bc9cac85559cb5fa80b",
+    "items": {
+      "c6cde3cd034ed5b8": "exacta",
+      "9c2984dad23927a2": "exacta",
+      "c5180b27d3e9440e": "exacta"
+    }
+  },
+  "chi-bautista-2011": {
+    "texto_sha256": "0d8cda3359f9cff8544906c9e6cb0bc1f069adc56d768cb64c69d7125dbc33a1",
+    "items": {
+      "0df797c342bf2980": "exacta",
+      "ca8c4c6362011e12": "exacta",
+      "8e93f56521b667c4": "exacta",
+      "1c02fcba84e60a57": "exacta"
+    }
+  },
+  "flores-2002": {
+    "texto_sha256": "85e2d7721fdad8cdc8874a8ac30a1799a36969c82eb01d2871c2bbdb70b8f5e9",
+    "items": {
+      "150fbaf8bac7a479": "exacta",
+      "d87ba3287bdd3579": "exacta"
+    }
+  },
+  "godoy-garzon-2015": {
+    "texto_sha256": "f616fe96d3df71ebe8d106bc22619fdb176ac79f0acb113128084a4af31ed1df",
+    "items": {
+      "d8ccc819fd4dbcdc": "exacta",
+      "8380545202c101c2": "exacta",
+      "15f61f91666a4b2c": "exacta",
+      "852cb64e1a9c8872": "exacta",
+      "18873d249d91c787": "exacta",
+      "61176bcd0ece97c7": "exacta"
+    }
+  },
+  "kuniyoshi": {
+    "texto_sha256": "240bbbdb8ed543a71aca7a8005c5793c253e5df9ffb19719ab5e32ada3a42a26",
+    "items": {
+      "4406d439a151fdfb": "exacta",
+      "a08197fff7ed5278": "exacta",
+      "ce1481d5a3ebddf0": "exacta",
+      "56fc3f25c268758a": "exacta",
+      "41c604751b75c93b": "exacta",
+      "a88cb48dd3ff7d10": "exacta",
+      "5fbb9f507bb23602": "exacta",
+      "7a5b2a07f784ccd7": "exacta",
+      "bf2a2d8e104a2360": "exacta",
+      "6574d404b3b74c9f": "exacta",
+      "b66ffa86f8f91645": "exacta",
+      "b5b5843caeb6e349": "exacta",
+      "b769328de6d83be0": "exacta",
+      "3d9da8ac0006ac6f": "exacta",
+      "fc8861bc5a5c07a6": "exacta",
+      "1e057be9d4a93955": "exacta"
+    }
+  },
+  "mejia-reyes-2020": {
+    "texto_sha256": "b85d424fbf6e2a1143713e1eae248cd2acd463d4edd229f09f40d0c9ee8e6a18",
+    "items": {
+      "1031d7a1344b1e30": "exacta"
+    }
+  },
+  "molina-2009": {
+    "texto_sha256": "9d8654e4ae82a85feb4c1919f0991e6b008c303e71a4b7df0b837ac742595ca2",
+    "items": {
+      "0a91ff75bae7bcc0": "exacta",
+      "9e987317f313908d": "exacta",
+      "5e28beaf315ae6c6": "exacta",
+      "9c6e898626d9f3e3": "exacta"
+    }
+  },
+  "osorio": {
+    "texto_sha256": "1db16abdec0ed04416ab41023b563edcc6a49331d77b7f77e50e9b065f255a1f",
+    "items": {
+      "d01898e553976c89": "exacta",
+      "dd00b3f6c9fb42a6": "exacta",
+      "3395f465df56dd75": "exacta",
+      "29b80e89c5bad010": "exacta",
+      "74791880557e7e24": "exacta",
+      "0d83e85b2ec1a3a6": "exacta",
+      "0bb8dc6950d0907e": "exacta",
+      "7a088092a49d7dfb": "exacta",
+      "125a66a31924fa38": "exacta",
+      "7745dc001eaad74c": "exacta",
+      "f171d0a34c6f94b4": "exacta",
+      "83bafeaa257ac259": "exacta",
+      "5c5b88f0e5170e04": "exacta",
+      "8636c635c71a7987": "exacta",
+      "de2bd581189c2064": "exacta",
+      "d4f7b87a759f17b2": "exacta"
+    }
+  },
+  "poquiviqui-1998": {
+    "texto_sha256": "229fa2a98232eb79d15cd7ed342f4ddb736170fb4876f0abcb83ae5744f3fa64",
+    "items": {
+      "33d6811d95e74934": "aproximada (OCR, 0.94)",
+      "cca65f1163ad909a": "aproximada (OCR, 0.94)",
+      "9471450b7a6cd0a7": "aproximada (OCR, 0.95)"
+    }
+  },
+  "t215-1990": {
+    "texto_sha256": "92b20707fc77173c2c678f271846ce2115e1986e4c8f51ee7ad82d92857f5441",
+    "items": {
+      "e53253a59ec78200": "aproximada (OCR, 0.88)"
+    }
+  },
+  "vargas-2008": {
+    "texto_sha256": "634419ca976c2bd15605055bb382c25fc5b6615da19bf8aa4521f29b10d9227f",
+    "items": {
+      "471e8b2f735f7c82": "exacta",
+      "c155a5b52b4b889a": "exacta",
+      "5e7763eeb481c0db": "exacta",
+      "fe382518e93456ea": "exacta",
+      "d5d15090862fa10d": "exacta",
+      "3d85032642ca1d4b": "exacta",
+      "4213a7aa840a6b7f": "exacta",
+      "11ade54dd1c4d1f9": "exacta",
+      "65e29be12f3d100a": "exacta",
+      "a8b578f7dca0cd97": "exacta"
+    }
+  },
+  "vargas-cazar-2019": {
+    "texto_sha256": "46916625f08401bd3c59a0e9f09af63e76b01712036dc28315a133ede6709603",
+    "items": {
+      "a884bf21e093e4e9": "exacta",
+      "df01f0ac64e8b9f4": "exacta",
+      "58dfd29f362e596f": "exacta"
+    }
+  },
+  "villarreal-2023": {
+    "texto_sha256": "51e929846889b30d9d66c179effe7e1cc62d611aa266b9787f96ba86c66b6676",
+    "items": {
+      "d918b5dc089d9156": "exacta",
+      "8e659b9badcde607": "exacta",
+      "e2f2c3ec5739d4e4": "exacta",
+      "a480d51a63a822c8": "exacta",
+      "55fde4be07bb86fc": "exacta",
+      "b349e25f06cf0368": "exacta"
+    }
+  }
+}

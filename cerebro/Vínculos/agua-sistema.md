@@ -13,6 +13,8 @@ tipo: vínculo
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
 - a favor | [[fao-tm4]] | Tabla 8 | Pasar la eficiencia a 0, 50 y 100 puntos es criterio propio.
+- a favor | [[molina-2009]] | pág. 4 | Crisantemo en Colombia: el goteo regado según la ETc usó 58,2 % menos agua que el riego por codo, sin bajar la producción. Respalda el mecanismo; los cortes de 0, 50 y 100 puntos siguen siendo criterio propio.
+- menciona | [[vargas-cazar-2019]] | pág. 3 | Arroz en Zamorano: la inundación no rindió más que el goteo. No midió el agua usada.
 
 ## Del código (no editar aquí)
 

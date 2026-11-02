@@ -12,7 +12,7 @@ tipo: vínculo
 
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
-- menciona | [[kuniyoshi]] | Limitaciones y Recomendaciones | Señala la disponibilidad de otras especies en floración como un factor que no midió.
+- menciona | [[kuniyoshi]] | Limitaciones y Recomendaciones (pág. 43–45) | Señala la disponibilidad de otras especies en floración como un factor que no midió.
 
 ## Del código (no editar aquí)
 

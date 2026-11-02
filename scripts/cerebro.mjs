@@ -1,6 +1,9 @@
 // Bóveda de Obsidian del cerebro (carpeta cerebro/): fuente de verdad del estado y la evidencia de cada vínculo.
 //
-//   npm run cerebro      → lee cerebro/, reescribe las partes que vienen del código y genera src/cerebro/boveda.js
+//   node scripts/cerebro.mjs                    → lee cerebro/, reescribe lo que viene del código y genera src/cerebro/boveda.js,
+//                                                 src/cerebro/tesis.js y cerebro/Tesis/_Resumen.md
+//   node scripts/cerebro.mjs --verificar <dir>  → antes, busca cada frase de cerebro/Tesis/ en su página del PDF
+//                                                 (<dir>/<texto>.txt, de pdftotext) y guarda cerebro/Tesis/_verificacion.json
 //
 // Qué se edita en Obsidian (y solo eso entra a la app):
 //   - Vínculos/<id>.md: `estado`, `validado_por`, `validado_fecha` (propiedades) y la lista bajo «## Evidencia».
@@ -11,10 +14,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SUBCARPETA, VERIFICACION, leerTesis, leerPagina, sinVerificar, verificar, agregar, notaResumen, datosApp } from './tesis.mjs';
 
 export const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CARPETA = 'cerebro';
 export const SALIDA = 'src/cerebro/boveda.js';
+export const SALIDA_TESIS = 'src/cerebro/tesis.js';
 export const POR_COMPLETAR = 'por completar';
 const POSTURAS = ['a favor', 'en contra', 'menciona'];
 const ESTADOS = ['con fuente', 'criterio propio', 'por validar'];
@@ -109,15 +114,20 @@ Esta carpeta es una bóveda de Obsidian. Ábrela con «Abrir carpeta como bóved
 - En cada nota de \`Vínculos/\`: la propiedad \`estado\` (con fuente, criterio propio o por validar), \`validado_por\`,
   \`validado_fecha\` y la lista bajo «## Evidencia».
 - Fuentes nuevas: una nota en \`Fuentes/\` con \`origen: bóveda\`, \`cita\` y \`acceso\` (enlace, handle o dónde está el documento).
+- Tesis: una nota en \`Tesis/\` por tesis, con relaciones, umbrales, fórmulas y datos. Cada línea termina con
+  \`pág. N | "frase textual"\` y solo entra si la frase está en esa página del PDF (\`Tesis/_verificacion.json\`).
+  Una tesis sirve como fuente de un vínculo con \`[[clave]]\`. \`Tesis/_Resumen.md\` junta lo que dicen todas.
 
 **Reglas (las revisan las pruebas)**
 - Nada sin fuente se marca «con fuente». «con fuente» exige al menos una evidencia «a favor» con página, tabla o sección.
 - Una evidencia «a favor» sin página queda como «${POR_COMPLETAR}» y aparece en la lista de pendientes.
 - No se inventan citas: toda evidencia enlaza una nota de \`Fuentes/\`.
 - «por validar» no puede tener evidencia «a favor»: si la hay, es «con fuente» o «criterio propio».
+- Una evidencia que cita una tesis debe decir \`pág. N\` de una página donde la tesis tiene una frase verificada.
 
 **Después de editar**
-1. \`npm run cerebro\` (reescribe lo que viene del código y genera \`src/cerebro/boveda.js\`).
+1. \`node scripts/cerebro.mjs\` (reescribe lo que viene del código y genera \`src/cerebro/boveda.js\`).
+   Si cambiaste una tesis: \`node scripts/cerebro.mjs --verificar <carpeta con los textos de las tesis>\`.
 2. \`npm test\`.
 3. PR. Diego revisa y une.
 `;
@@ -142,11 +152,29 @@ export function construir({ raiz = RAIZ, VINCULOS, VARIABLES, pesoDe, FUENTES_EC
   const notasV = leerCarpeta(path.join(dir, 'Vínculos'));
   const notasF = leerCarpeta(path.join(dir, 'Fuentes'));
   const codigo = fuentesDelCodigo(FUENTES_ECO, FUENTES_PLAG);
+  // Tesis: notas escritas a mano (pasan tal cual) y su registro de verificación.
+  const dirT = path.join(dir, SUBCARPETA);
+  const notasT = Object.fromEntries(Object.entries(leerCarpeta(dirT)).filter(([k]) => !k.startsWith('_')));
+  const tesis = Object.entries(notasT).map(([k, txt]) => { archivos[`${CARPETA}/${SUBCARPETA}/${k}.md`] = txt; return leerTesis(k, txt, { leerNota, seccion }); });
+  tesis.forEach((t) => errores.push(...t.errores));
+  const rutaVer = path.join(dirT, VERIFICACION);
+  const registro = fs.existsSync(rutaVer) ? JSON.parse(fs.readFileSync(rutaVer, 'utf8')) : {};
+  if (fs.existsSync(rutaVer)) archivos[`${CARPETA}/${SUBCARPETA}/${VERIFICACION}`] = fs.readFileSync(rutaVer, 'utf8');
+  errores.push(...sinVerificar(tesis, registro));
   const fuentes = {};
-  for (const [k, f] of Object.entries(codigo)) { fuentes[k] = { ...f, origen: 'código' }; archivos[`${CARPETA}/Fuentes/${k}.md`] = notaFuente(k, f, 'código'); }
+  for (const [k, f] of Object.entries(codigo)) {
+    fuentes[k] = { ...f, origen: 'código' };
+    // Si la fuente también es una tesis leída, su nota es la de Tesis/ (dos notas con la misma clave confunden los enlaces).
+    if (!notasT[k]) archivos[`${CARPETA}/Fuentes/${k}.md`] = notaFuente(k, f, 'código');
+  }
+  for (const t of tesis) {
+    if (notasF[t.clave] && !codigo[t.clave]) errores.push(`Tesis/${t.clave}.md: ya hay una fuente con esa clave en Fuentes/`);
+    fuentes[t.clave] = { ...(fuentes[t.clave] ?? { cita: t.props.cita, url: '', origen: 'tesis' }), acceso: `tesis leída: ${t.props.archivo ?? t.props.texto}`, tesis: true };
+  }
+  const paginasTesis = Object.fromEntries(tesis.map((t) => [t.clave, t.items.map((it) => it.pagina)]));
   for (const [k, txt] of Object.entries(notasF)) {
     const { props } = leerNota(txt);
-    if (codigo[k]) continue;
+    if (codigo[k] || notasT[k]) continue;
     if (props.origen !== 'bóveda') { errores.push(`Fuentes/${k}.md: no está en el código y no dice «origen: bóveda»`); continue; }
     if (!props.cita?.trim()) errores.push(`Fuentes/${k}.md: falta la cita`);
     if (!props.acceso?.trim()) errores.push(`Fuentes/${k}.md: falta el acceso (enlace, handle o dónde está el documento)`);
@@ -165,7 +193,11 @@ export function construir({ raiz = RAIZ, VINCULOS, VARIABLES, pesoDe, FUENTES_EC
     } else if (semilla[v.id]) editable = semilla[v.id];
     else { errores.push(`Vínculos/${v.id}.md: falta la nota del vínculo`); continue; }
     if (!ESTADOS.includes(editable.estado)) errores.push(`Vínculos/${v.id}.md: estado desconocido «${editable.estado}»`);
-    for (const e of editable.evidencia) if (!fuentes[e.fuente]) errores.push(`Vínculos/${v.id}.md: la fuente [[${e.fuente}]] no existe en Fuentes/`);
+    for (const e of editable.evidencia) if (!fuentes[e.fuente]) errores.push(`Vínculos/${v.id}.md: la fuente [[${e.fuente}]] no existe en Fuentes/ ni en Tesis/`);
+    for (const e of editable.evidencia.filter((x) => paginasTesis[x.fuente])) {
+      const p = leerPagina((e.donde.match(/p[áa]g\.?\s*\d+(?:\s*[-–]\s*\d+)?/i) ?? [''])[0]);
+      if (!p || !paginasTesis[e.fuente].some(([a, b]) => a <= p[1] && p[0] <= b)) errores.push(`Vínculos/${v.id}.md: la evidencia de [[${e.fuente}]] debe decir «pág. N» de una página con una frase verificada de esa tesis`);
+    }
     const aFavor = editable.evidencia.filter((e) => e.postura === 'a favor');
     if (editable.estado === 'con fuente' && !aFavor.some((e) => e.donde !== POR_COMPLETAR)) errores.push(`Vínculos/${v.id}.md: dice «con fuente» pero ninguna evidencia «a favor» tiene página, tabla o sección`);
     if (editable.estado === 'por validar' && aFavor.length) errores.push(`Vínculos/${v.id}.md: «por validar» con evidencia «a favor»: debería ser «con fuente» o «criterio propio»`);
@@ -179,8 +211,12 @@ export function construir({ raiz = RAIZ, VINCULOS, VARIABLES, pesoDe, FUENTES_EC
   for (const [id, v] of Object.entries(VARIABLES)) archivos[`${CARPETA}/Variables/${id}.md`] = notaVariable(id, v, VINCULOS);
   archivos[`${CARPETA}/Léeme.md`] = LEEME;
   const boveda = { vinculos, fuentes };
-  archivos[SALIDA] = `// Generado por \`npm run cerebro\` desde la bóveda de Obsidian (cerebro/). No editar a mano: edita las notas.\nexport const BOVEDA = ${JSON.stringify(boveda, null, 2)};\n`;
-  return { archivos, boveda, errores };
+  archivos[SALIDA] = `// Generado por \`node scripts/cerebro.mjs\` desde la bóveda de Obsidian (cerebro/). No editar a mano: edita las notas.\nexport const BOVEDA = ${JSON.stringify(boveda, null, 2)};\n`;
+  const ag = agregar(tesis, { VARIABLES, VINCULOS });
+  if (tesis.length) archivos[`${CARPETA}/${SUBCARPETA}/_Resumen.md`] = notaResumen(tesis, ag, { VARIABLES });
+  const app = errores.length ? { tesis: [], relaciones: [], candidatas: [] } : datosApp(tesis, registro, ag);
+  archivos[SALIDA_TESIS] = `// Generado por \`node scripts/cerebro.mjs\` desde cerebro/Tesis/. No editar a mano: edita las notas de las tesis.\n// Solo trae lo verificado: cada frase está en la página indicada del PDF de la tesis.\nexport const TESIS = ${JSON.stringify(app, null, 2)};\n`;
+  return { archivos, boveda, errores, tesis, agregado: ag };
 }
 
 // Pendientes de la bóveda: evidencias «a favor» sin página y fuentes sin acceso.
@@ -211,9 +247,23 @@ export function escribir(archivos, raiz = RAIZ) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const iv = process.argv.indexOf('--verificar');
+  if (iv > 0) {
+    const dirTextos = process.argv[iv + 1];
+    if (!dirTextos) { console.error('Uso: node scripts/cerebro.mjs --verificar <carpeta con los .txt de las tesis>'); process.exit(1); }
+    const dirT = path.join(RAIZ, CARPETA, SUBCARPETA);
+    const tesis = Object.entries(leerCarpeta(dirT)).filter(([k]) => !k.startsWith('_')).map(([k, txt]) => leerTesis(k, txt, { leerNota, seccion }));
+    const malas = tesis.flatMap((t) => t.errores);
+    if (malas.length) { console.error('Notas de tesis con errores:\n- ' + malas.join('\n- ')); process.exit(1); }
+    const { registro, fallas } = verificar(tesis, dirTextos);
+    fs.writeFileSync(path.join(dirT, VERIFICACION), JSON.stringify(registro, null, 2) + '\n');
+    const n = Object.values(registro).reduce((s, x) => s + Object.keys(x.items).length, 0);
+    console.log(`Verificadas ${n} líneas de ${tesis.length} tesis.`);
+    if (fallas.length) { console.error(`No verificadas (${fallas.length}):\n- ` + fallas.join('\n- ')); process.exit(1); }
+  }
   const r = construir(await cargarCodigo());
   if (r.errores.length) { console.error('La bóveda tiene errores; no se escribió nada:\n- ' + r.errores.join('\n- ')); process.exit(1); }
   escribir(r.archivos);
   const p = pendientes(r.boveda);
-  console.log(`Bóveda al día: ${Object.keys(r.boveda.vinculos).length} vínculos, ${Object.keys(r.boveda.fuentes).length} fuentes.${p.length ? `\nPendientes (${p.length}):\n- ${p.join('\n- ')}` : ''}`);
+  console.log(`Bóveda al día: ${Object.keys(r.boveda.vinculos).length} vínculos, ${Object.keys(r.boveda.fuentes).length} fuentes, ${r.tesis.length} tesis (${r.agregado.relaciones.length} pares de variables).${p.length ? `\nPendientes (${p.length}):\n- ${p.join('\n- ')}` : ''}`);
 }

@@ -13,7 +13,7 @@ tipo: vínculo
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
 - menciona | [[osorio]] | pág. 27 | Espera más floración con más volumen de copa, sin medirlo.
-- menciona | [[kuniyoshi]] | Resultados, Figura 10 | Midió flores visibles en copas cercanas, no volumen de copa: pendiente 0,077 y R² = 0,2147, con Spearman no significativa (p > 0,05). La autora dice que no se puede afirmar una asociación consistente. Cita a Tejeda et al. (2025) con una relación más fuerte usando flores caídas.
+- menciona | [[kuniyoshi]] | Resultados, Figura 10 (pág. 32–33) | Midió flores visibles en copas cercanas, no volumen de copa: pendiente 0,077 y R² = 0,2147, con Spearman no significativa (p > 0,05). La autora dice que no se puede afirmar una asociación consistente. Cita a Tejeda et al. (2025) con una relación más fuerte usando flores caídas.
 
 ## Del código (no editar aquí)
 

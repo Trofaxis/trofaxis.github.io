@@ -56,6 +56,29 @@ tiene `/admin/`.
 - Al crear la bóveda (2026-11-01) se corrigió una contradicción: `agua-sistema` decía «con fuente» en el cerebro pero la app lo
   muestra como «criterio propio» (las eficiencias son de FAO; pasarlas a 0, 50 y 100 puntos no). Quedó «criterio propio».
 
+## Tesis leídas (piloto, 2026-11-02)
+
+Primer paso para que el cerebro reciba cientos de tesis sin inventar nada. La IA (o una persona) solo **lee**;
+un programa **comprueba** y una persona **aprueba**. La app no usa IA.
+
+1. **Nota por tesis** en `cerebro/Tesis/<clave>.md`: secciones `## Relaciones` (`- de | a | sentido | base | resultado | pág. N | "frase"`),
+   `## Umbrales`, `## Fórmulas`, `## Datos` y `## Alertas`. `sentido`: `+`, `−`, `0` (sin efecto significativo), `?`, `+ n.s.`, `− n.s.`.
+   `base`: `medido` (lo midió la tesis), `citado` (lo dice otra fuente que la tesis cita) o `afirmado` (sin medir).
+   Las variables usan el id de Trofaxis si existe; si no, el id queda como **variable candidata**.
+2. **Verificador**: `node scripts/cerebro.mjs --verificar <carpeta con los .txt>` busca cada frase en esa página del PDF
+   (texto de `pdftotext -layout`, páginas separadas por `\f`; las páginas son las del archivo PDF). Sin tildes, mayúsculas
+   ni espacios; en tesis escaneadas (`ocr: sí`) acepta letras mal leídas (parecido ≥ 0,8) pero exige cada cifra tal cual.
+   Guarda `cerebro/Tesis/_verificacion.json` con una huella por línea: cambiar la frase o la página obliga a verificar de nuevo.
+3. **Agregado**: `node scripts/cerebro.mjs` genera `cerebro/Tesis/_Resumen.md` (pares de variables con cuántas tesis los
+   midieron y en qué sentido, umbrales por variable, fórmulas, variables candidatas y alertas) y `src/cerebro/tesis.js`,
+   que el explorador del cerebro muestra en el tipo «Tesis».
+4. **Evidencia en vínculos**: una tesis se cita como `[[clave]]`, y la evidencia debe decir `pág. N` de una página donde la
+   tesis tiene una frase verificada. Nada de esto cambia un estado ni un puntaje: eso sigue siendo un PR revisado.
+
+Piloto: 13 tesis (11 de riego y suelos de la carpeta CPA de Diego, Osorio 2025 y Kuniyoshi 2026), 75 líneas, todas verificadas.
+Los PDF y los textos completos no se suben al repositorio (derechos de autor): viven en la carpeta del proyecto. Solo van
+frases cortas con su página.
+
 ## Evidencia del puntaje en la app
 
 - `src/core/evidencia.js` suma el peso de cada variable de una rúbrica según su estado: **con fuente** (verificado o fuente
@@ -69,7 +92,7 @@ tiene `/admin/`.
 
 - Responder preguntas libres o explicar con sus propias palabras: solo encuentra hechos que contienen las palabras buscadas.
 - Razonar sobre un caso nuevo que no tenga regla escrita: cada diagnóstico tiene que estar programado.
-- Leer un PDF o una tesis y sacar datos: alguien los carga a mano, con su página.
+- Leer un PDF o una tesis y sacar datos: alguien (o una IA, fuera de la app) escribe la nota de la tesis y el verificador comprueba cada frase.
 - Aprender solo: la memoria de casos compara fincas, pero no cambia pesos ni umbrales por sí misma.
 
 ## Qué todavía necesita conexión

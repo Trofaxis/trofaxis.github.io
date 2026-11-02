@@ -12,7 +12,7 @@ tipo: vínculo
 
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
-- menciona | [[kuniyoshi]] | Limitaciones | Señala la exposición a agroquímicos como un factor que no midió.
+- menciona | [[kuniyoshi]] | Limitaciones (pág. 43) | Señala la exposición a agroquímicos como un factor que no midió.
 
 ## Del código (no editar aquí)
 

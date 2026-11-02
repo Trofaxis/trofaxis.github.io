@@ -12,6 +12,7 @@ tipo: vínculo
 
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
+- menciona | [[godoy-garzon-2015]] | pág. 4 | Premisa: en ladera la erosión y la degradación se aceleran. Clases de pendiente y distancia entre barreras en pág. 22–23 (de segunda mano).
 
 ## Del código (no editar aquí)
 

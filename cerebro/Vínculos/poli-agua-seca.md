@@ -12,7 +12,7 @@ tipo: vínculo
 
 <!-- Una línea por fuente: - postura | [[clave de la fuente]] | página, tabla o sección | nota.
      postura: a favor, en contra o menciona. «con fuente» exige al menos una «a favor» con página. -->
-- menciona | [[kuniyoshi]] | Introducción | Menciona la disponibilidad de agua y la acumulación de líquidos en la corola como posibles factores.
+- menciona | [[kuniyoshi]] | Introducción (pág. 12) | Menciona la disponibilidad de agua y la acumulación de líquidos en la corola como posibles factores.
 
 ## Del código (no editar aquí)
 
