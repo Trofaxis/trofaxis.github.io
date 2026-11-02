@@ -18,7 +18,7 @@ Esta carpeta es una bóveda de Obsidian. Ábrela con «Abrir carpeta como bóved
 - Una evidencia que cita una tesis debe decir `pág. N` de una página donde la tesis tiene una frase verificada.
 
 **Después de editar**
-1. `node scripts/cerebro.mjs` (reescribe lo que viene del código y genera `src/cerebro/boveda.js`).
+1. `node scripts/cerebro.mjs` (reescribe lo que viene del código, genera `src/cerebro/boveda.js` y actualiza `CACHE_NAME` de `sw.js`).
    Si cambiaste una tesis: `node scripts/cerebro.mjs --verificar <carpeta con los textos de las tesis>`.
 2. `npm test`.
 3. PR. Diego revisa y une.

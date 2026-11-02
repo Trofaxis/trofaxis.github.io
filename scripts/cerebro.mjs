@@ -126,7 +126,7 @@ Esta carpeta es una bóveda de Obsidian. Ábrela con «Abrir carpeta como bóved
 - Una evidencia que cita una tesis debe decir \`pág. N\` de una página donde la tesis tiene una frase verificada.
 
 **Después de editar**
-1. \`node scripts/cerebro.mjs\` (reescribe lo que viene del código y genera \`src/cerebro/boveda.js\`).
+1. \`node scripts/cerebro.mjs\` (reescribe lo que viene del código, genera \`src/cerebro/boveda.js\` y actualiza \`CACHE_NAME\` de \`sw.js\`).
    Si cambiaste una tesis: \`node scripts/cerebro.mjs --verificar <carpeta con los textos de las tesis>\`.
 2. \`npm test\`.
 3. PR. Diego revisa y une.
@@ -264,6 +264,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const r = construir(await cargarCodigo());
   if (r.errores.length) { console.error('La bóveda tiene errores; no se escribió nada:\n- ' + r.errores.join('\n- ')); process.exit(1); }
   escribir(r.archivos);
+  // boveda.js y tesis.js están en el app shell: si cambian, la versión de caché del service worker también.
+  const { leerAppShell, versionCache } = await import('./build.mjs');
+  const rutaSw = path.join(RAIZ, 'sw.js'), sw = fs.readFileSync(rutaSw, 'utf8');
+  const swNuevo = sw.replace(/const CACHE_NAME = '[^']+';/, `const CACHE_NAME = '${versionCache(RAIZ, leerAppShell(sw))}';`);
+  if (swNuevo !== sw) { fs.writeFileSync(rutaSw, swNuevo); console.log('sw.js: CACHE_NAME actualizado.'); }
   const p = pendientes(r.boveda);
   console.log(`Bóveda al día: ${Object.keys(r.boveda.vinculos).length} vínculos, ${Object.keys(r.boveda.fuentes).length} fuentes, ${r.tesis.length} tesis (${r.agregado.relaciones.length} pares de variables).${p.length ? `\nPendientes (${p.length}):\n- ${p.join('\n- ')}` : ''}`);
 }
