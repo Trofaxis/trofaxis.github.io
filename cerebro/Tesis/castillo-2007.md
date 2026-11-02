@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- cultivo.biologicoAlRiego | Biológico aplicado por el riego (Trichoderma)
+- cultivo.raices | Peso de las raíces
+
 ## Relaciones
 
 - cultivo.biologicoAlRiego | cultivo.rendimiento | + | medido | Tres y cuatro aplicaciones de Trichoderma por el goteo dieron mazorcas más largas | pág. 7 | "Los tratamientos con tres y cuatro aplicaciones con TRICHOZAM® se obtuvieron mazorcas de mayor longitud"

@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Documento escaneado (OCR): las frases se escriben limpias y se verifican por parecido.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- cultivo.densidad | Densidad de siembra
+- plagas.porPlanta | Insectos plaga por planta
+
 ## Relaciones
 
 - cultivo.densidad | cultivo.rendimiento | + | medido | Más densidad: más bellotas cosechables por planta y menos pudrición | pág. 6 | "A mayor densidad se obtuvo mayor numero de bellotas cosechables por planta y se redujo la pudricion."

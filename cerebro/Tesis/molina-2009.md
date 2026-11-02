@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- cultivo.rendimiento | Rendimiento del cultivo
+- finca.rentabilidad | Rentabilidad de la finca
+
 ## Relaciones
 
 - riego.sistema | riego.volumenAplicado | − | medido | El goteo (regado según ETc) usó 58,2 % menos agua que el riego por codo | pág. 4 | "se logró un ahorro de agua del 58.2% en relación al sistema de riego por codo"

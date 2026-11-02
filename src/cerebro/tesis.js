@@ -1162,52 +1162,60 @@ export const TESIS = {
     }
   ],
   "candidatas": [
-    [
-      "clima.alteraciones",
-      [
+    {
+      "id": "clima.alteraciones",
+      "nombre": "Alteraciones del clima",
+      "tesis": [
         "kuniyoshi"
       ]
-    ],
-    [
-      "cultivo.bioestimulanteFoliar",
-      [
+    },
+    {
+      "id": "cultivo.bioestimulanteFoliar",
+      "nombre": "Silicio o bioestimulante foliar",
+      "tesis": [
         "vargas-cazar-2019"
       ]
-    ],
-    [
-      "cultivo.biologicoAlRiego",
-      [
+    },
+    {
+      "id": "cultivo.biologicoAlRiego",
+      "nombre": "Biológico aplicado por el riego (Trichoderma)",
+      "tesis": [
         "castillo-2007"
       ]
-    ],
-    [
-      "cultivo.densidad",
-      [
+    },
+    {
+      "id": "cultivo.densidad",
+      "nombre": "Densidad de siembra",
+      "tesis": [
         "poquiviqui-1998",
         "t215-1990"
       ]
-    ],
-    [
-      "cultivo.distanciamiento",
-      [
+    },
+    {
+      "id": "cultivo.distanciamiento",
+      "nombre": "Distancia entre surcos",
+      "tesis": [
         "chi-bautista-2011"
       ]
-    ],
-    [
-      "cultivo.enfermedades",
-      [
+    },
+    {
+      "id": "cultivo.enfermedades",
+      "nombre": "Enfermedades del cultivo",
+      "tesis": [
         "flores-2002"
       ]
-    ],
-    [
-      "cultivo.raices",
-      [
+    },
+    {
+      "id": "cultivo.raices",
+      "nombre": "Peso de las raíces",
+      "tesis": [
         "castillo-2007"
       ]
-    ],
-    [
-      "cultivo.rendimiento",
-      [
+    },
+    {
+      "id": "cultivo.rendimiento",
+      "nombre": "Rendimiento del cultivo",
+      "tesis": [
         "castillo-2007",
         "chi-bautista-2011",
         "mejia-reyes-2020",
@@ -1216,94 +1224,108 @@ export const TESIS = {
         "t215-1990",
         "vargas-cazar-2019"
       ]
-    ],
-    [
-      "finca.rentabilidad",
-      [
+    },
+    {
+      "id": "finca.rentabilidad",
+      "nombre": "Rentabilidad de la finca",
+      "tesis": [
         "chi-bautista-2011",
         "molina-2009"
       ]
-    ],
-    [
-      "plagas.porPlanta",
-      [
+    },
+    {
+      "id": "plagas.porPlanta",
+      "nombre": "Insectos plaga por planta",
+      "tesis": [
         "poquiviqui-1998"
       ]
-    ],
-    [
-      "poli.abejasMuertas",
-      [
+    },
+    {
+      "id": "poli.abejasMuertas",
+      "nombre": "Abejas muertas en las flores",
+      "tesis": [
         "kuniyoshi"
       ]
-    ],
-    [
-      "riego.calidadCinta",
-      [
+    },
+    {
+      "id": "riego.calidadCinta",
+      "nombre": "Calidad de fabricación de la cinta (Qd y CVf)",
+      "tesis": [
         "vargas-2008"
       ]
-    ],
-    [
-      "riego.ciclosUso",
-      [
+    },
+    {
+      "id": "riego.ciclosUso",
+      "nombre": "Ciclos de uso de la cinta de goteo",
+      "tesis": [
         "vargas-2008"
       ]
-    ],
-    [
-      "riego.lamina",
-      [
+    },
+    {
+      "id": "riego.lamina",
+      "nombre": "Lámina de riego",
+      "tesis": [
         "chi-bautista-2011",
         "mejia-reyes-2020"
       ]
-    ],
-    [
-      "riego.programacion",
-      [
+    },
+    {
+      "id": "riego.programacion",
+      "nombre": "Programación del riego con sensores de humedad",
+      "tesis": [
         "villarreal-2023"
       ]
-    ],
-    [
-      "riego.uniformidad",
-      [
+    },
+    {
+      "id": "riego.uniformidad",
+      "nombre": "Uniformidad del riego (CU, UD o CUC)",
+      "tesis": [
         "vargas-2008",
         "villarreal-2023"
       ]
-    ],
-    [
-      "riego.volumenAplicado",
-      [
+    },
+    {
+      "id": "riego.volumenAplicado",
+      "nombre": "Volumen de agua aplicado",
+      "tesis": [
         "molina-2009",
         "villarreal-2023"
       ]
-    ],
-    [
-      "spathodea.establecimiento",
-      [
+    },
+    {
+      "id": "spathodea.establecimiento",
+      "nombre": "Establecimiento de plántulas de Spathodea",
+      "tesis": [
         "osorio"
       ]
-    ],
-    [
-      "spathodea.floresVisibles",
-      [
+    },
+    {
+      "id": "spathodea.floresVisibles",
+      "nombre": "Flores visibles en copas de Spathodea",
+      "tesis": [
         "kuniyoshi"
       ]
-    ],
-    [
-      "spathodea.poda",
-      [
+    },
+    {
+      "id": "spathodea.poda",
+      "nombre": "Poda de Spathodea",
+      "tesis": [
         "osorio"
       ]
-    ],
-    [
-      "spathodea.sombra",
-      [
+    },
+    {
+      "id": "spathodea.sombra",
+      "nombre": "Sombra de un dosel cerrado",
+      "tesis": [
         "osorio"
       ]
-    ],
-    [
-      "sustrato.exceso",
-      [
+    },
+    {
+      "id": "sustrato.exceso",
+      "nombre": "Agua acumulada en el sustrato",
+      "tesis": [
         "flores-2002"
       ]
-    ]
+    }
   ]
 };

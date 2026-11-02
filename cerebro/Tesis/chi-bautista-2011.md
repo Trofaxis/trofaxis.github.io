@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- riego.lamina | Lámina de riego
+- cultivo.distanciamiento | Distancia entre surcos
+
 ## Relaciones
 
 - riego.lamina | cultivo.rendimiento | 0 | medido | Láminas de 50, 80, 100 y 120 % de la ETc: sin diferencia en producción | pág. 4 | "En el ensayo de cuatro láminas de riego no hubo diferencia significativa (P≤0.05) para variables agronómicas ni de producción."

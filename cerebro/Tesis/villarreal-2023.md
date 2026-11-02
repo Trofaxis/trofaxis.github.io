@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- riego.programacion | Programación del riego con sensores de humedad
+- riego.volumenAplicado | Volumen de agua aplicado
+
 ## Relaciones
 
 - riego.programacion | riego.volumenAplicado | − | medido | Programar con sensores de humedad aplicó 188,1 m³/ha menos que la programación teórica | pág. 35 | "siendo la programación de riego real la que obtuvo un menor volumen de agua, en comparación a lo que teóricamente se debió aplicar."

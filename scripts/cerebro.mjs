@@ -116,6 +116,7 @@ Esta carpeta es una bóveda de Obsidian. Ábrela con «Abrir carpeta como bóved
 - Fuentes nuevas: una nota en \`Fuentes/\` con \`origen: bóveda\`, \`cita\` y \`acceso\` (enlace, handle o dónde está el documento).
 - Tesis: una nota en \`Tesis/\` por tesis, con relaciones, umbrales, fórmulas y datos. Cada línea termina con
   \`pág. N | "frase textual"\` y solo entra si la frase está en esa página del PDF (\`Tesis/_verificacion.json\`).
+  Una variable que Trofaxis no tiene (candidata) lleva su nombre en \`## Variables nuevas\`: \`- id | Nombre en palabras\`.
   Una tesis sirve como fuente de un vínculo con \`[[clave]]\`. \`Tesis/_Resumen.md\` junta lo que dicen todas.
 
 **Reglas (las revisan las pruebas)**
@@ -213,6 +214,7 @@ export function construir({ raiz = RAIZ, VINCULOS, VARIABLES, pesoDe, FUENTES_EC
   const boveda = { vinculos, fuentes };
   archivos[SALIDA] = `// Generado por \`node scripts/cerebro.mjs\` desde la bóveda de Obsidian (cerebro/). No editar a mano: edita las notas.\nexport const BOVEDA = ${JSON.stringify(boveda, null, 2)};\n`;
   const ag = agregar(tesis, { VARIABLES, VINCULOS });
+  errores.push(...ag.errores);
   if (tesis.length) archivos[`${CARPETA}/${SUBCARPETA}/_Resumen.md`] = notaResumen(tesis, ag, { VARIABLES });
   const app = errores.length ? { tesis: [], relaciones: [], candidatas: [] } : datosApp(tesis, registro, ag);
   archivos[SALIDA_TESIS] = `// Generado por \`node scripts/cerebro.mjs\` desde cerebro/Tesis/. No editar a mano: edita las notas de las tesis.\n// Solo trae lo verificado: cada frase está en la página indicada del PDF de la tesis.\nexport const TESIS = ${JSON.stringify(app, null, 2)};\n`;

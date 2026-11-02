@@ -64,14 +64,17 @@ un programa **comprueba** y una persona **aprueba**. La app no usa IA.
 1. **Nota por tesis** en `cerebro/Tesis/<clave>.md`: secciones `## Relaciones` (`- de | a | sentido | base | resultado | pág. N | "frase"`),
    `## Umbrales`, `## Fórmulas`, `## Datos` y `## Alertas`. `sentido`: `+`, `−`, `0` (sin efecto significativo), `?`, `+ n.s.`, `− n.s.`.
    `base`: `medido` (lo midió la tesis), `citado` (lo dice otra fuente que la tesis cita) o `afirmado` (sin medir).
-   Las variables usan el id de Trofaxis si existe; si no, el id queda como **variable candidata**.
+   Las variables usan el id de Trofaxis si existe; si no, el id queda como **variable candidata**, y su nombre en
+   palabras va en `## Variables nuevas` (`- id | Nombre`). Sin nombre, `node scripts/cerebro.mjs` da error.
 2. **Verificador**: `node scripts/cerebro.mjs --verificar <carpeta con los .txt>` busca cada frase en esa página del PDF
    (texto de `pdftotext -layout`, páginas separadas por `\f`; las páginas son las del archivo PDF). Sin tildes, mayúsculas
    ni espacios; en tesis escaneadas (`ocr: sí`) acepta letras mal leídas (parecido ≥ 0,8) pero exige cada cifra tal cual.
    Guarda `cerebro/Tesis/_verificacion.json` con una huella por línea: cambiar la frase o la página obliga a verificar de nuevo.
 3. **Agregado**: `node scripts/cerebro.mjs` genera `cerebro/Tesis/_Resumen.md` (pares de variables con cuántas tesis los
    midieron y en qué sentido, umbrales por variable, fórmulas, variables candidatas y alertas) y `src/cerebro/tesis.js`,
-   que el explorador del cerebro muestra en el tipo «Tesis».
+   que el panel muestra en los tipos «Tesis» y «Relaciones de tesis» del explorador y en el grafo: cada relación es una
+   flecha turquesa, las candidatas son puntos turquesa y un vínculo que una tesis también menciona lleva un halo turquesa.
+   La casilla «Ver relaciones de las tesis» las quita. Al tocar una variable o una relación salen la frase, la página y la tesis.
 4. **Evidencia en vínculos**: una tesis se cita como `[[clave]]`, y la evidencia debe decir `pág. N` de una página donde la
    tesis tiene una frase verificada. Nada de esto cambia un estado ni un puntaje: eso sigue siendo un PR revisado.
 

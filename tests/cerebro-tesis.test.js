@@ -106,3 +106,50 @@ test('el explorador del cerebro lista las tesis y muestra cada línea con su pá
   assert.match(html, /pág\. 4 del PDF/);
   assert.match(html, /58\.2%/);
 });
+
+test('una variable candidata necesita su nombre en palabras, y no puede repetir una variable de Trofaxis', () => {
+  const nota = (d) => path.join(d, 'Tesis', 'chi-bautista-2011.md');
+  const r = bovedaFalsa((d) => cambiar(nota(d), '- riego.lamina | Lámina de riego\n', ''));
+  assert.ok(r.errores.some((e) => e.includes('riego.lamina') && e.includes('no tiene nombre')));
+  const r2 = bovedaFalsa((d) => cambiar(nota(d), '- riego.lamina | Lámina de riego', '- riego.lamina | Lámina de riego\n- riego.sistema | Sistema de riego'));
+  assert.ok(r2.errores.some((e) => e.includes('riego.sistema') && e.includes('ya es variable de Trofaxis')));
+});
+
+test('el grafo del panel dibuja las relaciones de las tesis con sus candidatas, sin duplicar los vínculos', async () => {
+  const { armarGrafo, vecinos } = await import('../src/cerebro/grafo.js');
+  const { HECHOS } = await import('../src/cerebro/hechos.js');
+  const sin = armarGrafo(HECHOS, { agrupar: false }), con = armarGrafo(HECHOS, { agrupar: false, tesis: TESIS });
+  assert.ok(!sin.aristas.some((e) => e.tipo === 'tesis' || e.tesis) && !sin.nodos.some((n) => n.candidata), 'sin la opción, el grafo de siempre');
+  // Cada par tiene una sola línea: la suya, o la del vínculo que Trofaxis ya tiene.
+  for (const r of TESIS.relaciones) {
+    const lineas = con.aristas.filter((e) => e.a === r.de && e.b === r.a && (e.tipo === 'tesis' || e.tesis));
+    assert.equal(lineas.length, 1, `${r.de} → ${r.a}`);
+    assert.equal(lineas[0].tipo, r.vinculos.length ? 'mecanismo' : 'tesis', `${r.de} → ${r.a}`);
+  }
+  assert.ok(vecinos(con, 'finca.pendiente').some((v) => v.id === 'riesgo.suelo' && v.tipo === 'mecanismo' && v.tesis.tesis.includes('godoy-garzon-2015')));
+  // Las candidatas llevan el nombre de la nota y ninguna se llama como un hecho (serían el mismo punto).
+  const cand = con.nodos.filter((n) => n.candidata), hechos = new Set(HECHOS.map((h) => h.id));
+  assert.ok(cand.length >= 20);
+  for (const n of cand) assert.equal(n.titulo, TESIS.candidatas.find((c) => c.id === n.id).nombre);
+  assert.ok(!TESIS.candidatas.some((c) => hechos.has(c.id)));
+  assert.ok(con.nodos.every((n) => n.grado > 0), 'ningún punto suelto');
+});
+
+test('el explorador lista las relaciones de las tesis y cada una muestra su frase, su página y si ya es un vínculo', async () => {
+  const { explorar, detalleRelacion, viewCerebro } = await import('../src/admin/cerebro.js');
+  assert.equal(explorar({ tipo: 'relacion' }).relaciones.length, TESIS.relaciones.length);
+  const par = (de, a) => TESIS.relaciones.find((x) => x.de === de && x.a === a);
+  assert.ok(explorar({ texto: 'densidad rendimiento' }).relaciones.includes(par('cultivo.densidad', 'cultivo.rendimiento')));
+  const html = detalleRelacion(par('cultivo.densidad', 'cultivo.rendimiento'));
+  assert.match(html, /Densidad de siembra → Rendimiento del cultivo/);
+  assert.match(html, /medido: sube \(2\)/);
+  assert.match(html, /pág\. \d+ del PDF/);
+  assert.match(html, /Poquiviqui López \(1998\)/);
+  assert.match(html, /no suma al puntaje/);
+  const pendiente = detalleRelacion(par('finca.pendiente', 'riesgo.suelo'));
+  assert.match(pendiente, /data-cb-vinculo="suelo-pendiente"/);
+  assert.match(pendiente, /no cambia su estado/);
+  const vista = viewCerebro();
+  assert.match(vista, /id="cb-tesis" checked/);
+  assert.match(vista, new RegExp(`Relaciones de tesis \\(${TESIS.relaciones.length}\\)`));
+});

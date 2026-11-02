@@ -17,6 +17,12 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- sustrato.exceso | Agua acumulada en el sustrato
+- cultivo.enfermedades | Enfermedades del cultivo
+
 ## Relaciones
 
 - sustrato.exceso | cultivo.enfermedades | + | afirmado | El agua acumulada en el medio favorece hongos y bacterias que reducen el enraizamiento | pág. 7 | "Esto favorece el ataque de enfermedades como hongos y bacterias que reducen su enraizamiento."
