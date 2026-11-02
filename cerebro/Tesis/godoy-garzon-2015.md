@@ -23,7 +23,7 @@ Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesi
 
 ## Umbrales
 
-- finca.pendiente | Clases: 0–3 % plana; 3–7 % ligeramente plana; 7–12 % moderadamente inclinada; 12–25 % inclinada; 25–50 % fuertemente inclinada; 50–75 % escarpada; > 75 % fuertemente escarpada (Bronzoni et al. 1994, adaptado; de segunda mano) | pág. 23 | "Cuadro 5. Clasificación de la pendiente según el porcentaje de inclinación."
+- finca.pendiente | Clases: 0–3 % plana o casi plana; 3–7 % ligeramente plana; 7–12 % moderadamente inclinada; 12–25 % inclinada; 25–50 % fuertemente inclinada; 50–75 % escarpada; > 75 % fuertemente escarpada (Bronzoni et al. 1994, adaptado; de segunda mano) | pág. 23 | "Cuadro 5. Clasificación de la pendiente según el porcentaje de inclinación."
 - finca.pendiente | Barreras vivas cada 15–30 m con pendiente < 15 %, 10–15 m con 15–30 % y 4–10 m con 30–50 % (Raudes y Sagastume 2011, de segunda mano) | pág. 22 | "Cuadro 4. Determinación de las obras de conservación de suelos según la pendiente y la distancia de separación entre las obras."
 
 ## Datos

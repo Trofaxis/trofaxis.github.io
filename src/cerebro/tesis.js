@@ -149,7 +149,7 @@ export const TESIS = {
           "pagina": "23",
           "cita": "Cuadro 5. Clasificación de la pendiente según el porcentaje de inclinación.",
           "variable": "finca.pendiente",
-          "umbral": "Clases: 0–3 % plana; 3–7 % ligeramente plana; 7–12 % moderadamente inclinada; 12–25 % inclinada; 25–50 % fuertemente inclinada; 50–75 % escarpada; > 75 % fuertemente escarpada (Bronzoni et al. 1994, adaptado; de segunda mano)",
+          "umbral": "Clases: 0–3 % plana o casi plana; 3–7 % ligeramente plana; 7–12 % moderadamente inclinada; 12–25 % inclinada; 25–50 % fuertemente inclinada; 50–75 % escarpada; > 75 % fuertemente escarpada (Bronzoni et al. 1994, adaptado; de segunda mano)",
           "coincidencia": "exacta"
         },
         {
