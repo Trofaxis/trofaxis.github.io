@@ -828,7 +828,7 @@ details.sec>summary:hover .sec-t{color:var(--accent)}
 .menu-mas-caja{position:absolute;right:0;top:calc(100% + 6px);z-index:20;display:flex;flex-direction:column;gap:4px;min-width:220px;padding:8px;border-radius:14px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 18px 40px -16px rgba(0,0,0,.4)}
 .menu-mas-caja .btn{border-color:transparent;text-align:left;width:100%}
 .menu-mas-caja .btn:hover{border-color:transparent}
-@media (max-width:560px){.menu-mas-caja{left:0;right:auto}}
+@media (max-width:560px){.menu-mas-caja{max-width:calc(100vw - 32px)}}
 .notice-corto{padding:10px 14px}
 .notice-corto span{min-width:0}
 .metodo{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);position:relative}
@@ -854,5 +854,5 @@ details.alerta.error{border-left-color:var(--crit)}details.alerta.advertencia{bo
 .alertas-mas{margin-top:8px}
 .alertas-mas>summary{font-size:15px;font-weight:600;color:var(--accent);padding:8px 0}
 .alertas-mas>.alertas{margin-top:6px}
-/* El bloque con un «?» abierto pasa al frente: la animación de entrada crea una capa por bloque y la explicación quedaba detrás del siguiente. */
-#app>:has(.ayuda[open]),.inicio>:has(.ayuda[open]),.sec-cuerpo>:has(.ayuda[open]){position:relative;z-index:10}
+/* El bloque con un «?» o un menú «Más» abierto pasa al frente: la animación de entrada crea una capa por bloque y la caja quedaba detrás del siguiente. */
+#app>:has(.ayuda[open],.menu-mas[open]),.inicio>:has(.ayuda[open],.menu-mas[open]),.sec-cuerpo>:has(.ayuda[open],.menu-mas[open]){position:relative;z-index:10}
