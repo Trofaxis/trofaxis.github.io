@@ -1,8 +1,8 @@
 /* Cerebro: grafo de hechos (src/admin/cerebro.js). Las fuentes llevan un azul propio para no confundirse con «criterio propio»;
-   las variables de la finca y sus vínculos, un violeta. */
-:root{--cb-fte:#2563EB;--cb-var:#7C3AED}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cb-fte:#7AA7F0;--cb-var:#B49CF7}}
-:root[data-theme="dark"]{--cb-fte:#7AA7F0;--cb-var:#B49CF7}
+   las variables de la finca y sus vínculos, un violeta; las relaciones leídas en tesis y sus variables candidatas, un turquesa. */
+:root{--cb-fte:#2563EB;--cb-var:#7C3AED;--cb-tesis:#0891B2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cb-fte:#7AA7F0;--cb-var:#B49CF7;--cb-tesis:#22D3EE}}
+:root[data-theme="dark"]{--cb-fte:#7AA7F0;--cb-var:#B49CF7;--cb-tesis:#22D3EE}
 .cerebro{gap:14px}
 .cb-controles{align-items:flex-end}
 .cb-buscar{flex:1 1 260px}
@@ -25,6 +25,11 @@
 .cb-punto.cb-fuente{background:var(--good)}
 .cb-punto.cb-propio{background:var(--warn)}
 .cb-punto.cb-validar{background:var(--muted)}
+.cb-punto.cb-cand{background:var(--cb-tesis)}
+.cb-raya{display:inline-block;width:18px;height:0;border-top:2px solid var(--muted)}
+.cb-raya.cb-var{border-color:var(--cb-var)}
+.cb-raya.cb-tesis{border-color:var(--cb-tesis)}
+.cb-raya.cb-halo{border-color:var(--cb-var);box-shadow:0 0 0 2px color-mix(in srgb,var(--cb-tesis) 40%,transparent)}
 .pill.cb-fuente{color:var(--good)}
 .pill.cb-propio{color:var(--warn)}
 .pill.cb-validar{color:var(--muted)}
@@ -34,6 +39,8 @@
 .cb-vinculo{border-left:3px solid var(--cb-var);padding:4px 0 4px 10px}
 .cb-vinculo p{margin:4px 0}
 .cb-evidencia{margin:4px 0;padding-left:18px}
+.cb-tesis-linea{border-left:3px solid var(--cb-tesis);padding:4px 0 4px 10px}
+.cb-tesis-linea p{margin:4px 0}
 /* Explorador: conteos que se tocan, tipos y lista de resultados. */
 .cb-explorar{display:flex;flex-direction:column;gap:10px}
 #cb-filtros{display:flex;flex-direction:column;gap:8px}

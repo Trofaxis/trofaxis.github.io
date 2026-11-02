@@ -17,6 +17,13 @@ revisado_fecha:
 
 Páginas: del archivo PDF (coinciden con la numeración impresa). Los anexos traen coordenadas de árboles: no se copian.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- spathodea.poda | Poda de Spathodea
+- spathodea.sombra | Sombra de un dosel cerrado
+- spathodea.establecimiento | Establecimiento de plántulas de Spathodea
+
 ## Relaciones
 
 - poli.abundanciaRiesgo | poli.floracionRiesgo | + | afirmado | Espera más floración con más volumen de copa; no lo midió | pág. 27 | "a mayor volumen de copa se esperaría mayor floración."

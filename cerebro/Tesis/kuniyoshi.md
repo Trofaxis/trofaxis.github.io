@@ -18,6 +18,13 @@ revisado_fecha:
 Páginas: del PDF que se genera desde el .docx con LibreOffice. El índice del .docx puede diferir 1 o 2 páginas: citar también la sección.
 No se toma nada del Anexo B (datos de Tejeda et al. 2025).
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- spathodea.floresVisibles | Flores visibles en copas de Spathodea
+- poli.abejasMuertas | Abejas muertas en las flores
+- clima.alteraciones | Alteraciones del clima
+
 ## Relaciones
 
 - spathodea.floresVisibles | poli.abejasMuertas | + n.s. | medido | Flores visibles en copas cercanas frente a abejas muertas: pendiente 0,077, R² = 0,2147, Spearman positiva débil y no significativa (Resultados, Figura 10) | pág. 33 | "Esta relación no fue estadísticamente significativa (p > .05), por lo que no se pudo afirmar que el aumento de la abundancia floral estuviera asociado de manera consistente con un mayor número de abejas muertas."

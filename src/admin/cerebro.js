@@ -1,6 +1,7 @@
 // Panel de administración: Cerebro. Grafo interactivo de todo lo que la app sabe, al estilo del de Obsidian:
 // arrastrar, acercar con la rueda o con dos dedos y tocar un punto para ver el hecho y su fuente.
-// Funciona sin conexión y sin IA: dibuja los hechos y la matriz de vínculos de src/cerebro/ en un <canvas>.
+// Funciona sin conexión y sin IA: dibuja los hechos, la matriz de vínculos y las relaciones leídas en tesis
+// (src/cerebro/) en un <canvas>.
 import { esc } from '../core/utils.js';
 import { HECHOS, TEMAS, PENDIENTES } from '../cerebro/hechos.js';
 import { CONSULTA_PPDB } from '../plag/catalogo.js';
@@ -12,13 +13,14 @@ import { normalizar } from '../riego/referencias.js';
 import { TESIS } from '../cerebro/tesis.js';
 
 const ESTADO_CLASE = { 'con fuente': 'cb-fuente', 'criterio propio': 'cb-propio', 'por validar': 'cb-validar' };
-const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de', mecanismo: 'vínculo' };
+const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de', mecanismo: 'vínculo', tesis: 'relación de una tesis' };
 
 // Estado de la vista que sobrevive a los redibujados de la app (posiciones, zoom, selección).
 // `agrupar` falso: solo relaciones (fórmulas y vínculos); los temas y las fuentes son agrupaciones y se piden aparte.
-const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', tipo: 'todo', estado: null, energia: 1, agrupar: false };
+// `tesis`: suma las relaciones leídas en tesis y sus variables candidatas (se ven de entrada).
+const G = { grafo: null, vista: null, sel: null, filtro: null, texto: '', tipo: 'todo', estado: null, energia: 1, agrupar: false, tesis: true };
 function grafo() {
-  if (!G.grafo) { G.grafo = posicionesIniciales(armarGrafo(HECHOS, { agrupar: G.agrupar })); for (let i = 0; i < 120; i++) paso(G.grafo); }
+  if (!G.grafo) { G.grafo = posicionesIniciales(armarGrafo(HECHOS, { agrupar: G.agrupar, tesis: G.tesis ? TESIS : null })); for (let i = 0; i < 120; i++) paso(G.grafo); }
   return G.grafo;
 }
 const porId = (id) => grafo().nodos.find((n) => n.id === id);
@@ -28,10 +30,31 @@ const pillV = (estado) => `<span class="pill ${ESTADO_CLASE[estado]}">${esc(esta
 const irVariable = (id) => `<button type="button" class="btn sm cb-ir" data-cb-ir="${esc(id)}">${esc(VARIABLES[id].nombre)}</button>`;
 const nombreVinculo = (v) => `${v.de.map((x) => VARIABLES[x].nombre).join(' + ')} → ${VARIABLES[v.a].nombre}`;
 
+// Tesis leídas: nombres de sus variables (las candidatas traen el suyo en la nota) y sus relaciones entre pares.
+const CANDIDATAS = new Map(TESIS.candidatas.map((c) => [c.id, c]));
+const nombreTesisVar = (id) => VARIABLES[id]?.nombre ?? CANDIDATAS.get(id)?.nombre ?? id;
+const EN_RELACION = new Set(TESIS.relaciones.flatMap((r) => [r.de, r.a]));
+const claveRelacion = (r) => `${r.de}>${r.a}`;
+const nombreRelacion = (r) => `${nombreTesisVar(r.de)} → ${nombreTesisVar(r.a)}`;
+const lineasDe = (r) => TESIS.tesis.flatMap((t) => t.items.filter((it) => it.seccion === 'Relaciones' && it.de === r.de && it.a === r.a).map((it) => ({ it, t })));
+// «Castillo Samudio, R. R. (2007). Efecto…» → «Castillo Samudio (2007)».
+const citaCorta = (t) => {
+  const m = t.cita.match(/^(.*?)\s*\((\d{4})\)/);
+  return m ? `${m[1].split(/\s+y\s+/).map((a) => a.split(',')[0].trim()).join(' y ')} (${m[2]})` : t.cita;
+};
+// En cuántas tesis y qué encontraron: «medido: sube (2)» son dos líneas medidas en las que el efecto sube;
+// «citado o afirmado» son líneas que la tesis no midió (lo dice otra fuente o lo afirma sin medir).
+function resumenRelacion(r) {
+  const m = r.medido;
+  const medido = [['sube', m.sube], ['baja', m.baja], ['sin efecto significativo', m.sinEfecto]].filter(([, n]) => n).map(([s, n]) => `${s} (${n})`);
+  return [`${r.tesis.length} tesis`, medido.length ? `medido: ${medido.join(', ')}` : '', r.otras ? `citado o afirmado (${r.otras})` : '',
+    r.vinculos.length ? 'también es un vínculo' : ''].filter(Boolean).join(' · ');
+}
+
 // Explorador: buscar o listar variables, vínculos (con sus hipótesis), fuentes y hechos, todo con el mismo filtro.
 // No es una IA: compara palabras sin tildes ni mayúsculas. «hipótesis» encuentra los vínculos por validar.
-export const TIPOS = { todo: 'Todo', variable: 'Variables', vinculo: 'Vínculos', fuente: 'Fuentes', tesis: 'Tesis', hecho: 'Hechos' };
-const LISTA = { variable: 'variables', vinculo: 'vinculos', fuente: 'fuentes', tesis: 'tesis', hecho: 'hechos' };
+export const TIPOS = { todo: 'Todo', variable: 'Variables', vinculo: 'Vínculos', fuente: 'Fuentes', tesis: 'Tesis', relacion: 'Relaciones de tesis', hecho: 'Hechos' };
+const LISTA = { variable: 'variables', vinculo: 'vinculos', fuente: 'fuentes', tesis: 'tesis', relacion: 'relaciones', hecho: 'hechos' };
 const ESTADO_VINCULO = { 'por validar': 'hipótesis' };
 const palabras = (t) => normalizar(t).split(/\s+/).filter((p) => p.length > 1);
 const coincide = (ps, ...textos) => { const t = normalizar(textos.join(' ')); return ps.every((p) => t.includes(p)); };
@@ -55,13 +78,14 @@ export function explorar({ texto = '', tipo = 'todo', estado = null } = {}) {
   const fuentes = !quiere('fuente') || estado ? [] : FUENTES_TODAS.filter((f) => coincide(ps, f.cita));
   const hechos = !quiere('hecho') ? [] : (ps.length ? buscar(texto, { max: 500 }) : HECHOS).filter((h) => !estado || h.estado === estado);
   const tesis = !quiere('tesis') || estado ? [] : TESIS.tesis.filter((x) => coincide(ps, x.cita, x.tema, x.cultivo, x.lugar, ...x.items.map((it) => `${it.de ?? ''} ${it.a ?? ''} ${it.resultado ?? ''} ${it.variable ?? ''} ${it.umbral ?? ''} ${it.nombre ?? ''} ${it.dato ?? ''} ${it.valor ?? ''} ${it.cita}`)));
-  return { variables, vinculos, fuentes, tesis, hechos };
+  const relaciones = !quiere('relacion') || estado ? [] : TESIS.relaciones.filter((r) => coincide(ps, nombreRelacion(r), r.de, r.a, ...lineasDe(r).map(({ it, t }) => `${t.cita} ${it.resultado} ${it.cita}`)));
+  return { variables, vinculos, fuentes, tesis, relaciones, hechos };
 }
 const activo = () => G.texto.trim() || G.tipo !== 'todo' || G.estado;
 
 // Ids de puntos del grafo que corresponden a lo que se está mostrando (para atenuar el resto).
 function idsEnGrafo(r) {
-  return new Set([...r.variables, ...r.vinculos.flatMap((v) => [...v.de, v.a]), ...r.hechos.map((h) => h.id), ...r.fuentes.flatMap((f) => f.hechos.map((h) => h.id))]);
+  return new Set([...r.variables, ...r.vinculos.flatMap((v) => [...v.de, v.a]), ...r.relaciones.flatMap((x) => [x.de, x.a]), ...r.hechos.map((h) => h.id), ...r.fuentes.flatMap((f) => f.hechos.map((h) => h.id))]);
 }
 
 // Ficha de un vínculo: causa → efecto, mecanismo, estado, evidencia y dónde actúa en la app.
@@ -90,8 +114,14 @@ function detalle(n) {
   if (n.tipo === 'variable') {
     const sale = VINCULOS.filter((v) => v.de.includes(n.id)), entra = VINCULOS.filter((v) => v.a === n.id);
     const fichas = (titulo, a) => (a.length ? `<h4>${titulo} (${a.length})</h4><ul class="cb-vecinos">${a.map(fichaVinculo).join('')}</ul>` : '');
-    return `<p class="muted small">${n.efecto ? 'Riesgo que recibe el efecto' : 'Variable de la finca'}</p><h3>${esc(n.titulo)}</h3>
-      ${lista('Usa los valores', vs.filter((v) => v.tipo === 'dato'))}${fichas('Afecta a', sale)}${fichas('Lo afectan', entra)}`;
+    const deTesis = (seccion, f) => TESIS.tesis.flatMap((t) => t.items.filter((it) => it.seccion === seccion && f(it)).map((it) => ({ it, t })));
+    const rel = deTesis('Relaciones', (it) => it.de === n.id || it.a === n.id), umb = deTesis('Umbrales', (it) => it.variable === n.id);
+    const cab = n.candidata ? 'Variable candidata: viene de las tesis y todavía no suma al puntaje'
+      : n.efecto ? 'Riesgo que recibe el efecto' : 'Variable de la finca';
+    return `<p class="muted small">${cab}</p><h3>${esc(n.titulo)}</h3>${n.candidata ? `<p class="small muted">En las notas de las tesis: <code>${esc(n.id)}</code></p>` : ''}
+      ${lista('Usa los valores', vs.filter((v) => v.tipo === 'dato'))}${fichas('Afecta a', sale)}${fichas('Lo afectan', entra)}
+      ${rel.length ? `<h4>Relaciones de las tesis (${rel.length})</h4><ul class="cb-vecinos">${rel.map(({ it, t }) => lineaTesis(it, t)).join('')}</ul>` : ''}
+      ${umb.length ? `<h4>Umbrales de las tesis (${umb.length})</h4><ul class="cb-vecinos">${umb.map(({ it, t }) => lineaTesis(it, t)).join('')}</ul>` : ''}`;
   }
   if (n.tipo !== 'hecho') {
     const tipo = n.tipo === 'tema' ? 'Tema' : 'Fuente';
@@ -134,7 +164,7 @@ const recorta = (a, f) => `${a.slice(0, MAX).map(f).join('')}${a.length > MAX ? 
 function resultados() {
   if (!activo()) return '<p class="muted small">Toca un conteo o un tipo para ver la lista, o escribe para buscar. Toca cualquier resultado para verlo en el grafo.</p>';
   const r = explorar({ texto: G.texto, tipo: G.tipo, estado: G.estado });
-  const n = r.variables.length + r.vinculos.length + r.fuentes.length + r.tesis.length + r.hechos.length;
+  const n = r.variables.length + r.vinculos.length + r.fuentes.length + r.tesis.length + r.relaciones.length + r.hechos.length;
   const que = [G.tipo !== 'todo' ? TIPOS[G.tipo].toLowerCase() : '', G.estado ? `«${ESTADO_VINCULO[G.estado] && G.tipo === 'vinculo' ? ESTADO_VINCULO[G.estado] : G.estado}»` : '', G.texto.trim() ? `con «${G.texto.trim()}»` : ''].filter(Boolean).join(' ');
   const cab = `<div class="row between cb-res-cab"><p class="small"><b>${n} resultado${n === 1 ? '' : 's'}</b>${que ? ` · ${esc(que)}` : ''}</p><button type="button" class="btn sm" data-cb-limpiar>Limpiar</button></div>`;
   if (!n) return `${cab}<p class="muted small">Nada coincide. El cerebro solo busca palabras: no responde preguntas libres.</p>`;
@@ -144,6 +174,7 @@ function resultados() {
     ${grupo('Variables', r.variables, (id) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(id)}"><span>${esc(VARIABLES[id].nombre)}</span><span class="small muted">${VINCULOS.filter((v) => v.de.includes(id) || v.a === id).length} vínculos</span></button></li>`)}
     ${grupo('Fuentes', r.fuentes, (f) => `<li><button type="button" class="cb-item" data-cb-fuente="${esc(f.cita)}"><span>${esc(f.cita)}</span><span class="small muted">${f.hechos.length} hechos · ${f.vinculos.length} vínculos</span></button></li>`)}
     ${grupo('Tesis leídas', r.tesis, (x) => `<li><button type="button" class="cb-item" data-cb-tesis="${esc(x.clave)}"><span>${esc(x.cita)}</span><span class="small muted">${esc(x.tema)} · ${x.items.length} líneas verificadas</span></button></li>`)}
+    ${grupo('Relaciones de tesis', r.relaciones, (x) => `<li><button type="button" class="cb-item" data-cb-relacion="${esc(claveRelacion(x))}"><span>${esc(nombreRelacion(x))}</span><span class="small muted">${esc(resumenRelacion(x))}</span></button></li>`)}
     ${grupo('Hechos', r.hechos, (h) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(h.id)}"><span>${esc(h.titulo)}</span><span class="small muted">${esc(String(h.valor))} ${esc(h.unidad ?? '')}</span></button>${pill(h.estado)}</li>`)}
   </div>`;
 }
@@ -156,14 +187,34 @@ function detalleFuente(f) {
 }
 // Detalle de una tesis leída: cada línea con su página y la frase textual que la respalda.
 const SENTIDO_TESIS = { '+': 'sube', '−': 'baja', '0': 'sin efecto significativo', '?': 'no se sabe', '+ n.s.': 'tiende a subir (no significativo)', '− n.s.': 'tiende a bajar (no significativo)' };
-const nombreTesisVar = (id) => (VARIABLES[id] ? VARIABLES[id].nombre : `${id} (candidata)`);
+const conMarca = (id) => `${esc(nombreTesisVar(id))}${VARIABLES[id] ? '' : ' <span class="muted">(candidata)</span>'}`;
+// Una línea de una tesis (relación o umbral): qué dice, la frase textual con su página y la tesis, que se abre al tocarla.
+// `par` falso cuando el título ya nombra las dos variables.
+function lineaTesis(it, t, par = true) {
+  const que = it.seccion === 'Umbrales' ? `<b>${esc(it.umbral)}</b>`
+    : `${par ? `${conMarca(it.de)} → ${conMarca(it.a)}: ` : 'Efecto: '}<b>${esc(SENTIDO_TESIS[it.sentido] ?? it.sentido)}</b> <span class="pill">${esc(it.base)}</span><br><span class="small">${esc(it.resultado)}</span>`;
+  return `<li class="cb-tesis-linea"><p>${que}</p>
+    <p class="small muted">«${esc(it.cita)}» · pág. ${esc(it.pagina)} del PDF</p>
+    <p><button type="button" class="btn sm cb-ir" data-cb-tesis="${esc(t.clave)}">${esc(citaCorta(t))}</button></p></li>`;
+}
+// Detalle de una relación entre dos variables: lo que dice cada tesis, y el vínculo de Trofaxis si ya existe.
+export function detalleRelacion(r) {
+  const vinculos = r.vinculos.map((id) => VINCULOS.find((v) => v.id === id)).filter(Boolean);
+  const candidatas = [r.de, r.a].filter((id) => !VARIABLES[id]);
+  const estado = vinculos.length
+    ? `<p class="small">Trofaxis ya tiene este vínculo: ${vinculos.map((v) => `<button type="button" class="btn sm cb-ir" data-cb-vinculo="${esc(v.id)}">${esc(nombreVinculo(v))}</button> ${pillV(v.estado)}`).join(' ')}. La tesis no cambia su estado: eso se decide en un PR revisado.</p>`
+    : `<p class="small muted">Trofaxis no tiene este vínculo${candidatas.length ? ` y ${candidatas.length === 1 ? 'una variable es candidata' : 'las dos variables son candidatas'}` : ''}: no suma al puntaje.</p>`;
+  return `<p class="muted small">Relación leída en ${r.tesis.length === 1 ? 'una tesis' : `${r.tesis.length} tesis`}</p><h3>${esc(nombreRelacion(r))}</h3>
+    <p class="small">${esc(resumenRelacion(r))}</p>${estado}
+    <ul class="cb-vecinos">${lineasDe(r).map(({ it, t }) => lineaTesis(it, t, false)).join('')}</ul>`;
+}
 export function detalleTesis(x) {
   const frase = (it) => `<p class="small muted">«${esc(it.cita)}» · pág. ${esc(it.pagina)} del PDF · ${esc(it.coincidencia)}</p>`;
   const sec = (titulo, s, f) => { const its = x.items.filter((it) => it.seccion === s); return its.length ? `<h4>${titulo} (${its.length})</h4><ul class="cb-vecinos">${its.map((it) => `<li>${f(it)}${frase(it)}</li>`).join('')}</ul>` : ''; };
   return `<p class="muted small">Tesis leída · ${esc(x.tema)}${x.cultivo ? ` · ${esc(x.cultivo)}` : ''}${x.lugar ? ` · ${esc(x.lugar)}` : ''}</p><h3>${esc(x.cita)}</h3>
     <p class="small">Cada línea trae la frase de la tesis y su página; un programa comprobó que la frase está en esa página. Nada de esto cambia un puntaje por sí solo.</p>
-    ${sec('Relaciones entre variables', 'Relaciones', (it) => `<b>${esc(nombreTesisVar(it.de))} → ${esc(nombreTesisVar(it.a))}:</b> ${esc(SENTIDO_TESIS[it.sentido] ?? it.sentido)} <span class="pill">${esc(it.base)}</span><br><span class="small">${esc(it.resultado)}</span>`)}
-    ${sec('Umbrales', 'Umbrales', (it) => `<b>${esc(nombreTesisVar(it.variable))}:</b> <span class="small">${esc(it.umbral)}</span>`)}
+    ${sec('Relaciones entre variables', 'Relaciones', (it) => `<b>${conMarca(it.de)} → ${conMarca(it.a)}:</b> ${esc(SENTIDO_TESIS[it.sentido] ?? it.sentido)} <span class="pill">${esc(it.base)}</span><br><span class="small">${esc(it.resultado)}</span>`)}
+    ${sec('Umbrales', 'Umbrales', (it) => `<b>${conMarca(it.variable)}:</b> <span class="small">${esc(it.umbral)}</span>`)}
     ${sec('Fórmulas', 'Fórmulas', (it) => `<b>${esc(it.nombre)}:</b> <span class="small">${esc(it.formula)}</span>`)}
     ${sec('Datos', 'Datos', (it) => `<b>${esc(it.dato)}:</b> <span class="small">${esc(it.valor)}</span>`)}
     ${x.alertas.length ? `<h4>Alertas</h4><ul class="cb-vecinos">${x.alertas.map((a) => `<li class="small">${esc(a)}</li>`).join('')}</ul>` : ''}`;
@@ -198,11 +249,12 @@ export function viewCerebro() {
   return `<header class="admin-cab"><b>Trofaxis</b> · Administración <a class="btn sm" href="../">Ir a la app</a></header>
   <section class="card cerebro">
     <div><h2>Cerebro de Trofaxis</h2>
-      <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho o una variable de la finca. Las líneas son solo relaciones reales: las fórmulas que usan dos valores juntos (punteadas) y los vínculos entre variables (con flecha), cada uno con su mecanismo y su fuente o su estado. El tema y la fuente son agrupaciones, no relaciones: se ven al marcar «Ver también temas y fuentes». Funciona sin conexión y sin inteligencia artificial.</p></div>
+      <p class="muted">Todo lo que la app sabe, con su fuente. Cada punto es un hecho o una variable de la finca. Las líneas son solo relaciones reales: las fórmulas que usan dos valores juntos (punteadas) y los vínculos entre variables (con flecha), cada uno con su mecanismo y su fuente o su estado. Las flechas turquesa son relaciones leídas en ${TESIS.tesis.length} tesis: cada una trae la frase y la página del PDF, que un programa comprobó, y ninguna cambia un puntaje. El tema y la fuente son agrupaciones, no relaciones: se ven al marcar «Ver también temas y fuentes». Funciona sin conexión y sin inteligencia artificial.</p></div>
     <div class="cb-explorar">
       <div id="cb-filtros">${filtros()}</div>
       <div class="row cb-controles">
         <div class="f cb-buscar"><label for="cb-buscar">Buscar una variable, hipótesis, fuente o hecho</label><input id="cb-buscar" type="search" placeholder="hipótesis, Kuniyoshi, pendiente, imidacloprid…" value="${esc(G.texto)}" autocomplete="off"></div>
+        <label class="cb-agrupar small"><input type="checkbox" id="cb-tesis"${G.tesis ? ' checked' : ''}> Ver relaciones de las tesis</label>
         <label class="cb-agrupar small"><input type="checkbox" id="cb-agrupar"${G.agrupar ? ' checked' : ''}> Ver también temas y fuentes</label>
         <button type="button" class="btn sm" id="cb-centrar">Centrar</button>
         <button type="button" class="btn sm" id="cb-obsidian">Descargar para Obsidian (.zip)</button>
@@ -210,12 +262,12 @@ export function viewCerebro() {
       <div id="cb-resultados" class="cb-resultados" aria-live="polite">${resultados()}</div>
     </div>
     <div class="row small cb-leyenda" aria-hidden="true">
-      <span><i class="cb-punto cb-var"></i>Variable de la finca</span><span><i class="cb-punto cb-tema"></i>Tema</span><span><i class="cb-punto cb-fte"></i>Fuente</span>
+      <span><i class="cb-punto cb-var"></i>Variable de la finca</span><span><i class="cb-punto cb-cand"></i>Variable candidata (de una tesis)</span><span><i class="cb-punto cb-tema"></i>Tema</span><span><i class="cb-punto cb-fte"></i>Fuente</span>
       <span><i class="cb-punto cb-fuente"></i>Hecho con fuente</span><span><i class="cb-punto cb-propio"></i>Criterio propio</span><span><i class="cb-punto cb-validar"></i>Por validar</span>
-      <span>Flecha: vínculo · Punteada: fórmula</span>
+      <span><i class="cb-raya cb-var"></i>Vínculo</span><span><i class="cb-raya cb-tesis"></i>Relación de una tesis</span><span><i class="cb-raya cb-halo"></i>Vínculo que una tesis también menciona</span><span>Punteada: fórmula</span>
     </div>
     <div class="cb-cuerpo">
-      <div class="cb-lienzo"><canvas id="cb-canvas" role="img" aria-label="Grafo del cerebro: ${r.total} hechos y ${rv.total} vínculos entre variables de la finca. Usa la búsqueda para recorrerlo con el teclado."></canvas></div>
+      <div class="cb-lienzo"><canvas id="cb-canvas" role="img" aria-label="Grafo del cerebro: ${r.total} hechos, ${rv.total} vínculos entre variables de la finca y ${TESIS.relaciones.length} relaciones leídas en tesis. Usa la búsqueda para recorrerlo con el teclado."></canvas></div>
       <aside id="cb-detalle" class="cb-detalle" aria-live="polite">${detalle(sel)}</aside>
     </div>
     <details><summary>Lo que el cerebro todavía no sabe</summary><ul>${PENDIENTES.map((p) => `<li><b>${esc(p.fuente)}:</b> ${esc(p.falta)}</li>`).join('')}</ul>
@@ -233,7 +285,7 @@ export function montarCerebro(raiz = document) {
   let g = grafo();
   const ctx = canvas.getContext('2d');
   const css = getComputedStyle(document.documentElement), col = (v) => css.getPropertyValue(v).trim();
-  const C = { tema: col('--accent'), fte: col('--cb-fte'), var: col('--cb-var'), 'con fuente': col('--good'), 'criterio propio': col('--warn'), 'por validar': col('--muted'), linea: col('--muted'), ink: col('--ink'), fondo: col('--surface') };
+  const C = { tema: col('--accent'), fte: col('--cb-fte'), var: col('--cb-var'), tesis: col('--cb-tesis'), 'con fuente': col('--good'), 'criterio propio': col('--warn'), 'por validar': col('--muted'), linea: col('--muted'), ink: col('--ink'), fondo: col('--surface') };
   const detalleEl = raiz.querySelector('#cb-detalle');
   let w = 0, h = 0;
   function medir() {
@@ -250,7 +302,7 @@ export function montarCerebro(raiz = document) {
   const aPantalla = (n) => [w / 2 + (n.x + G.vista.x) * G.vista.k, h / 2 + (n.y + G.vista.y) * G.vista.k];
   const aMundo = (px, py) => [(px - w / 2) / G.vista.k - G.vista.x, (py - h / 2) / G.vista.k - G.vista.y];
   const radio = (n) => (n.tipo === 'tema' || n.efecto ? 9 : n.tipo === 'variable' ? 3.5 + Math.sqrt(n.grado) * 0.8 : n.tipo === 'fuente' ? 2.5 + Math.sqrt(n.grado) * 0.9 : 2.5 + Math.sqrt(n.grado) * 0.7);
-  const color = (n) => (n.tipo === 'tema' ? C.tema : n.tipo === 'fuente' ? C.fte : n.tipo === 'variable' ? C.var : C[n.estado]);
+  const color = (n) => (n.tipo === 'tema' ? C.tema : n.tipo === 'fuente' ? C.fte : n.candidata ? C.tesis : n.tipo === 'variable' ? C.var : C[n.estado]);
   const escala = () => Math.min(1.6, Math.max(0.7, Math.sqrt(G.vista.k)));
 
   function dibujar() {
@@ -261,14 +313,18 @@ export function montarCerebro(raiz = document) {
     const idx = new Map(g.nodos.map((n) => [n.id, n]));
     ctx.lineWidth = 1;
     for (const e of g.aristas) {
-      const a = idx.get(e.a), b = idx.get(e.b), activa = G.sel && (e.a === G.sel || e.b === G.sel), mec = e.tipo === 'mecanismo';
-      ctx.globalAlpha = activa ? 0.9 : tenue(e.a) || tenue(e.b) ? 0.05 : mec ? 0.6 : 0.22;
-      ctx.strokeStyle = activa ? C.ink : mec ? C.var : C.linea;
-      ctx.lineWidth = mec ? 1.5 : 1;
+      const a = idx.get(e.a), b = idx.get(e.b), activa = G.sel && (e.a === G.sel || e.b === G.sel), mec = e.tipo === 'mecanismo', tes = e.tipo === 'tesis';
+      const lejos = tenue(e.a) || tenue(e.b), [x1, y1] = aPantalla(a), [x2, y2] = aPantalla(b);
       ctx.setLineDash(e.tipo === 'formula' ? [4, 3] : []);
-      const [x1, y1] = aPantalla(a), [x2, y2] = aPantalla(b);
+      if (mec && e.tesis) { // halo turquesa: una tesis también menciona este vínculo
+        ctx.globalAlpha = lejos && !activa ? 0.04 : 0.35; ctx.strokeStyle = C.tesis; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      }
+      ctx.globalAlpha = activa ? 0.9 : lejos ? 0.05 : mec || tes ? 0.6 : 0.22;
+      ctx.strokeStyle = activa ? C.ink : mec ? C.var : tes ? C.tesis : C.linea;
+      ctx.lineWidth = mec || tes ? 1.5 : 1;
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-      if (mec) { // punta de flecha en el borde del efecto: causa → efecto
+      if (mec || tes) { // punta de flecha en el borde del efecto: causa → efecto
         const d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, r = radio(b) * escala() + 2;
         const px = x2 - ux * r, py = y2 - uy * r;
         ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(px, py);
@@ -308,15 +364,16 @@ export function montarCerebro(raiz = document) {
     }
     return mejor;
   }
-  // Con o sin temas y fuentes: se arma otro grafo y se vuelve a encuadrar.
-  function cambiarAgrupar(si) {
-    G.agrupar = si; G.grafo = null; g = grafo();
-    const casilla = raiz.querySelector('#cb-agrupar'); if (casilla) casilla.checked = si;
+  // Con o sin temas y fuentes, con o sin las relaciones de las tesis: se arma otro grafo y se vuelve a encuadrar.
+  function cambiarVista(cambio) {
+    Object.assign(G, cambio); G.grafo = null; g = grafo();
+    for (const [sel, si] of [['#cb-agrupar', G.agrupar], ['#cb-tesis', G.tesis]]) { const c = raiz.querySelector(sel); if (c) c.checked = si; }
     if (G.sel && !porId(G.sel)) G.sel = null;
     encuadrar(); seleccionar(G.sel); despertar(0.5);
   }
   function seleccionar(id, centrar = false) {
-    if (id && !porId(id) && !G.agrupar) cambiarAgrupar(true); // un hecho sin relaciones solo está en la vista completa
+    if (id && !porId(id) && !G.tesis && EN_RELACION.has(id)) cambiarVista({ tesis: true }); // una candidata solo está con las tesis
+    if (id && !porId(id) && !G.agrupar) cambiarVista({ agrupar: true }); // un hecho sin relaciones solo está en la vista completa
     if (id && !porId(id)) id = null;
     G.sel = id; detalleEl.innerHTML = detalle(id ? porId(id) : null);
     if (centrar && id) { const n = porId(id); G.vista.x = -n.x; G.vista.y = -n.y; G.vista.k = Math.max(G.vista.k, 1.6); canvas.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
@@ -383,6 +440,8 @@ export function montarCerebro(raiz = document) {
     if (e.target.closest('[data-cb-limpiar]')) { G.texto = ''; G.tipo = 'todo'; G.estado = null; if (entrada) entrada.value = ''; refrescar(); return; }
     const v = e.target.closest('[data-cb-vinculo]');
     if (v) { const x = VINCULOS.find((y) => y.id === v.dataset.cbVinculo); seleccionar(x.de[0], true); detalleEl.innerHTML = detalleVinculo(x); return; }
+    const rl = e.target.closest('[data-cb-relacion]');
+    if (rl) { const x = TESIS.relaciones.find((y) => claveRelacion(y) === rl.dataset.cbRelacion); seleccionar(x.de, true); detalleEl.innerHTML = detalleRelacion(x); return; }
     const ts = e.target.closest('[data-cb-tesis]');
     if (ts) { const x = TESIS.tesis.find((y) => y.clave === ts.dataset.cbTesis); seleccionar(null); detalleEl.innerHTML = detalleTesis(x); detalleEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     const f = e.target.closest('[data-cb-fuente]');
@@ -390,7 +449,8 @@ export function montarCerebro(raiz = document) {
     const b = e.target.closest('[data-cb-ir]'); if (b) seleccionar(b.dataset.cbIr, true);
   });
   raiz.querySelector('#cb-centrar')?.addEventListener('click', () => { encuadrar(); seleccionar(null); });
-  raiz.querySelector('#cb-agrupar')?.addEventListener('change', (e) => cambiarAgrupar(e.target.checked));
+  raiz.querySelector('#cb-agrupar')?.addEventListener('change', (e) => cambiarVista({ agrupar: e.target.checked }));
+  raiz.querySelector('#cb-tesis')?.addEventListener('change', (e) => cambiarVista({ tesis: e.target.checked }));
   raiz.querySelector('#cb-obsidian')?.addEventListener('click', () => {
     const blob = new Blob([zip(notasObsidian(armarGrafo()))], { type: 'application/zip' }); // la bóveda lleva todo, con temas y fuentes
     const url = URL.createObjectURL(blob), a = document.createElement('a');

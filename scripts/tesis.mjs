@@ -82,7 +82,14 @@ export function leerTesis(clave, texto, { leerNota, seccion }) {
   }
   if (!items.length) errores.push(`Tesis/${clave}.md: no tiene ninguna línea con página y frase`);
   const alertas = (seccion(cuerpo, 'Alertas') ?? '').split('\n').map((l) => l.trim()).filter((l) => l.startsWith('- ')).map((l) => l.slice(2));
-  return { clave, props, items, alertas, errores };
+  // Variables que esta tesis trae y Trofaxis todavía no tiene: «- id | nombre en palabras».
+  const variablesNuevas = [];
+  for (const l of (seccion(cuerpo, 'Variables nuevas') ?? '').split('\n').map((x) => x.trim()).filter((x) => x.startsWith('- '))) {
+    const [id, nombre = ''] = l.slice(2).split(' | ').map((x) => x.trim());
+    if (!/^[a-z]+\.[A-Za-z]+$/.test(id) || !nombre) errores.push(`Tesis/${clave}.md: variable nueva mal escrita «${l}» (se escribe «- area.nombreEnCamello | Nombre en palabras»)`);
+    else variablesNuevas.push({ id, nombre });
+  }
+  return { clave, props, items, alertas, variablesNuevas, errores };
 }
 
 // Parecido entre dos textos (pares de letras en común, de 0 a 1). Solo para texto escaneado (OCR).
@@ -141,7 +148,12 @@ export function sinVerificar(tesis, registro) {
 
 // --- Agregado: lo que dicen todas las tesis juntas -----------------------------------------------------------
 export function agregar(tesis, { VARIABLES, VINCULOS }) {
-  const pares = new Map(), umbrales = new Map(), candidatas = new Map();
+  const pares = new Map(), umbrales = new Map(), candidatas = new Map(), nombres = new Map(), errores = [];
+  for (const t of tesis) for (const v of t.variablesNuevas ?? []) {
+    if (VARIABLES[v.id]) errores.push(`Tesis/${t.clave}.md: «${v.id}» ya es variable de Trofaxis; no va en «Variables nuevas»`);
+    else if (nombres.has(v.id) && nombres.get(v.id).nombre !== v.nombre) errores.push(`Tesis/${t.clave}.md: «${v.id}» ya tiene otro nombre en Tesis/${nombres.get(v.id).clave}.md`);
+    else if (!nombres.has(v.id)) nombres.set(v.id, { nombre: v.nombre, clave: t.clave });
+  }
   const nota = (id, clave) => { if (!VARIABLES[id]) { if (!candidatas.has(id)) candidatas.set(id, new Set()); candidatas.get(id).add(clave); } };
   for (const t of tesis) for (const it of t.items) {
     if (it.seccion === 'Relaciones') {
@@ -166,10 +178,16 @@ export function agregar(tesis, { VARIABLES, VINCULOS }) {
       vinculos: vinculoDe(p.de, p.a),
     };
   }).sort((x, y) => y.tesis.length - x.tesis.length || x.de.localeCompare(y.de));
-  return { relaciones, umbrales: [...umbrales.entries()].sort(), candidatas: [...candidatas.entries()].map(([id, s]) => [id, [...s]]).sort() };
+  // Toda variable candidata necesita un nombre en palabras (sección «Variables nuevas» de alguna tesis).
+  for (const id of candidatas.keys()) if (!nombres.has(id)) errores.push(`Tesis: la variable candidata «${id}» no tiene nombre; agrégala en «## Variables nuevas» de la tesis que la usa`);
+  for (const [id, n] of nombres) if (!candidatas.has(id)) errores.push(`Tesis/${n.clave}.md: «${id}» está en «Variables nuevas» pero ninguna línea la usa`);
+  return {
+    relaciones, umbrales: [...umbrales.entries()].sort(), errores,
+    candidatas: [...candidatas.entries()].map(([id, s]) => ({ id, nombre: nombres.get(id)?.nombre ?? id, tesis: [...s] })).sort((x, y) => x.id.localeCompare(y.id)),
+  };
 }
 
-const nombreVar = (VARIABLES, id) => (VARIABLES[id] ? `[[${id}|${VARIABLES[id].nombre}]]` : `\`${id}\` (candidata)`);
+const nombreVar = (VARIABLES, id, ag) => (VARIABLES[id] ? `[[${id}|${VARIABLES[id].nombre}]]` : `${ag?.candidatas.find((c) => c.id === id)?.nombre ?? id} (\`${id}\`, candidata)`);
 const pag = (it) => `pág. ${[...new Set(it.pagina)].join('–')}`;
 
 export function notaResumen(tesis, ag, { VARIABLES }) {
@@ -179,23 +197,23 @@ export function notaResumen(tesis, ag, { VARIABLES }) {
     `**${tesis.length} tesis · ${tesis.reduce((s, t) => s + t.items.length, 0)} líneas verificadas · ${ag.relaciones.length} pares de variables · ${ag.candidatas.length} variables candidatas**`, '',
     '## Relaciones entre variables', '',
     '| De → a | Tesis | Medido: sube / baja / sin efecto | Otras (citado o afirmado) | Vínculo de Trofaxis |', '|---|---|---|---|---|',
-    ...ag.relaciones.map((r) => `| ${nombreVar(VARIABLES, r.de)} → ${nombreVar(VARIABLES, r.a)} | ${r.tesis.map((c) => `[[${c}]]`).join(', ')} | ${r.medido.sube} / ${r.medido.baja} / ${r.medido.sinEfecto} | ${r.otras} | ${r.vinculos.length ? r.vinculos.map((v) => `[[${v}]]`).join(', ') : 'ninguno (candidato)'} |`),
+    ...ag.relaciones.map((r) => `| ${nombreVar(VARIABLES, r.de, ag)} → ${nombreVar(VARIABLES, r.a, ag)} | ${r.tesis.map((c) => `[[${c}]]`).join(', ')} | ${r.medido.sube} / ${r.medido.baja} / ${r.medido.sinEfecto} | ${r.otras} | ${r.vinculos.length ? r.vinculos.map((v) => `[[${v}]]`).join(', ') : 'ninguno (candidato)'} |`),
     '', '### Detalle', ''];
   for (const r of ag.relaciones) {
-    lineas.push(`**${r.de} → ${r.a}**`, '');
+    lineas.push(`**${nombreVar(VARIABLES, r.de, ag)} → ${nombreVar(VARIABLES, r.a, ag)}**`, '');
     for (const it of r.items) lineas.push(`- ${it.sentido} · ${it.base} · ${it.resultado} — [[${it.clave}]], ${pag(it)}: «${it.cita}»`);
     lineas.push('');
   }
   lineas.push('## Umbrales y rangos por variable', '', '> Candidatos para los cortes de las rúbricas. No están programados: los cortes siguen siendo criterio propio hasta que un especialista los valide.', '');
   for (const [v, its] of ag.umbrales) {
-    lineas.push(`**${nombreVar(VARIABLES, v)}**`, '');
+    lineas.push(`**${nombreVar(VARIABLES, v, ag)}**`, '');
     for (const it of its) lineas.push(`- ${it.umbral} — [[${it.clave}]], ${pag(it)}: «${it.cita}»`);
     lineas.push('');
   }
   lineas.push('## Fórmulas', '');
   for (const t of tesis) for (const it of t.items.filter((x) => x.seccion === 'Fórmulas')) lineas.push(`- **${it.nombre}:** ${it.formula} — [[${t.clave}]], ${pag(it)}`);
   lineas.push('', '## Variables candidatas', '', '> Aparecen en las tesis pero todavía no son variables de Trofaxis.', '');
-  for (const [id, cl] of ag.candidatas) lineas.push(`- \`${id}\` — ${cl.map((c) => `[[${c}]]`).join(', ')}`);
+  for (const c of ag.candidatas) lineas.push(`- **${c.nombre}** (\`${c.id}\`) — ${c.tesis.map((k) => `[[${k}]]`).join(', ')}`);
   const alertas = tesis.filter((t) => t.alertas.length);
   if (alertas.length) {
     lineas.push('', '## Alertas', '');

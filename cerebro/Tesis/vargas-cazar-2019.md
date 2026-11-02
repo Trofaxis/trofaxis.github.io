@@ -17,6 +17,11 @@ revisado_fecha:
 
 Páginas: del archivo PDF. Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- cultivo.bioestimulanteFoliar | Silicio o bioestimulante foliar
+
 ## Relaciones
 
 - riego.sistema | cultivo.rendimiento | 0 | medido | La inundación no rindió más que el goteo | pág. 3 | "sin embargo, el rendimiento no fue estadísticamente superior al riego por goteo."

@@ -17,6 +17,13 @@ revisado_fecha:
 
 Páginas: del archivo PDF (la portada es la pág. 1). Leída el 2026-11-02 con el piloto de lectura de tesis.
 
+## Variables nuevas
+
+<!-- Variables que esta tesis trae y Trofaxis todavía no tiene: - id | nombre en palabras -->
+- riego.uniformidad | Uniformidad del riego (CU, UD o CUC)
+- riego.ciclosUso | Ciclos de uso de la cinta de goteo
+- riego.calidadCinta | Calidad de fabricación de la cinta (Qd y CVf)
+
 ## Relaciones
 
 - riego.uniformidad | fert.fertirriego | + | afirmado | La uniformidad del riego influye en cómo se reparte el fertilizante (lo dice el resumen; no lo midió) | pág. 4 | "La uniformidad de la distribución del agua en el riego influye directamente en el crecimiento de las plantas y en el uso de energía y aplicación de fertilizantes."

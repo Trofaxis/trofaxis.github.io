@@ -2,6 +2,8 @@
 // Dos clases de línea son relaciones:
 //   formula   → una fórmula de la app usa los dos valores juntos (el archivo se nombra en cada regla).
 //   mecanismo → una variable afecta a otra según la matriz de vínculos (src/cerebro/vinculos.js), con flecha.
+//   tesis     → una tesis leída (cerebro/Tesis/, src/cerebro/tesis.js) relaciona dos variables, con flecha. Solo con la
+//               opción `tesis`. Si el par ya es un vínculo, no hay otra línea: la tesis se suma a la del vínculo.
 // Una une la matriz con los hechos:
 //   dato      → la variable usa ese valor (un umbral, un corte).
 // Y dos son solo agrupaciones, no relaciones; se dibujan únicamente con `agrupar`:
@@ -36,8 +38,16 @@ const FORMULAS = [
 // Clave de una fuente: la misma cita es el mismo nodo.
 const claveFuente = (f) => 'fuente:' + f.cita.replace(/\s*\(actualizada.*$/, '');
 
+// Tema de una variable candidata, solo para su posición inicial: el de las variables de Trofaxis con el mismo prefijo
+// (riego.lamina → riego); si ninguna lo tiene, el prefijo mismo (cultivo, spathodea).
+function temaCandidata(id, variables) {
+  const prefijo = id.split('.')[0];
+  return Object.entries(variables).find(([k]) => k.split('.')[0] === prefijo)?.[1].tema ?? prefijo;
+}
+
 // `agrupar` suma los temas y las fuentes. Sin él quedan solo las relaciones, y los hechos sin ninguna se ocultan.
-export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIABLES, vinculos = VINCULOS } = {}) {
+// `tesis` (el TESIS de src/cerebro/tesis.js) suma las relaciones leídas en tesis y las variables candidatas que traen.
+export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIABLES, vinculos = VINCULOS, tesis = null } = {}) {
   const nodos = new Map();
   const aristas = [];
   const ids = new Set(hechos.map((h) => h.id));
@@ -65,14 +75,15 @@ export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIAB
       }
     }
   }
-  // Variables de la matriz de vínculos. Solo entran las que algún vínculo usa.
-  const usadas = new Set(vinculos.flatMap((v) => [...v.de, v.a]));
-  for (const id of usadas) {
+  // Variables de la matriz de vínculos. Solo entran las que algún vínculo (o, con `tesis`, alguna tesis) usa.
+  const agregarVariable = (id) => {
     const v = variables[id];
     nodos.set(id, { id, tipo: 'variable', titulo: v.nombre, tema: v.tema, efecto: !!v.efecto });
     for (const hid of v.hechos ?? []) if (ids.has(hid)) aristas.push({ a: id, b: hid, tipo: 'dato' });
     if (agrupar && TEMAS[v.tema]) aristas.push({ a: id, b: 'tema:' + v.tema, tipo: 'tema' });
-  }
+  };
+  const usadas = new Set(vinculos.flatMap((v) => [...v.de, v.a]));
+  for (const id of usadas) agregarVariable(id);
   // Una línea por par causa → efecto; si varios vínculos la comparten, la línea los lista a todos.
   const mec = new Map();
   for (const v of vinculos) {
@@ -80,6 +91,21 @@ export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIAB
       const k = de + '>' + v.a;
       if (mec.has(k)) mec.get(k).vinculos.push(v.id);
       else { const e = { a: de, b: v.a, tipo: 'mecanismo', vinculos: [v.id] }; mec.set(k, e); aristas.push(e); }
+    }
+  }
+  // Relaciones leídas en tesis: una línea por par causa → efecto. Una variable que Trofaxis no tiene entra como
+  // candidata, con el nombre que le da la nota de la tesis («## Variables nuevas»). Nada de esto suma al puntaje.
+  if (tesis) {
+    const nombres = new Map((tesis.candidatas ?? []).map((c) => [c.id, c.nombre]));
+    const variable = (id) => {
+      if (nodos.get(id)?.tipo === 'variable') return;
+      if (variables[id]) agregarVariable(id);
+      else nodos.set(id, { id, tipo: 'variable', candidata: true, titulo: nombres.get(id) ?? id, tema: temaCandidata(id, variables) });
+    };
+    for (const r of tesis.relaciones) {
+      variable(r.de); variable(r.a);
+      const e = mec.get(r.de + '>' + r.a);
+      if (e) e.tesis = r; else aristas.push({ a: r.de, b: r.a, tipo: 'tesis', tesis: r });
     }
   }
   let lista = [...nodos.values()];
@@ -94,7 +120,7 @@ export function armarGrafo(hechos = HECHOS, { agrupar = true, variables = VARIAB
 // `sale` es verdadero cuando la línea va de este nodo al otro (causa → efecto).
 export function vecinos(grafo, id) {
   return grafo.aristas.filter((e) => e.a === id || e.b === id)
-    .map((e) => ({ id: e.a === id ? e.b : e.a, tipo: e.tipo, donde: e.donde, vinculos: e.vinculos, sale: e.a === id }));
+    .map((e) => ({ id: e.a === id ? e.b : e.a, tipo: e.tipo, donde: e.donde, vinculos: e.vinculos, tesis: e.tesis, sale: e.a === id }));
 }
 
 // Posiciones iniciales en círculos por tema (deterministas: el mismo grafo siempre arranca igual).

@@ -8,6 +8,7 @@ Esta carpeta es una bóveda de Obsidian. Ábrela con «Abrir carpeta como bóved
 - Fuentes nuevas: una nota en `Fuentes/` con `origen: bóveda`, `cita` y `acceso` (enlace, handle o dónde está el documento).
 - Tesis: una nota en `Tesis/` por tesis, con relaciones, umbrales, fórmulas y datos. Cada línea termina con
   `pág. N | "frase textual"` y solo entra si la frase está en esa página del PDF (`Tesis/_verificacion.json`).
+  Una variable que Trofaxis no tiene (candidata) lleva su nombre en `## Variables nuevas`: `- id | Nombre en palabras`.
   Una tesis sirve como fuente de un vínculo con `[[clave]]`. `Tesis/_Resumen.md` junta lo que dicen todas.
 
 **Reglas (las revisan las pruebas)**
