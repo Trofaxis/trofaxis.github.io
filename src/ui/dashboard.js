@@ -14,7 +14,7 @@ import { conPlan } from '../fert/calculo.js';
 import { calcular } from '../riego/calculo.js';
 import { validar } from '../riego/reglas.js';
 import { panelMapa } from './mapa.js';
-import { pastillaPuntaje, estadoFuente, mas, ayuda, seccion, cabeza, cifras } from './components.js';
+import { pastillaPuntaje, estadoFuente, barraEvidenciaDe, barraEvidencia, mas, ayuda, seccion, cabeza, cifras } from './components.js';
 import { masMayorRiesgo, masModulosAlto, masMesCargado, masCoincidencias, masDatos, masGlobalgap, masPerfil } from './explicaciones.js';
 import { panelClima } from './clima.js';
 import { panelApiRadar } from './apiradar.js';
@@ -22,6 +22,7 @@ import { pasosFinca } from '../core/completitud.js';
 import { esquemaFinca, finca3d, leyendaFinca } from './finca3d.js';
 import { ruedaAnio } from './rueda.js';
 import { escalaIndice } from './indice.js';
+import { evidenciaGlobal } from '../core/evidencia.js';
 
 // Hallazgos del módulo Riego, solo si el usuario cargó o escribió sus propios datos (no el caso de ejemplo).
 export function extraRiego(){
@@ -31,10 +32,10 @@ export function extraRiego(){
 
 // Tabla de la rúbrica de un módulo: qué variable, con qué valor, qué puntaje, cuánto pesa y de dónde sale.
 function tablaRubrica(m,cfg){
-  return `<div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th></tr></thead><tbody>
+  return `${barraEvidenciaDe(m.variables)}<div class="scroll"><table class="data rubrica"><thead><tr><th>Variable</th><th>Valor</th><th class="num">Puntaje</th><th class="num">Peso</th></tr></thead><tbody>
     ${m.variables.filter(v=>v.aplica!==false).map(v=>`<tr><td>${esc(v.nombre)}<div>${estadoFuente(v.estado,v.fuente,`fuente-${m.id}-${v.id}`,S.abiertos[`fuente-${m.id}-${v.id}`])}</div></td><td>${esc(v.valor)}</td><td class="num">${pastillaPuntaje(v.puntaje,cfg)}</td><td class="num">${v.peso}</td></tr>`).join('')}
   </tbody></table></div>
-  <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar.</p>`;
+  <p class="muted small">Riesgo = Σ peso × puntaje ÷ Σ peso, solo con las variables que tienen dato. Pesos y cortes: criterio propio, por validar. «Con fuente» = la relación está en un documento citado; «Criterio propio» = regla de Trofaxis sin documento; «Hipótesis» = una fuente la menciona sin medirla.</p>`;
 }
 
 // Tarjeta del resumen con su «+» en la esquina: al abrirlo, la tarjeta ocupa todo el ancho y muestra el resumen.
@@ -126,6 +127,7 @@ export function viewDashboard(){
   const gg=f.gg!=='no';
   const anySim=Object.values(S.sim).some(Boolean);const RS=anySim?simular(f,S.sim,cfg,X):R;
   const lvO=nivel(R.overall,cfg);
+  const EV=evidenciaGlobal(mods,cfg.pesos);
   const pesoTotal=mods.reduce((s,m)=>s+(cfg.pesos[m.id]??0),0);
   const pesosTxt=mods.map(m=>`${m.nombre.toLowerCase()} ${Math.round((cfg.pesos[m.id]??0)/pesoTotal*100)} %`).join(', ');
   const notaIndice=`El índice promedia los módulos con datos suficientes (confianza de al menos ${Math.round((cfg.confianzaMinima??0)*100)} %); cada módulo es una rúbrica de variables con peso y fuente. Pesos por calibrar: ${pesosTxt}.${R.sinDatos?' Todavía ningún módulo tiene datos suficientes: responde el cuestionario para ver el índice.':R.parcial?` Hoy usa ${conDatos.length} de ${mods.length} módulos; faltan datos en ${mods.filter(m=>!m.suficiente).map(m=>m.nombre.toLowerCase()).join(', ')}.`:''}`;
@@ -151,6 +153,7 @@ export function viewDashboard(){
         ${kpi('mes','Mes más cargado',hotM.length?`${MFULL[hotM[0][0]][0].toUpperCase()+MFULL[hotM[0][0]].slice(1)} (${hotM[0][1]})`:'Ninguno',masMesCargado(R))}
         ${kpi('coinc','Meses con coincidencias',`${hotM.length} de 12`,masCoincidencias(R))}
         ${kpi('datos','Datos completos',`${Math.round(R.conf*100)} %`,masDatos(R))}
+        ${kpi('evid','Puntaje con fuente',`${EV.partes[0].pct} %`,`${barraEvidencia(EV)}<p class="small">Parte del índice que sale de relaciones con documento citado, ponderada por el peso de cada módulo. El resto es criterio propio o hipótesis, y así se marca en cada rúbrica. No es la confianza de tus datos: es qué tan probada está la regla que los convierte en riesgo.</p>`)}
         ${kpi('gg','GLOBALG.A.P.',f.gg==='si'?'Declarado: certificado':f.gg==='quiero'?'Declarado: en camino':'No aplica',masGlobalgap(f))}
       </div>
       <div><p class="label t-centro">Índice ambiental global</p>${R.sinDatos?gaugeSinDatos():gauge(R.overall,lvO)}</div>

@@ -9,6 +9,7 @@ import { armarGrafo, posicionesIniciales, paso, vecinos } from '../cerebro/grafo
 import { notasObsidian, zip } from '../cerebro/obsidian.js';
 import { VARIABLES, VINCULOS, SENTIDOS, pesoDe, resumenVinculos } from '../cerebro/vinculos.js';
 import { normalizar } from '../riego/referencias.js';
+import { TESIS } from '../cerebro/tesis.js';
 
 const ESTADO_CLASE = { 'con fuente': 'cb-fuente', 'criterio propio': 'cb-propio', 'por validar': 'cb-validar' };
 const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de', mecanismo: 'vínculo' };
@@ -29,7 +30,8 @@ const nombreVinculo = (v) => `${v.de.map((x) => VARIABLES[x].nombre).join(' + ')
 
 // Explorador: buscar o listar variables, vínculos (con sus hipótesis), fuentes y hechos, todo con el mismo filtro.
 // No es una IA: compara palabras sin tildes ni mayúsculas. «hipótesis» encuentra los vínculos por validar.
-export const TIPOS = { todo: 'Todo', variable: 'Variables', vinculo: 'Vínculos', fuente: 'Fuentes', hecho: 'Hechos' };
+export const TIPOS = { todo: 'Todo', variable: 'Variables', vinculo: 'Vínculos', fuente: 'Fuentes', tesis: 'Tesis', hecho: 'Hechos' };
+const LISTA = { variable: 'variables', vinculo: 'vinculos', fuente: 'fuentes', tesis: 'tesis', hecho: 'hechos' };
 const ESTADO_VINCULO = { 'por validar': 'hipótesis' };
 const palabras = (t) => normalizar(t).split(/\s+/).filter((p) => p.length > 1);
 const coincide = (ps, ...textos) => { const t = normalizar(textos.join(' ')); return ps.every((p) => t.includes(p)); };
@@ -52,7 +54,8 @@ export function explorar({ texto = '', tipo = 'todo', estado = null } = {}) {
     && coincide(ps, nombreVinculo(v), v.mecanismo, v.estado, ESTADO_VINCULO[v.estado] ?? '', v.contexto ?? '', v.nota ?? '', ...v.evidencia.map((e) => `${e.cita} ${e.nota ?? ''}`)));
   const fuentes = !quiere('fuente') || estado ? [] : FUENTES_TODAS.filter((f) => coincide(ps, f.cita));
   const hechos = !quiere('hecho') ? [] : (ps.length ? buscar(texto, { max: 500 }) : HECHOS).filter((h) => !estado || h.estado === estado);
-  return { variables, vinculos, fuentes, hechos };
+  const tesis = !quiere('tesis') || estado ? [] : TESIS.tesis.filter((x) => coincide(ps, x.cita, x.tema, x.cultivo, x.lugar, ...x.items.map((it) => `${it.de ?? ''} ${it.a ?? ''} ${it.resultado ?? ''} ${it.variable ?? ''} ${it.umbral ?? ''} ${it.nombre ?? ''} ${it.dato ?? ''} ${it.valor ?? ''} ${it.cita}`)));
+  return { variables, vinculos, fuentes, tesis, hechos };
 }
 const activo = () => G.texto.trim() || G.tipo !== 'todo' || G.estado;
 
@@ -122,7 +125,7 @@ function filtros() {
       ${rv.conflicto ? `<span class="pill cb-conflicto">${rv.conflicto} en conflicto</span>` : ''}
     </div>
     <div class="row cb-tipos" role="group" aria-label="Qué buscar">
-      ${Object.entries(TIPOS).map(([t, n]) => filtroBtn(t, null, t === 'todo' ? n : `${n} (${todo[t === 'vinculo' ? 'vinculos' : t === 'variable' ? 'variables' : t === 'fuente' ? 'fuentes' : 'hechos'].length})`, 'cb-tipo')).join('')}
+      ${Object.entries(TIPOS).map(([t, n]) => filtroBtn(t, null, t === 'todo' ? n : `${n} (${todo[LISTA[t]].length})`, 'cb-tipo')).join('')}
     </div>`;
 }
 
@@ -131,7 +134,7 @@ const recorta = (a, f) => `${a.slice(0, MAX).map(f).join('')}${a.length > MAX ? 
 function resultados() {
   if (!activo()) return '<p class="muted small">Toca un conteo o un tipo para ver la lista, o escribe para buscar. Toca cualquier resultado para verlo en el grafo.</p>';
   const r = explorar({ texto: G.texto, tipo: G.tipo, estado: G.estado });
-  const n = r.variables.length + r.vinculos.length + r.fuentes.length + r.hechos.length;
+  const n = r.variables.length + r.vinculos.length + r.fuentes.length + r.tesis.length + r.hechos.length;
   const que = [G.tipo !== 'todo' ? TIPOS[G.tipo].toLowerCase() : '', G.estado ? `«${ESTADO_VINCULO[G.estado] && G.tipo === 'vinculo' ? ESTADO_VINCULO[G.estado] : G.estado}»` : '', G.texto.trim() ? `con «${G.texto.trim()}»` : ''].filter(Boolean).join(' ');
   const cab = `<div class="row between cb-res-cab"><p class="small"><b>${n} resultado${n === 1 ? '' : 's'}</b>${que ? ` · ${esc(que)}` : ''}</p><button type="button" class="btn sm" data-cb-limpiar>Limpiar</button></div>`;
   if (!n) return `${cab}<p class="muted small">Nada coincide. El cerebro solo busca palabras: no responde preguntas libres.</p>`;
@@ -140,6 +143,7 @@ function resultados() {
     ${grupo('Vínculos', r.vinculos, (v) => `<li><button type="button" class="cb-item" data-cb-vinculo="${esc(v.id)}"><span>${esc(nombreVinculo(v))}</span><span class="small muted">${esc(v.mecanismo)}</span></button>${pillV(v.estado)}${pesoDe(v) ? ` <span class="small muted">peso ${pesoDe(v)}</span>` : ''}</li>`)}
     ${grupo('Variables', r.variables, (id) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(id)}"><span>${esc(VARIABLES[id].nombre)}</span><span class="small muted">${VINCULOS.filter((v) => v.de.includes(id) || v.a === id).length} vínculos</span></button></li>`)}
     ${grupo('Fuentes', r.fuentes, (f) => `<li><button type="button" class="cb-item" data-cb-fuente="${esc(f.cita)}"><span>${esc(f.cita)}</span><span class="small muted">${f.hechos.length} hechos · ${f.vinculos.length} vínculos</span></button></li>`)}
+    ${grupo('Tesis leídas', r.tesis, (x) => `<li><button type="button" class="cb-item" data-cb-tesis="${esc(x.clave)}"><span>${esc(x.cita)}</span><span class="small muted">${esc(x.tema)} · ${x.items.length} líneas verificadas</span></button></li>`)}
     ${grupo('Hechos', r.hechos, (h) => `<li><button type="button" class="cb-item" data-cb-ir="${esc(h.id)}"><span>${esc(h.titulo)}</span><span class="small muted">${esc(String(h.valor))} ${esc(h.unidad ?? '')}</span></button>${pill(h.estado)}</li>`)}
   </div>`;
 }
@@ -149,6 +153,20 @@ function detalleFuente(f) {
   return `<p class="muted small">Fuente</p><h3>${esc(f.cita)}</h3>${f.url ? `<p><a href="${esc(f.url)}" target="_blank" rel="noopener">Abrir la fuente</a></p>` : ''}
     ${f.vinculos.length ? `<h4>Vínculos que la citan (${f.vinculos.length})</h4><ul class="cb-vecinos">${f.vinculos.map(fichaVinculo).join('')}</ul>` : ''}
     ${f.hechos.length ? `<h4>Hechos (${f.hechos.length})</h4><ul class="cb-vecinos">${f.hechos.slice(0, 60).map((h) => `<li><button type="button" class="btn sm cb-ir" data-cb-ir="${esc(h.id)}">${esc(h.titulo)}</button></li>`).join('')}</ul>` : ''}`;
+}
+// Detalle de una tesis leída: cada línea con su página y la frase textual que la respalda.
+const SENTIDO_TESIS = { '+': 'sube', '−': 'baja', '0': 'sin efecto significativo', '?': 'no se sabe', '+ n.s.': 'tiende a subir (no significativo)', '− n.s.': 'tiende a bajar (no significativo)' };
+const nombreTesisVar = (id) => (VARIABLES[id] ? VARIABLES[id].nombre : `${id} (candidata)`);
+export function detalleTesis(x) {
+  const frase = (it) => `<p class="small muted">«${esc(it.cita)}» · pág. ${esc(it.pagina)} del PDF · ${esc(it.coincidencia)}</p>`;
+  const sec = (titulo, s, f) => { const its = x.items.filter((it) => it.seccion === s); return its.length ? `<h4>${titulo} (${its.length})</h4><ul class="cb-vecinos">${its.map((it) => `<li>${f(it)}${frase(it)}</li>`).join('')}</ul>` : ''; };
+  return `<p class="muted small">Tesis leída · ${esc(x.tema)}${x.cultivo ? ` · ${esc(x.cultivo)}` : ''}${x.lugar ? ` · ${esc(x.lugar)}` : ''}</p><h3>${esc(x.cita)}</h3>
+    <p class="small">Cada línea trae la frase de la tesis y su página; un programa comprobó que la frase está en esa página. Nada de esto cambia un puntaje por sí solo.</p>
+    ${sec('Relaciones entre variables', 'Relaciones', (it) => `<b>${esc(nombreTesisVar(it.de))} → ${esc(nombreTesisVar(it.a))}:</b> ${esc(SENTIDO_TESIS[it.sentido] ?? it.sentido)} <span class="pill">${esc(it.base)}</span><br><span class="small">${esc(it.resultado)}</span>`)}
+    ${sec('Umbrales', 'Umbrales', (it) => `<b>${esc(nombreTesisVar(it.variable))}:</b> <span class="small">${esc(it.umbral)}</span>`)}
+    ${sec('Fórmulas', 'Fórmulas', (it) => `<b>${esc(it.nombre)}:</b> <span class="small">${esc(it.formula)}</span>`)}
+    ${sec('Datos', 'Datos', (it) => `<b>${esc(it.dato)}:</b> <span class="small">${esc(it.valor)}</span>`)}
+    ${x.alertas.length ? `<h4>Alertas</h4><ul class="cb-vecinos">${x.alertas.map((a) => `<li class="small">${esc(a)}</li>`).join('')}</ul>` : ''}`;
 }
 const detalleVinculo = (v) => `<p class="muted small">Vínculo</p><h3>${esc(nombreVinculo(v))}</h3><ul class="cb-vecinos">${fichaVinculo(v)}</ul>`;
 
@@ -365,6 +383,8 @@ export function montarCerebro(raiz = document) {
     if (e.target.closest('[data-cb-limpiar]')) { G.texto = ''; G.tipo = 'todo'; G.estado = null; if (entrada) entrada.value = ''; refrescar(); return; }
     const v = e.target.closest('[data-cb-vinculo]');
     if (v) { const x = VINCULOS.find((y) => y.id === v.dataset.cbVinculo); seleccionar(x.de[0], true); detalleEl.innerHTML = detalleVinculo(x); return; }
+    const ts = e.target.closest('[data-cb-tesis]');
+    if (ts) { const x = TESIS.tesis.find((y) => y.clave === ts.dataset.cbTesis); seleccionar(null); detalleEl.innerHTML = detalleTesis(x); detalleEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     const f = e.target.closest('[data-cb-fuente]');
     if (f) { const x = FUENTES_TODAS.find((y) => y.cita === f.dataset.cbFuente); seleccionar(null); detalleEl.innerHTML = detalleFuente(x); detalleEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     const b = e.target.closest('[data-cb-ir]'); if (b) seleccionar(b.dataset.cbIr, true);

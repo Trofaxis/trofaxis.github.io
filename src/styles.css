@@ -220,6 +220,11 @@ pre.formula{white-space:pre-wrap;overflow-x:auto}
 /* Rúbrica por módulo */
 table.rubrica{font-size:13px}
 table.rubrica td{padding:6px 4px}
+.evidencia{margin:4px 0 10px}
+.ev-barra{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--chip);margin-top:4px}
+.ev-barra span{display:block;height:100%}
+.ev-barra .ev-fuente{background:var(--good)}.ev-barra .ev-criterio{background:var(--pollen)}.ev-barra .ev-hipotesis{background:var(--crit)}
+.evidencia .ev-fuente{color:var(--good)}.evidencia .ev-criterio{color:var(--pollen)}.evidencia .ev-hipotesis{color:var(--crit)}
 .estado{font-size:12px;font-weight:600;margin-top:2px;color:var(--muted)}
 .estado.verificado{color:var(--good)}
 .estado.criterio-propio{color:var(--pollen)}

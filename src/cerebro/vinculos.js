@@ -11,9 +11,8 @@
 //   usadoEn   → dónde actúa: { modulo, variable, archivo } si entra a una rúbrica, o { aviso, archivo } si solo avisa.
 //   validado  → { por, fecha } cuando un especialista lo revise; null mientras tanto.
 import { CONFIG } from '../core/config.js';
-import { FUENTES as FUENTES_ECO } from '../core/fuentes.js';
-import { FUENTES_PLAG } from '../plag/calculo.js';
 import { ESTADOS } from './hechos.js';
+import { BOVEDA } from './boveda.js';
 
 export const SENTIDOS = { '+': 'sube', '−': 'baja', '?': 'dirección desconocida' };
 export const POSTURAS = ['a favor', 'en contra', 'menciona'];
@@ -53,88 +52,81 @@ export const VARIABLES = {
   'riesgo.lixiviacion': { nombre: 'Plaguicida que llega al agua subterránea', tema: 'plaguicidas', hechos: [], efecto: true },
 };
 
-const K = { cita: FUENTES_ECO.kuniyoshi.cita }, O = { cita: FUENTES_ECO.osorio.cita };
 const SPATHODEA = 'Spathodea campanulata en el campus de Zamorano';
 const rubrica = (modulo, variable, archivo) => ({ modulo, variable, archivo });
 
-export const VINCULOS = [
+// Estructura de cada vínculo (qué variables, mecanismo, dónde actúa). El estado, la evidencia y la validación
+// vienen de la bóveda de Obsidian (cerebro/Vínculos/<id>.md) a través de src/cerebro/boveda.js; ver scripts/cerebro.mjs.
+export const VINCULOS_CODIGO = [
   // Fertilización, suelo y agua: la lluvia y la pendiente mueven lo que se aplica.
   { id: 'fert-lluvia', de: ['fert.meses', 'clima.mesesLluvia'], a: 'riesgo.fert', sentido: '+',
     mecanismo: 'La lluvia fuerte arrastra por escorrentía el fertilizante recién aplicado, antes de que el cultivo lo absorba.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('fert', 'lluvia', 'src/modules/fertilizacion.js') },
+    usadoEn: rubrica('fert', 'lluvia', 'src/modules/fertilizacion.js') },
   { id: 'suelo-desnudo-lluvia', de: ['suelo.desnudoMeses', 'clima.mesesLluvia'], a: 'riesgo.suelo', sentido: '+',
     mecanismo: 'Sin cobertura, la lluvia golpea el suelo y lo erosiona.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('suelo', 'sueloDesnudoLluvia', 'src/modules/suelo.js') },
+    usadoEn: rubrica('suelo', 'sueloDesnudoLluvia', 'src/modules/suelo.js') },
   { id: 'suelo-fert-desnudo', de: ['fert.meses', 'suelo.desnudoMeses', 'clima.mesesLluvia'], a: 'riesgo.suelo', sentido: '+',
     mecanismo: 'Sin cobertura, la lluvia erosiona el suelo y arrastra el fertilizante recién aplicado.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('suelo', 'fertSueloDesnudo', 'src/modules/suelo.js') },
+    usadoEn: rubrica('suelo', 'fertSueloDesnudo', 'src/modules/suelo.js') },
   { id: 'agua-fertirriego', de: ['fert.fertirriego', 'riego.escorrentia'], a: 'riesgo.agua', sentido: '+',
     mecanismo: 'En fertirriego el fertilizante va disuelto en el agua: si el goteo aplica más de lo que el suelo infiltra, el agua escurre y se lo lleva.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('agua', 'fertirriegoEscorrentia', 'src/modules/agua.js') },
+    usadoEn: rubrica('agua', 'fertirriegoEscorrentia', 'src/modules/agua.js') },
   { id: 'fert-pendiente', de: ['finca.pendiente'], a: 'riesgo.fert', sentido: '+',
     mecanismo: 'Con más pendiente, el agua corre más rápido y arrastra más fertilizante.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('fert', 'pendiente', 'src/modules/fertilizacion.js') },
+    usadoEn: rubrica('fert', 'pendiente', 'src/modules/fertilizacion.js') },
   { id: 'suelo-pendiente', de: ['finca.pendiente'], a: 'riesgo.suelo', sentido: '+',
     mecanismo: 'Con más pendiente, la escorrentía tiene más fuerza y erosiona más.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('suelo', 'pendiente', 'src/modules/suelo.js') },
+    usadoEn: rubrica('suelo', 'pendiente', 'src/modules/suelo.js') },
   { id: 'fert-distancia', de: ['finca.distAgua'], a: 'riesgo.fert', sentido: '−',
     mecanismo: 'Cuanto más lejos está el cuerpo de agua, menos fertilizante arrastrado llega a él.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('fert', 'distancia', 'src/modules/fertilizacion.js') },
+    usadoEn: rubrica('fert', 'distancia', 'src/modules/fertilizacion.js') },
   { id: 'agua-distancia', de: ['finca.distAgua'], a: 'riesgo.agua', sentido: '−',
     mecanismo: 'Cuanto más lejos está el cuerpo de agua, menos agua de la finca, con lo que arrastra, llega a él.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('agua', 'distancia', 'src/modules/agua.js') },
+    usadoEn: rubrica('agua', 'distancia', 'src/modules/agua.js') },
   { id: 'agua-sistema', de: ['riego.sistema'], a: 'riesgo.agua', sentido: '−',
     mecanismo: 'Con más eficiencia de aplicación se pierde menos del agua aplicada: goteo 90 %, aspersión 75 %, superficie 60 %.',
-    estado: 'con fuente', evidencia: [{ cita: 'FAO, eficiencia de aplicación (Training Manual 4, Tabla 8)', postura: 'a favor', nota: 'Pasar la eficiencia a 0, 50 y 100 puntos es criterio propio.' }],
     usadoEn: rubrica('agua', 'sistema', 'src/modules/agua.js') },
   { id: 'lixiviacion-gus', de: ['plag.gus', 'plag.alSuelo', 'clima.mesesLluvia'], a: 'riesgo.lixiviacion', sentido: '+',
     mecanismo: 'Un producto móvil aplicado al suelo o por el riego puede bajar con la lluvia o un riego excesivo hasta el agua subterránea.',
-    estado: 'criterio propio', evidencia: [{ cita: FUENTES_PLAG.gus.cita, postura: 'a favor', nota: 'Solo el potencial de lixiviación del producto. La suma con la lluvia y el umbral de lámina no están verificados.' }],
     usadoEn: { aviso: 'Producto móvil aplicado al suelo', archivo: 'src/plag/calculo.js' } },
 
   // Polinizadores: lo que expone a las abejas en la floración (Kuniyoshi y Osorio, PEG Zamorano).
   { id: 'poli-coincidencia', de: ['plag.meses', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Aplicar cuando las abejas visitan las flores las expone al producto.',
-    estado: 'criterio propio', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la exposición a agroquímicos como un factor que no midió (Limitaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'coincidencia', 'src/modules/polinizadores.js') },
   { id: 'poli-hq', de: ['plag.hq', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'HQ = dosis ÷ DL50 por contacto: si supera el umbral, la dosis aplicada en floración puede matar abejas por contacto.',
-    estado: 'con fuente', evidencia: [
-      { cita: FUENTES_PLAG.fao.cita, postura: 'a favor', nota: 'Umbrales de 42 y 85.' },
-      { cita: FUENTES_PLAG.ppdb.cita, postura: 'a favor', nota: 'DL50 de cada ingrediente.' },
-      { cita: FUENTES_PLAG.arena.cita, postura: 'a favor', nota: 'Margen ×10 para abejas sin aguijón: derivación, no norma.' },
-    ], usadoEn: rubrica('poli', 'claseEnFloracion', 'src/modules/polinizadores.js') },
+    usadoEn: rubrica('poli', 'claseEnFloracion', 'src/modules/polinizadores.js') },
   { id: 'poli-abundancia', de: ['poli.abundanciaRiesgo'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Más volumen de copa daría más flores de la especie de riesgo y, con ellas, más abejas muertas bajo los árboles.',
-    estado: 'por validar', evidencia: [
-      { ...O, postura: 'menciona', nota: 'Espera más floración con más volumen de copa, sin medirlo (pág. 27).' },
-      { ...K, postura: 'menciona', nota: 'Midió flores visibles en copas cercanas, no volumen de copa: pendiente 0,077 y R² = 0,2147, con Spearman no significativa (p > 0,05). La autora dice que no se puede afirmar una asociación consistente (Resultados, Figura 10). Cita a Tejeda et al. (2025) con una relación más fuerte usando flores caídas.' },
-    ],
     contexto: SPATHODEA, nota: 'Hipótesis que ya suma al puntaje. Para validarla hay que contar flores y abejas muertas por árbol junto con su volumen de copa (Osorio, Ec. 3).',
     usadoEn: rubrica('poli', 'abundanciaRiesgo', 'src/modules/polinizadores.js') },
   { id: 'poli-sin-alternativas', de: ['poli.floracionRiesgo', 'poli.sinOtrasFlores'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Sin otras flores disponibles, las abejas dependen más de la especie de riesgo.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Señala la disponibilidad de otras especies en floración como un factor que no midió (Limitaciones y Recomendaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'alternativas', 'src/modules/polinizadores.js') },
   { id: 'poli-agua-seca', de: ['poli.floracionRiesgo', 'clima.mesesSecos'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'En época seca las abejas podrían buscar el líquido que se acumula en la corola de la especie de riesgo.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Menciona la disponibilidad de agua y la acumulación de líquidos en la corola como posibles factores (Introducción).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'aguaSeca', 'src/modules/polinizadores.js') },
   { id: 'poli-foliar', de: ['fert.foliar', 'poli.floracionVisitada'], a: 'riesgo.poli', sentido: '+',
     mecanismo: 'Un producto foliar aplicado en floración puede llegar a las flores que visitan las abejas.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Cita la exposición a agroquímicos sin medirla (Limitaciones).' }],
     contexto: SPATHODEA, usadoEn: rubrica('poli', 'foliarEnFloracion', 'src/modules/polinizadores.js') },
   { id: 'poli-clima', de: ['clima.floracion', 'poli.floracionRiesgo'], a: 'riesgo.poli', sentido: '?',
     mecanismo: 'La temperatura, la humedad y la lluvia durante la floración podrían influir en la muerte de abejas; no se sabe en qué dirección.',
-    estado: 'por validar', evidencia: [{ ...K, postura: 'menciona', nota: 'Los menciona como factores que no midió (Limitaciones y Recomendaciones).' }],
     contexto: SPATHODEA, nota: 'Solo informa: peso 0 hasta que se mida su efecto.',
     usadoEn: rubrica('poli', 'climaFloracion', 'src/modules/polinizadores.js') },
 
   // Cadenas tróficas.
   { id: 'troficas-amplio-plaga', de: ['plag.amplio', 'plagas.meses'], a: 'riesgo.troficas', sentido: '+',
     mecanismo: 'Un producto de amplio espectro aplicado cuando hay plaga mata también a los enemigos naturales que la controlan.',
-    estado: 'criterio propio', evidencia: [], usadoEn: rubrica('troficas', 'amplioEnPlaga', 'src/modules/troficas.js') },
+    usadoEn: rubrica('troficas', 'amplioEnPlaga', 'src/modules/troficas.js') },
 ];
+
+// Vínculos completos: la estructura del código más el estado, la evidencia y la validación de la bóveda.
+// Un vínculo sin nota en la bóveda queda sin estado y la prueba lo marca.
+export const VINCULOS = VINCULOS_CODIGO.map((v) => {
+  const b = BOVEDA.vinculos[v.id];
+  return { ...v, estado: b?.estado, evidencia: b?.evidencia ?? [], validado: b?.validado ?? null };
+});
 
 // Peso con el que el vínculo suma al índice: el de su variable en la rúbrica; 0 si solo avisa.
 export const pesoDe = (v, cfg = CONFIG) => (v.usadoEn?.modulo ? cfg.rubrica[v.usadoEn.modulo]?.[v.usadoEn.variable]?.peso ?? 0 : 0);

@@ -59,7 +59,7 @@ export function notasObsidian(grafo = armarGrafo()) {
   });
   notas.unshift({ ruta: `${CARPETA}/Léeme.md`, contenido: ['# Cerebro de Trofaxis', '',
     'Exportado desde la app. Cada nota es un hecho, una variable de la finca, un tema o una fuente; las líneas del grafo de Obsidian son los enlaces entre notas. Los vínculos entre variables (qué afecta a qué y por qué) están en las notas de Variables.',
-    'Editar estas notas no cambia la app: los valores viven en el código de Trofaxis.', '',
+    'Esta descarga es una copia para mirar. Para cambiar el estado o la evidencia de un vínculo, edita la bóveda cerebro/ del repositorio (ver cerebro/Léeme.md); los valores numéricos viven en el código de Trofaxis.', '',
     ...Object.keys(TEMAS).map((t) => `- ${enl('tema:' + t)}`), ''].join('\n') });
   return notas;
 }
