@@ -46,6 +46,15 @@ export function instalarDOM() {
         return null;
       } } });
     },
+    // Un clic sobre un control con varios data-* (p. ej. data-act y data-step a la vez): closest responde
+    // como el navegador para selectores de atributo ([data-x], [data-x="v"]) separados por comas.
+    clicControl(datos) {
+      const control = { dataset: { ...datos }, disabled: false };
+      const casa = (sel) => sel.split(',').some((s) => { const m = s.trim().match(/^\[data-([a-z-]+)(?:="([^"]*)")?\]$/);
+        if (!m) return false; const k = m[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        return k in control.dataset && (m[2] === undefined || control.dataset[k] === m[2]); });
+      emitir('click', { target: { closest: (sel) => (casa(sel) ? control : null) } });
+    },
     // Un clic sobre una pestaña (data-view).
     irA(vista) { emitir('click', { target: { closest: (sel) => (sel === '[data-view]' ? { dataset: { view: vista } } : null) } }); },
     escribir(id, value) { emitir('input', { target: { id, value, dataset: {} } }); },
