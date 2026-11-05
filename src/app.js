@@ -515,7 +515,8 @@ document.addEventListener('click',e=>{
   // Secciones plegables con data-keep: se recuerda lo que el usuario abrió o cerró (el navegador hace el cambio).
   const su=e.target.closest('summary');if(su&&su.parentElement.dataset.keep){S.abiertos[su.parentElement.dataset.keep]=!su.parentElement.open;return;}
   const v=e.target.closest('[data-view]');if(v){if(S.climaUI.estado==='ok')S.climaUI={estado:'',msg:'',llenos:[]};S.view=v.dataset.view;render();window.scrollTo(0,0);return;}
-  const st=e.target.closest('[data-step]');if(st){S.step=+st.dataset.step;render();return;}
+  // Pestañas del cuestionario. Un botón con data-act y data-step (el «Completar» del dashboard) va a su acción.
+  const st=e.target.closest('[data-step]');if(st&&!st.dataset.act){S.step=+st.dataset.step;render();return;}
   const ap=e.target.closest('[data-arplan]');if(ap){S.arExcluir[ap.dataset.arplan]=!S.arExcluir[ap.dataset.arplan];render();return;}
   const sm=e.target.closest('[data-sim]');if(sm&&!sm.disabled){S.sim[sm.dataset.sim]=!S.sim[sm.dataset.sim];render();return;}
   const mb=e.target.closest('[data-month]');if(mb){S.plagMsg=null;const[o,k]=getRef(mb.dataset.path);const i=+mb.dataset.month;o[k]=o[k].includes(i)?o[k].filter(x=>x!==i):uniq([...o[k],i]);render();return;}

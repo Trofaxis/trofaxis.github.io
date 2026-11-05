@@ -7,7 +7,7 @@ import { instalarDOM } from './dom-falso.js';
 
 const app = fs.readFileSync('src/app.js', 'utf8');
 const dom = instalarDOM();
-const { S, demoFarm } = await import('../src/core/state.js');
+const { S, demoFarm, emptyFarm } = await import('../src/core/state.js');
 await import('../src/app.js');
 
 function archivos(dir) {
@@ -56,4 +56,18 @@ test('las acciones que suben al inicio de la página siguen siendo las mismas', 
   assert.ok(m);
   assert.deepEqual([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort(), ['bv-atras', 'bv-cuestionario', 'bv-saltar', 'bv-saltar-cuestionario', 'bv-siguiente', 'bv-ver',
     'finish', 'load-demo', 'next', 'prev', 'rapido-ir', 'rapido-listo', 'reset-yes', 'start-empty', 'wiz-modo', 'wiz-paso']);
+});
+
+// «Completar» del dashboard (tarjeta «Te faltan N de 8 pasos»): lleva data-act="wiz-paso" y data-step.
+// Antes lo atrapaba el manejador de pestañas del cuestionario (data-step): cambiaba el paso sin abrir el cuestionario.
+test('«Completar» de un paso abre el cuestionario completo en ese paso', () => {
+  S.farm = emptyFarm(); S.demo = false; S.view = 'dashboard'; S.step = 0; S.wizModo = 'rapido';
+  dom.clicControl({ act: 'wiz-paso', step: '2' });
+  assert.equal(S.view, 'wizard');
+  assert.equal(S.wizModo, 'completo');
+  assert.equal(S.step, 2);
+  // Las pestañas del cuestionario (solo data-step) siguen cambiando de paso sin salir de él.
+  dom.clicControl({ step: '4' });
+  assert.equal(S.view, 'wizard');
+  assert.equal(S.step, 4);
 });
