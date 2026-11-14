@@ -12,10 +12,20 @@ import { cargarUbicacion, guardarUbicacion, borrarUbicacion, ubicacionVacia, exp
 import { pedirClima } from './clima.js';
 import { mapaRiesgoDe } from './mapariesgo.js';
 import { descargarImagenPlan } from './plan-imagen.js';
+import { centroide, loteEn, siguienteIdLote, puntoClima, lugarClima, resumenLote } from '../mapa/lotes.js';
+import { obtenerAhora } from '../clima/ahora.js';
+import { conPlan } from '../fert/calculo.js';
+import { tarjetaClima, tarjetaLote, listaLotes } from './lotes.js';
 
 const C = CONFIG.mapa, C_AR = CONFIG.apiradar;
 let U = cargarUbicacion();
-let modo = 'ver'; // ver | punto | contorno | sitio
+let modo = 'ver'; // ver | punto | contorno | sitio | lote
+// Vista de lotes: el mismo mapa, más grande, con los lotes y sus tarjetas encima. `variante` dice qué bloque se dibujó.
+let variante = 'finca'; // finca (Inicio) | lotes (Mi finca › Lotes)
+let optsLotes = {};
+let borrador = []; // vértices del lote que se está dibujando
+let loteSel = null;
+let climaAhora = { estado: '', clave: '' };
 let msg = '';
 let fallas = 0;
 let zonaUtm = 16; // zona UTM con la que se leen las coordenadas de los árboles (16 N: oeste de Honduras; 17 N: este)
@@ -25,11 +35,13 @@ let textoArboles = '';
 export const ubicacionActual = () => U;
 
 // Al empezar otra finca o borrar los datos, la ubicación anterior se borra también.
-export function reiniciarMapa() { borrarUbicacion(); U = ubicacionVacia(); modo = 'ver'; msg = ''; S.climaUI = { estado: '', msg: '', llenos: [] }; }
+export function reiniciarMapa() { borrarUbicacion(); U = ubicacionVacia(); modo = 'ver'; msg = ''; borrador = []; loteSel = null; climaAhora = { estado: '', clave: '' }; S.climaUI = { estado: '', msg: '', llenos: [] }; }
 
 const fmt = (x) => x.toFixed(5);
 
 export function panelMapa() {
+  variante = 'finca';
+  if (modo === 'lote') { modo = 'ver'; borrador = []; }
   const b = (m, t, extra = '', cls = '') => `<button type="button" class="btn sm${cls}" data-mapa="${m}" ${extra}>${t}</button>`;
   return `<div class="mapa-bloque">
     <div><h3>Mapa de la finca</h3><p class="muted small">Imagen satelital Sentinel-2 (~10 m por píxel): sirve para ubicar la finca y dibujar su contorno, no para medir con precisión. Las coordenadas se guardan en este dispositivo (en este navegador) y no se suben a internet: no van en el archivo exportado ni en la memoria de casos.</p></div>
@@ -84,7 +96,42 @@ export function panelMapa() {
   </div>`;
 }
 
+// Bloque de la vista de lotes: mapa grande con la tarjeta del clima de ahora y la del lote elegido encima.
+// opts.riesgo: { texto } del índice de la finca (lo calcula la vista, que conoce los datos de riego).
+export function panelLotesMapa(opts = {}) {
+  variante = 'lotes'; optsLotes = opts;
+  if (!['ver', 'lote'].includes(modo)) modo = 'ver';
+  if (loteSel && !U.lotes.some((l) => l.id === loteSel)) loteSel = null;
+  const b = (m, t, extra = '', cls = '') => `<button type="button" class="btn sm${cls}" data-mapa="${m}" ${extra}>${t}</button>`;
+  const lote = U.lotes.find((l) => l.id === loteSel);
+  const mes = new Date().getMonth();
+  const tarjeta = lote ? tarjetaLote(lote, resumenLote(lote, conPlan(S.farm), mes), { mes, cultivos: (S.farm.cultivos ?? []).map((c) => c.nombre).filter(Boolean), riesgo: opts.riesgo }) : '';
+  return `<div class="mapa-bloque lotes-bloque">
+    ${S.demo ? '<p class="muted small"><b>Ejemplo:</b> la finca demostrativa es ficticia y no tiene lotes. Puedes probar dibujando cualquiera.</p>' : ''}
+    <div class="lotes-escena">
+      <div class="mapa mapa-grande" id="mapa-finca" tabindex="0" role="application" aria-label="Mapa satelital con los lotes. Toca un lote para ver su tarjeta. Flechas para mover, + y − para acercar o alejar." data-modo="${modo}"></div>
+      <div class="lotes-sobre lotes-arriba" id="lotes-clima" aria-live="polite">${tarjetaClima(climaAhora)}</div>
+      ${tarjeta ? `<div class="lotes-sobre lotes-abajo">${tarjeta}</div>` : ''}
+    </div>
+    <div class="row mapa-ctrl">
+      ${modo === 'lote' ? b('lote-deshacer', 'Deshacer punto') + b('lote-terminar', 'Terminar lote', '', ' primary') + b('lote-cancelar', 'Cancelar')
+        : b('modo-lote', 'Dibujar lote', U.lotes.length >= C.maxLotes ? 'disabled' : '', ' primary')}
+      ${b('gps', 'Mi ubicación')}
+    </div>
+    <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
+    ${listaLotes(U.lotes, loteSel)}
+    <p class="muted small">Los lotes se guardan en este dispositivo, igual que el mapa: no se suben a la nube ni van en el archivo de la finca. Para el clima de ahora se envía a Open-Meteo el centro del lote redondeado a ~1 km. Imagen satelital Sentinel-2 de ${esc(C.capa.atribucion.match(/data (\d{4})/)?.[1] ?? 'un año fijo')}: no es la de hoy.</p>
+  </div>`;
+}
+
 function infoHtml() {
+  if (variante === 'lotes') {
+    const ayudaL = modo === 'lote'
+      ? `Toca cada esquina del lote en orden (${borrador.length} punto(s)${borrador.length < 3 ? `, faltan ${3 - borrador.length}` : ''}). Pulsa «Terminar lote» al acabar.`
+      : 'Toca un lote para ver su tarjeta. Arrastra para moverte; Ctrl + rueda o los botones + y − para acercar.';
+    return `<p class="muted">${ayudaL}</p>${msg ? `<p class="mapa-msg">${esc(msg)}</p>` : ''}
+      ${fallas ? '<p class="mapa-aviso">No se pudo cargar parte de la imagen satelital (sin internet o el servicio no responde). Puedes seguir dibujando los lotes.</p>' : ''}`;
+  }
   const ayuda = { punto: 'Toca el mapa donde está la finca.', sitio: 'Toca el mapa donde pondrías un meliponario o un hotel de insectos. La app te dirá si queda lejos de los árboles de riesgo.', contorno: 'Toca cada esquina de la finca en orden. Pulsa Terminar al acabar.', ver: 'Arrastra para moverte. Ctrl + rueda o los botones + y − para acercar.' }[modo];
   const a = areaHa(U.contorno);
   const avisos = avisosMapa(U, S.farm.area);
@@ -125,7 +172,13 @@ function dibujar(el) {
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   const pts = U.contorno.map(xy);
   const cerrado = pts.length >= 3 && modo !== 'contorno';
-  svg.innerHTML = `${pts.length >= 2 ? `<${cerrado ? 'polygon' : 'polyline'} class="mapa-contorno" points="${pts.map((p) => p.join(',')).join(' ')}"/>` : ''}
+  const lotes = U.lotes.map((l, i) => {
+    const ps = l.contorno.map(xy), [cx, cy] = xy(centroide(l.contorno));
+    return `<g class="lote lote-c${i % 6}${l.id === loteSel ? ' sel' : ''}"><polygon points="${ps.map((p) => p.join(',')).join(' ')}"/>${variante === 'lotes' ? `<text x="${cx}" y="${cy}">${esc(l.nombre)}</text>` : ''}</g>`;
+  }).join('');
+  const bps = modo === 'lote' ? borrador.map(xy) : [];
+  const borr = bps.length ? `${bps.length >= 2 ? `<polyline class="lote-borrador" points="${bps.map((p) => p.join(',')).join(' ')}"/>` : ''}${bps.map((p) => `<circle class="mapa-vertice" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join('')}` : '';
+  svg.innerHTML = `${lotes}${borr}${pts.length >= 2 ? `<${cerrado ? 'polygon' : 'polyline'} class="mapa-contorno" points="${pts.map((p) => p.join(',')).join(' ')}"/>` : ''}
     ${modo === 'contorno' ? pts.map((p) => `<circle class="mapa-vertice" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join('') : ''}
     ${arbolesSvg(xy, lat, zoom)}
     ${U.punto ? (() => { const [x, y] = xy(U.punto); return `<g class="mapa-punto" transform="translate(${x},${y})"><circle r="9"/><circle r="3.5" class="centro"/></g>`; })() : ''}`;
@@ -177,11 +230,24 @@ function zoomEn(el, dz, ox = el.clientWidth / 2, oy = el.clientHeight / 2) {
 }
 
 function tocar(el, ox, oy) {
-  if (modo === 'ver') return;
+  if (modo === 'ver' && variante !== 'lotes') return;
   const { lat, lon, zoom } = U.vista, c = aPixel(lat, lon, zoom);
   const g = aGrados(c.x + ox - el.clientWidth / 2, c.y + oy - el.clientHeight / 2, zoom);
   const p = [+g.lat.toFixed(6), +g.lon.toFixed(6)];
   msg = '';
+  if (modo === 'ver') {
+    // El lote tocado queda al centro, para que la tarjeta (a la derecha en escritorio) no lo tape.
+    const l = loteEn(p, U.lotes); loteSel = l?.id ?? null;
+    if (l) { const [la, lo] = centroide(l.contorno); U.vista = { ...U.vista, lat: la, lon: lo }; }
+    rerender();
+    // En el teléfono la tarjeta queda debajo del mapa: se acerca a la vista para que se note que apareció.
+    if (loteSel && window.matchMedia?.('(max-width:900px)').matches) document.querySelector('.lc-lote')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return;
+  }
+  if (modo === 'lote') {
+    if (borrador.length >= 200) msg = 'Un lote admite hasta 200 puntos. Pulsa «Terminar lote».'; else borrador.push(p);
+    dibujar(el); actualizarInfo(); return;
+  }
   if (modo === 'punto') { U.punto = p; modo = 'ver'; guardar(); rerender(); pedirClima(p[0], p[1]); }
   else if (modo === 'sitio') {
     // Un sitio marcado sobre el ejemplo se prueba contra los árboles de ejemplo (no los borra): así se ve qué hace el botón.
@@ -231,7 +297,7 @@ const limpiar = (xy) => xy.split(/[;, \t]+/).filter(Boolean);
 function rerender() {
   const b = document.querySelector('.mapa-bloque');
   if (!b) return;
-  const tmp = document.createElement('div'); tmp.innerHTML = panelMapa();
+  const tmp = document.createElement('div'); tmp.innerHTML = variante === 'lotes' ? panelLotesMapa(optsLotes) : panelMapa();
   b.replaceWith(tmp.firstElementChild);
   montarMapa();
 }
@@ -247,6 +313,7 @@ export function montarMapa() {
     <a class="mapa-atrib" href="${C.capa.enlace}" target="_blank" rel="noopener">${esc(C.capa.atribucion)}</a>`;
   fallas = 0;
   dibujar(el);
+  if (variante === 'lotes') actualizarClimaAhora();
   if (typeof ResizeObserver === 'function') { observador = new ResizeObserver(() => dibujar(el)); observador.observe(el); }
 
   let ini = null;
@@ -287,6 +354,35 @@ export function montarMapa() {
 
 document.addEventListener('input', (e) => { if (e.target.id === 'mapa-arboles') textoArboles = e.target.value; });
 
+// Nombre y cultivo del lote elegido (se guardan al salir del campo o al elegir).
+document.addEventListener('change', (e) => {
+  const campo = e.target.closest?.('[data-lote]');
+  const l = campo && U.lotes.find((x) => x.id === loteSel);
+  if (!l) return;
+  if (campo.dataset.lote === 'nombre') l.nombre = campo.value.trim().slice(0, 40) || l.nombre;
+  if (campo.dataset.lote === 'cultivo') l.cultivo = campo.value.slice(0, 60);
+  guardar(); rerender();
+  document.getElementById(campo.id)?.focus();
+});
+
+// Clima de ahora en la tarjeta de arriba: se pide al montar la vista de lotes y al cambiar de lote.
+// Solo se repinta la tarjeta, no el mapa.
+function actualizarClimaAhora(forzar = false) {
+  if (variante !== 'lotes') return;
+  const p = puntoClima(U, loteSel);
+  if (!p) { climaAhora = { estado: 'sin-punto', clave: '' }; pintarClima(); return; }
+  const clave = p.map((x) => x.toFixed(2)).join(','), lugar = lugarClima(U, loteSel);
+  if (!forzar && climaAhora.clave === clave && ['listo', 'cargando'].includes(climaAhora.estado)) {
+    if (climaAhora.lugar !== lugar) { climaAhora = { ...climaAhora, lugar }; pintarClima(); }
+    return;
+  }
+  climaAhora = { estado: 'cargando', clave, lugar }; pintarClima();
+  obtenerAhora(p[0], p[1]).then(
+    (r) => { if (climaAhora.clave === clave) { climaAhora = { estado: 'listo', clave, lugar: climaAhora.lugar, datos: r.datos, aviso: r.aviso }; pintarClima(); } },
+    (err) => { if (climaAhora.clave === clave) { climaAhora = { estado: 'error', clave, lugar: climaAhora.lugar, msg: err.message }; pintarClima(); } });
+}
+function pintarClima() { const el = document.getElementById('lotes-clima'); if (el) el.innerHTML = tarjetaClima(climaAhora); }
+
 // Botones del bloque (delegado una sola vez en el documento).
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-mapa]');
@@ -297,7 +393,31 @@ document.addEventListener('click', (e) => {
   if (a === 'respaldo-bajar') { bajarRespaldo(); return; }
   if (a === 'respaldo-subir') { subirRespaldo(); return; }
   if (a === 'imagen') { descargarImagenPlan({ R: null, finca: S.farm, ubic: U, cfg: CONFIG }).then((m) => { msg = m; rerender(); }); return; }
-  if (a === 'modo-punto') modo = modo === 'punto' ? 'ver' : 'punto';
+  if (a === 'clima-ahora') { actualizarClimaAhora(true); return; }
+  if (a === 'modo-lote') {
+    if (U.lotes.length >= C.maxLotes) msg = `Ya hay ${C.maxLotes} lotes, el máximo.`;
+    else { modo = 'lote'; borrador = []; loteSel = null; }
+  } else if (a === 'lote-deshacer') borrador.pop();
+  else if (a === 'lote-cancelar') { borrador = []; modo = 'ver'; }
+  else if (a === 'lote-terminar') {
+    if (borrador.length < 3) msg = 'Un lote necesita al menos 3 puntos.';
+    else {
+      const id = siguienteIdLote(U.lotes);
+      U.lotes.push({ id, nombre: `Lote ${U.lotes.length + 1}`, cultivo: '', contorno: borrador });
+      const [la, lo] = centroide(borrador); U.vista = { ...U.vista, lat: la, lon: lo };
+      borrador = []; modo = 'ver'; loteSel = id;
+      msg = 'Lote guardado. Ponle nombre y cultivo en su tarjeta.';
+    }
+  } else if (a === 'lote-sel') {
+    const l = U.lotes.find((x) => x.id === b.dataset.id);
+    if (l) { loteSel = l.id; const [la, lo] = centroide(l.contorno); U.vista = { lat: la, lon: lo, zoom: Math.max(U.vista.zoom, 15) }; }
+  } else if (a === 'lote-cerrar') loteSel = null;
+  else if (a === 'lote-quitar') {
+    const l = U.lotes.find((x) => x.id === loteSel);
+    if (!l || !window.confirm(`¿Borrar el lote «${l.nombre}»? No se puede deshacer.`)) return;
+    U.lotes = U.lotes.filter((x) => x.id !== l.id); loteSel = null; msg = `Se borró ${l.nombre}.`;
+  }
+  else if (a === 'modo-punto') modo = modo === 'punto' ? 'ver' : 'punto';
   else if (a === 'modo-sitio') modo = modo === 'sitio' ? 'ver' : 'sitio';
   else if (a === 'modo-contorno') { if (modo !== 'contorno') U.contorno = []; modo = modo === 'contorno' ? 'ver' : 'contorno'; }
   else if (a === 'deshacer') U.contorno.pop();

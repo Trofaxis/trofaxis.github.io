@@ -135,6 +135,7 @@ export const CONFIG = {
     // Rectángulo aproximado de Honduras continental e islas (criterio propio, solo para avisar).
     honduras: { latMin: 12.9, latMax: 17.5, lonMin: -89.4, lonMax: -83.1 },
     toleranciaArea: 0.2, // aviso si el área dibujada difiere más de 20 % de la declarada (criterio propio)
+    maxLotes: 30, // lotes que se pueden dibujar en una finca (criterio propio, límite de almacenamiento)
   },
 
   // Clima por ubicación (Issue #8, crítica 3): Open-Meteo, clima histórico (ERA5 / ERA5-Land de Copernicus).
@@ -152,6 +153,11 @@ export const CONFIG = {
     decimalesCoord: 2, // coordenadas que se envían al servicio: 2 decimales (~1 km)
     esperaMs: 30000, // tiempo máximo de espera de la descarga
     cacheDias: 180, // días que se reutiliza una descarga del mismo punto
+    // Clima de ahora (vista de lotes): pronóstico de Open-Meteo, mismo redondeo de coordenadas.
+    // Variables «current» y códigos WMO: https://open-meteo.com/en/docs
+    urlAhora: 'https://api.open-meteo.com/v1/forecast',
+    ahoraVigenciaMin: 30, // minutos que se reutiliza el clima de ahora del mismo punto (criterio propio)
+    ahoraEsperaMs: 15000, // tiempo máximo de espera (criterio propio)
   },
 
   // Riego: hidráulica y reservorio. Fuente de cada valor al lado.

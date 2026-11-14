@@ -308,6 +308,45 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .mapa-aviso{color:var(--warn);margin:4px 0}
 .mapa-msg{margin:4px 0}
 #mapa-info p{margin:4px 0}
+/* vista de lotes (Mi finca › Lotes): el mismo mapa, más alto, con tarjetas encima en escritorio y debajo en el teléfono */
+.lotes-bloque{border-top:none;padding-top:0}
+.lotes-escena{position:relative}
+.mapa.mapa-grande{height:min(68vh,620px)}
+.mapa[data-modo="lote"]{cursor:crosshair}
+.lotes-sobre{position:absolute;z-index:2;width:min(320px,calc(50% - 24px))}
+.lotes-arriba{top:12px;left:12px}
+.lotes-abajo{top:84px;right:12px;max-height:calc(100% - 112px);overflow:auto}
+.lc-tarjeta{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);font-size:14px}
+.lc-tarjeta p{margin:2px 0}
+.lc-tarjeta h4{margin:10px 0 4px;font-size:14px}
+.lc-tarjeta .f{margin:6px 0}
+.lc-etq{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.lc-ahora{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.lc-ahora .lc-etq{flex-basis:100%}
+.lc-temp{font:600 30px/1.1 var(--f-display)}
+.lc-datos{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:8px 0 4px}
+.lc-datos dt{font-size:12px;color:var(--muted)}
+.lc-datos dd{margin:0;font-family:var(--f-mono);font-size:13.5px}
+.lc-pie{font-size:12px;color:var(--muted)}
+.lc-cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lc-act{margin:2px 0 6px;padding-left:18px}
+.lc-lista{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}
+.lc-lista .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.lc-color{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.3)}
+.lote polygon{stroke-width:2.5;stroke-linejoin:round}
+.lote.sel polygon{stroke:#fff;stroke-width:4}
+.lote text{font:700 12px var(--f-body);fill:#fff;stroke:rgba(0,0,0,.75);stroke-width:3;paint-order:stroke;text-anchor:middle;dominant-baseline:middle}
+.lote-borrador{fill:none;stroke:#fff;stroke-width:2.5;stroke-dasharray:6 4}
+.lote-c0 polygon{fill:rgba(233,181,59,.28);stroke:#E9B53B} i.lote-c0{background:#E9B53B}
+.lote-c1 polygon{fill:rgba(79,163,240,.28);stroke:#4FA3F0} i.lote-c1{background:#4FA3F0}
+.lote-c2 polygon{fill:rgba(236,121,175,.28);stroke:#EC79AF} i.lote-c2{background:#EC79AF}
+.lote-c3 polygon{fill:rgba(140,203,121,.28);stroke:#8CCB79} i.lote-c3{background:#8CCB79}
+.lote-c4 polygon{fill:rgba(240,122,107,.28);stroke:#F07A6B} i.lote-c4{background:#F07A6B}
+.lote-c5 polygon{fill:rgba(183,156,240,.28);stroke:#B79CF0} i.lote-c5{background:#B79CF0}
+@media (max-width:900px){
+  .mapa.mapa-grande{height:56vh}
+  .lotes-sobre{position:static;width:auto;max-height:none;margin-top:10px}
+}
 
 /* Tarjetas KPI del resumen de la finca: vidrio con la etiqueta en el color de acento */
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}

@@ -12,7 +12,7 @@
 <body>
   <main class="admin-main"><section class="card">
     <h1>Política de privacidad de Trofaxis</h1>
-    <p class="muted small">Última actualización: 21 de octubre de 2026. Trofaxis es una herramienta del proyecto CADS (Zamorano) para evaluar el riesgo ambiental de fincas.</p>
+    <p class="muted small">Última actualización: 14 de noviembre de 2026. Trofaxis es una herramienta del proyecto CADS (Zamorano) para evaluar el riesgo ambiental de fincas.</p>
 
     <h2>Sin iniciar sesión</h2>
     <p>Todo lo que escribes se guarda solo en tu navegador. Nada sale de tu equipo, salvo lo que se describe abajo para el clima y el mapa.</p>
@@ -23,7 +23,7 @@
       <li>Mientras la sesión esté abierta, tu finca se guarda sola en la nube de Supabase para que la tengas en otros equipos. La finca de ejemplo nunca se sube.</li>
       <li>Tu finca en la nube no es pública. La ves tú y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas. Sí ve los textos que escribas en la finca (por ejemplo, acciones o fuente de agua): no pongas ahí nombres de personas ni lugares. Cada consulta del administrador queda registrada.</li>
       <li>Si no quieres que tu finca se suba, cierra la sesión: sin sesión nada sale de tu navegador.</li>
-      <li>La finca, el mapa y el censo se guardan en este equipo. Las coordenadas exactas del mapa no se guardan en Supabase ni se envían a Open-Meteo.</li>
+      <li>La finca, el mapa, los lotes y el censo se guardan en este equipo. Las coordenadas exactas del mapa y de los lotes no se guardan en Supabase ni se envían a Open-Meteo.</li>
     </ul>
 
     <h2>Casos compartidos</h2>
@@ -34,7 +34,7 @@
 
     <h2>Servicios externos</h2>
     <ul>
-      <li><b>Open-Meteo</b>: al pedir el clima se envían la latitud y la longitud redondeadas a 2 decimales (aproximadamente 1 km de precisión), además de la solicitud de clima. No se envían las coordenadas exactas del mapa.</li>
+      <li><b>Open-Meteo</b>: al pedir el clima histórico, o el clima de ahora en la vista de lotes, se envían la latitud y la longitud redondeadas a 2 decimales (aproximadamente 1 km de precisión), además de la solicitud de clima. En la vista de lotes ese punto es el centro del lote elegido o la ubicación de la finca. No se envían las coordenadas exactas del mapa ni el contorno de los lotes.</li>
       <li><b>EOX</b>: el mapa pide imágenes de teselas para el área que estás viendo. La solicitud revela a EOX el área aproximada del mapa y la dirección de red desde la que navegas.</li>
       <li><b>Supabase</b>: administra la autenticación y guarda las fincas en la nube, los casos compartidos asociados de forma privada a la cuenta y las respuestas anónimas de bienvenida.</li>
       <li><b>Google</b>: solo si eliges «Continuar con Google», para confirmar tu cuenta.</li>

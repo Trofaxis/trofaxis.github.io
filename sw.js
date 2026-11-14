@@ -1,6 +1,6 @@
 // Este prefijo agrupa las cachés propias para retirar versiones anteriores.
 const CACHE_PREFIX = 'trofaxis-shell-';
-const CACHE_NAME = 'trofaxis-shell-2afcd78be615';
+const CACHE_NAME = 'trofaxis-shell-7ccc65df0a99';
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -32,6 +32,7 @@ const APP_SHELL = [
   "/src/cerebro/vinculos.js",
   "/src/cerebro/auditoria.js",
   "/src/cerebro/diccionario.js",
+  "/src/clima/ahora.js",
   "/src/clima/normales.js",
   "/src/clima/servicio.js",
   "/src/core/aviso-guardado.js",
@@ -60,6 +61,7 @@ const APP_SHELL = [
   "/src/fonts/inter-latin-wght-normal.woff2",
   "/src/fonts/jetbrains-mono-latin-wght-normal.woff2",
   "/src/mapa/geo.js",
+  "/src/mapa/lotes.js",
   "/src/mapa/ubicacion.js",
   "/src/modules/agua.js",
   "/src/modules/fertilizacion.js",
@@ -99,6 +101,7 @@ const APP_SHELL = [
   "/src/ui/foco.js",
   "/src/ui/grupos.js",
   "/src/ui/indice.js",
+  "/src/ui/lotes.js",
   "/src/ui/mapa.js",
   "/src/ui/mapariesgo.js",
   "/src/ui/plaguicidas.js",
@@ -108,6 +111,7 @@ const APP_SHELL = [
   "/src/ui/rueda.js",
   "/src/ui/settings.js",
   "/src/ui/templates.js",
+  "/src/ui/vista-lotes.js",
   "/src/ui/wizard.js"
 ];
 
