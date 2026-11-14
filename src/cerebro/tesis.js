@@ -90,6 +90,46 @@ export const TESIS = {
       ]
     },
     {
+      "clave": "anderson-2013",
+      "cita": "Anderson, T. R. (2013). Denitrification in riparian zones and other saturated soils of a northeastern agricultural landscape. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "suelo",
+      "cultivo": "finca lechera con cultivos y pasturas",
+      "lugar": "noreste de Estados Unidos",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Annual rates of denitrification showed a strong positive relationship with topographic index",
+          "de": "suelo.humedad",
+          "a": "suelo.desnitrificacion",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "La desnitrificación anual sube con el índice topográfico de humedad, es decir, en los suelos que más se saturan (isótopos de 15N en el agua subterránea somera)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "4",
+          "cita": "resulted in a N flux that was nearly half of the total denitrification from the landscape",
+          "dato": "Desnitrificación en la zona saturada somera",
+          "valor": "casi la mitad del total de la finca, en un tercio del área",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "4",
+          "cita": "the contribution of riparian areas to total landscape denitrification was less than 10 percent",
+          "dato": "Desnitrificación en zonas ribereñas saturadas",
+          "valor": "tasas entre las más altas, pero menos del 10 % del total del paisaje",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "La franja ribereña elimina nitrato con tasas altas, pero es poca área: una franja junto al cauce no compensa el nitrato que sale del resto de la finca (pág. 4)."
+      ]
+    },
+    {
       "clave": "benavides-jara-2014",
       "cita": "Benavides Cabezas, Á. V. y Jara Velasteguí, E. I. (2014). Comparación de tres sistemas de riego para la producción de arroz con tres densidades de siembra en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "tema": "riego",
@@ -378,6 +418,60 @@ export const TESIS = {
       ]
     },
     {
+      "clave": "fallas-2022",
+      "cita": "Fallas Corrales, R. A. (2022). Fertilizer interactions with micronutrients in tropical volcanic soils. Tesis doctoral, Wageningen University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "suelos agrícolas de ceniza volcánica aluvial (ensayos de laboratorio y columnas)",
+      "lugar": "San Bosco y La Sonia, Pococí, Costa Rica",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "149",
+          "cita": "adding highly concentrated potassium chloride solutions promotes zinc desorption and leaching from these alluvial volcanic ash soils",
+          "de": "fert.dosisK",
+          "a": "suelo.zincLixiviado",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Las soluciones concentradas de KCl desorbieron y lavaron zinc en columnas sin disturbar de suelo volcánico aluvial",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "149",
+          "cita": "a lower pH and a higher ionic strength promote increased zinc solution concentrations in both volcanic soils",
+          "de": "suelo.pH",
+          "a": "suelo.zincLixiviado",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Con pH más bajo (y más sales en la solución) quedó más zinc disuelto en los dos suelos",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "148",
+          "cita": "the high phosphate rates commonly applied to this volcanic soil have minor effects on boron adsorption at the typical low boron concentrations observed in the sampled region",
+          "de": "fert.dosisP",
+          "a": "suelo.boroAdsorbido",
+          "sentido": "0",
+          "base": "medido",
+          "resultado": "Las dosis altas de fosfato que se usan en ese suelo casi no cambian la adsorción de boro a las concentraciones bajas de la zona",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "148",
+          "cita": "Under such conditions, where leaching of elements can be significant, the mobility of fertilizers in soil and their interaction with other nutrients is an important factor to consider",
+          "dato": "Suelos volcánicos tropicales con lluvia alta (régimen údico)",
+          "valor": "la lixiviación puede ser importante y la movilidad del fertilizante cuenta para el manejo",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Son ensayos de laboratorio (adsorción y columnas), no de campo; dicen qué pasa con dosis altas, no cuánto se pierde en una finca (pág. 148–149)."
+      ]
+    },
+    {
       "clave": "flores-2002",
       "cita": "Flores Fukuda, V. (2002). Evaluación de cuatro medios de enraizamiento y tres instalaciones para la producción de la Flor de Pascua (Euphorbia pulcherrima). Proyecto especial, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "tema": "cultivo",
@@ -406,6 +500,62 @@ export const TESIS = {
         }
       ],
       "alertas": []
+    },
+    {
+      "clave": "flores-lopez-2009",
+      "cita": "Flores-Lopez, F. J. (2009). Soluble phosphorus and nitrate transport by monitoring ground water and stream flow discharges in the New York City source watersheds. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "fertilización",
+      "cultivo": "lechería con pasturas (más de 100 años de estiércol)",
+      "lugar": "montes Catskill, Nueva York, Estados Unidos",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "4",
+          "cita": "SRP concentrations increased as the distance to the streams decreased",
+          "de": "finca.distAgua",
+          "a": "agua.fosforoSubterranea",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "El fósforo soluble del agua subterránea sube a medida que baja la distancia al arroyo (37 pozos en una finca de valle aluvial)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "4",
+          "cita": "resulted in a 33% reduction (0.008 mg L-1) in stream SRP concentrations during the growing season",
+          "dato": "Cercas que sacan al ganado del cauce",
+          "valor": "−33 % de fósforo soluble en el arroyo en la época de crecimiento; sin efecto fuera de ella ni en el nitrato",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "stream SRP concentrations were generally below 0.1 mg L-1, with an average of 0.037",
+          "dato": "Fósforo soluble en el arroyo pese a más de 100 años de estiércol",
+          "valor": "casi siempre bajo 0,1 mg/L, promedio 0,037 mg/L",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "The highest SRP concentrations were consistently measured at the shallowest groundwater depths",
+          "dato": "Dónde está el fósforo más alto",
+          "valor": "en el agua subterránea más somera",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "The NO3--N concentrations varied from the detection limit of 0.05 to 5 mg L-1",
+          "dato": "Nitrato en el agua subterránea",
+          "valor": "de 0,05 a 5 mg/L de N",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "El fósforo del agua subterránea junto al arroyo no se correlacionó con el del arroyo: la cercanía sube el P del agua del suelo, pero eso no dice cuánto llega al cauce (pág. 3–4)."
+      ]
     },
     {
       "clave": "godoy-garzon-2015",
@@ -468,6 +618,61 @@ export const TESIS = {
         }
       ],
       "alertas": []
+    },
+    {
+      "clave": "huijsmans-2003",
+      "cita": "Huijsmans, J. F. M. (2003). Manure application and ammonia volatilization. Tesis doctoral, Wageningen University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "pastura y tierra arable (estiércol líquido)",
+      "lugar": "Países Bajos",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "150",
+          "cita": "The mean cumulative volatilization for surface spreading was estimated to be 77% of the total ammoniacal nitrogen (TAN) applied by the manure, 20% for narrow-band application and 6% for shallow injection",
+          "de": "fert.incorporacion",
+          "a": "aire.amoniaco",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "En pastura, el estiércol esparcido en superficie perdió 77 % del N amoniacal; en bandas angostas 20 % y con inyección superficial 6 % (base de datos de ensayos de campo 1989–1998)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "151",
+          "cita": "On arable land, the mean total volatilization, expressed as % of TAN applied, was 68% for surface spreading, 17% for surface incorporation and 2% for deep placement",
+          "de": "fert.incorporacion",
+          "a": "aire.amoniaco",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "En tierra arable: 68 % en superficie, 17 % incorporado superficialmente y 2 % enterrado a fondo",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "151",
+          "cita": "The volatilization rate increased with an increase in TAN content of the manure, manure application rate and air temperature",
+          "de": "fert.abonoOrganico",
+          "a": "aire.amoniaco",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "En tierra arable la tasa de volatilización sube con más N amoniacal en el estiércol, más dosis de estiércol y más temperatura del aire",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "152",
+          "cita": "the costs of manure application by volatilization-reducing techniques were ca 2 € per m3 higher than for broadcast spreading",
+          "dato": "Costo de las técnicas que reducen el amoníaco",
+          "valor": "unos 2 € por m3 más que esparcir en superficie (fincas con 1000 a 3000 m3 de estiércol al año)",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "El tiempo entre esparcir e incorporar cuenta: un arado de vertedera (más lento) no siempre pierde menos amoníaco que un cultivador, porque tarda más en enterrar el estiércol (pág. 151).",
+        "Es estiércol líquido en clima templado (Países Bajos); los porcentajes no se pasan tal cual a urea en el trópico."
+      ]
     },
     {
       "clave": "kuniyoshi",
@@ -621,6 +826,50 @@ export const TESIS = {
       "alertas": []
     },
     {
+      "clave": "major-2009",
+      "cita": "Major, J. (2009). Biochar application to a Colombian savanna Oxisol: fate and effect on soil fertility, crop production, nutrient leaching and soil hydrology. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "suelo",
+      "cultivo": "maíz",
+      "lugar": "sabana de los Llanos Orientales, Colombia (Oxisol)",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Leaching below the rooting zone was reduced by 17% for P, 19% for Sr, 8% for NO3-N, 23% for Ca, 28% for Mg, and 36% for K, over two years, with biochar application",
+          "de": "suelo.biocarbon",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Con 20 t/ha de biocarbón, la lixiviación bajo la zona de raíces bajó en dos años: P 17 %, nitrato 8 %, Ca 23 %, Mg 28 % y K 36 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "The application of 20 t ha-1 of biochar resulted in maize yield increases of 28, 30 and 140% in the second, third and fourth year after biochar application",
+          "de": "suelo.biocarbon",
+          "a": "cultivo.rendimiento",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "El maíz rindió 28, 30 y 140 % más en el segundo, tercer y cuarto año después de aplicar el biocarbón",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "The retention of nutrients by biochar and greater pH thus resulted in reduced leaching and greater crop uptake",
+          "dato": "Mecanismo",
+          "valor": "el biocarbón retiene nutrientes y sube el pH: menos lixiviación y más absorción, sobre todo de Ca y Mg",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "En esta arcilla pesada el biocarbón no cambió la hidrología del suelo (pág. 3–4).",
+        "El biocarbón no es una práctica que Trofaxis pregunte hoy; queda como relación de suelo para el futuro."
+      ]
+    },
+    {
       "clave": "mata-2021",
       "cita": "Mata Vigil, I. I. (2021). Evaluación de tres láminas de riego en suelos de diferentes texturas en el desarrollo de frijol (Phaseolus vulgaris L.). Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "tema": "riego",
@@ -734,6 +983,60 @@ export const TESIS = {
         }
       ],
       "alertas": []
+    },
+    {
+      "clave": "molodovskaya-2010",
+      "cita": "Molodovskaya, M. (2010). The emissions of nitrous oxide from agricultural fields in New York State: effect of fertilization and analysis of temporal and spatial variability. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "fertilización",
+      "cultivo": "maíz y alfalfa abonados con estiércol de lechería",
+      "lugar": "Nueva York, Estados Unidos",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "areas which received more manure N were stronger N2O emitters",
+          "de": "fert.abonoOrganico",
+          "a": "aire.oxidoNitroso",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Las áreas que recibieron más N de estiércol emitieron más N2O (covarianza turbulenta 2006–2009 y cámaras estáticas)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "4",
+          "cita": "The greatest N2O emissions were observed when flux-triggering weather events coincided with or followed manure application",
+          "de": "clima.mesesLluvia",
+          "a": "aire.oxidoNitroso",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Los picos de N2O los disparan la lluvia fuerte y el calor; los mayores llegaron cuando esa lluvia coincidió con la aplicación de estiércol o vino justo después",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "4",
+          "cita": "The most intense single N2O peak event was produced from combination of summer manure spreading and strong rainfall",
+          "de": "fert.meses",
+          "a": "aire.oxidoNitroso",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "El pico más intenso vino de esparcir estiércol en verano y que luego cayera una lluvia fuerte",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "manure nitrogen (N) was the most important factor controlling the extent of N2O formation",
+          "dato": "Factor que más controla el N2O",
+          "valor": "el N del estiércol; la humedad y la temperatura del suelo solo disparan los eventos",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Mide gases, no pérdidas al agua. Sirve para el vínculo de lluvia y fertilización por el lado del aire (pág. 4)."
+      ]
     },
     {
       "clave": "ordonez-ventura-2015",
@@ -937,6 +1240,49 @@ export const TESIS = {
       ]
     },
     {
+      "clave": "pacenka-2012",
+      "cita": "Pacenka, S. (2012). Can soil test phosphorus track phosphorus changes for water quality management? Tesis de maestría, Cornell University, Estados Unidos.",
+      "tema": "fertilización",
+      "cultivo": "fincas lecheras (maíz y pasturas)",
+      "lugar": "cuencas que abastecen de agua a Nueva York, Estados Unidos",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Morgan's P concentration with: corn frequency, higher recommended manure rate, and higher aluminum",
+          "de": "fert.abonoOrganico",
+          "a": "suelo.fosforo",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "En más de 1200 series de análisis de campos (6 años o más, muestreo cada 3 años), el P Morgan sube con más dosis recomendada de estiércol, más frecuencia de maíz y más aluminio",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "and higher aluminum; and a negative effect of soil wetness",
+          "de": "suelo.humedad",
+          "a": "suelo.fosforo",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "En la misma regresión, los suelos más húmedos tienen menos P Morgan",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "3",
+          "cita": "The breakpoint is around 12 kg P/ha",
+          "variable": "suelo.fosforo",
+          "umbral": "Punto de quiebre cerca de 12 kg P/ha (Morgan): los suelos con P bajo tienden a subir y los de P alto a bajar",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "El exceso de fósforo de las fincas causó floraciones de algas en las fuentes de agua potable de Nueva York (pág. 3)."
+      ]
+    },
+    {
       "clave": "plaza-2004",
       "cita": "Plaza Tumbaco, F. X. (2004). Determinación del requerimiento hídrico de cuatro pastos mediante el uso de lisímetros bajo condiciones de El Zamorano, Honduras. Proyecto especial de Ingeniero Agrónomo, Zamorano, Honduras.",
       "tema": "riego",
@@ -1061,6 +1407,60 @@ export const TESIS = {
       "alertas": []
     },
     {
+      "clave": "recha-2011",
+      "cita": "Recha, J. W. (2011). Streamwater dynamics and carbon and nutrient losses in tropical headwater catchments at a soil degradation gradient. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "suelo",
+      "cultivo": "maíz (5, 10 y 50 años después de talar el bosque) y bosque como testigo",
+      "lugar": "Kapchorwa, distrito de Nandi, oeste de Kenia (cuencas de cabecera)",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "at a depth of 0-0.1 m increased by 46%, while soil organic carbon (SOC) concentrations and total porosity decreased by 75% and 20%, respectively",
+          "de": "suelo.usoIntensivo",
+          "a": "suelo.compactacion",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Con más años de maíz, la densidad aparente de 0–10 cm subió 46 %, y el carbono orgánico y la porosidad bajaron 75 % y 20 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "The average runoff ratio was 0.033 in the forest and increased gradually to 0.095 with increasing duration of cultivation",
+          "de": "suelo.usoIntensivo",
+          "a": "suelo.escorrentia",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "La escorrentía pasó de 0,033 de la lluvia en el bosque a 0,095 con más años de cultivo",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Total C and nutrient exports increased with longer cultivation (P<0.05) due to greater",
+          "de": "suelo.usoIntensivo",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Las salidas de carbono y nutrientes al arroyo subieron con los años de cultivo, por el mayor caudal",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "3",
+          "cita": "all N species, total P, K and Na significantly (P<0.05) increased in streams after forest conversion and long-term cultivation",
+          "dato": "Nutrientes en el arroyo después de talar",
+          "valor": "todas las formas de N, el P total y el K subieron",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Es una cronosecuencia de cuatro cuencas (bosque, 5, 10 y 50 años de maíz), no un ensayo con repeticiones: muestra la tendencia de la degradación, no el efecto de una práctica (pág. 3)."
+      ]
+    },
+    {
       "clave": "rios-2024",
       "cita": "Ríos Morantes, F. J. (2024). Caracterización de la capacidad de retención de agua de cinco lotes contrastantes en manejo en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "tema": "suelo",
@@ -1145,6 +1545,354 @@ export const TESIS = {
       ]
     },
     {
+      "clave": "schoumans-2015",
+      "cita": "Schoumans, O. F. (2015). Phosphorus leaching from soils: process description, risk assessment and mitigation. Tesis doctoral, Wageningen University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "tierras agrícolas en general",
+      "lugar": "Países Bajos",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "244",
+          "cita": "as a simple index to determine the potential risk of increased P concentrations in groundwater that exceed the background concentration in the long term",
+          "de": "suelo.saturacionFosforo",
+          "a": "suelo.fosforoLixiviado",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "Pasado el grado de saturación crítico, el P del agua subterránea supera el nivel natural a largo plazo (es la base del protocolo neerlandés, no una medición nueva)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "245",
+          "cita": "The most important or sensitive input variables for the assessment of P losses are the historical P surpluses, groundwater table and actual P application rates",
+          "de": "fert.dosisP",
+          "a": "suelo.fosforoLixiviado",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "En su modelo SIMPLE, lo que más pesa en las pérdidas de P son los excedentes históricos de P, el nivel freático y la dosis actual de P (modelo, no medición de campo)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "244",
+          "cita": "The critical PSD of non-calcareous sandy soils was found to be 25%",
+          "variable": "suelo.saturacionFosforo",
+          "umbral": "Grado de saturación crítico de 25 % en suelos arenosos no calcáreos",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "244",
+          "cita": "peat soils (5%), calcareous sandy soils (23%), acid sandy soils (25%), non-calcareous clay soils (31%) and calcareous clay soils (78%)",
+          "variable": "suelo.saturacionFosforo",
+          "umbral": "Crítico por tipo de suelo: turba 5 %, arenoso calcáreo 23 %, arenoso ácido 25 %, arcilla no calcárea 31 % y arcilla calcárea 78 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "244",
+          "cita": "both soil types can be considered as vulnerable to P losses",
+          "dato": "Suelos más vulnerables a perder P",
+          "valor": "arcillas turbosas de tierras bajas (mucho P retenido de forma reversible) y arenosos calcáreos (lo retienen débilmente)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "245",
+          "cita": "In about 43% of the agricultural land in the Netherlands, the critical PSD for the given soil type was exceeded",
+          "dato": "Tierra agrícola de Países Bajos sobre el grado crítico",
+          "valor": "cerca de 43 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "246",
+          "cita": "source-oriented measures, such as reducing P application rates or lowering the P content of the soil, are needed to decrease P losses in the long term",
+          "dato": "Qué baja las pérdidas a largo plazo",
+          "valor": "bajar la dosis de P o el P del suelo; las medidas en el cauce o el paisaje ayudan a corto plazo",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Los umbrales son de suelos de Países Bajos, y la tesis muestra que el crítico cambia con el tipo de suelo y con su aluminio y hierro extraíbles con oxalato (pág. 244). Usarlos en suelos tropicales sería criterio propio."
+      ]
+    },
+    {
+      "clave": "schroder-1998",
+      "cita": "Schröder, J. J. (1998). Towards improved nitrogen management in silage maize production on sandy soils. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "maíz para ensilaje",
+      "lugar": "Países Bajos (suelos arenosos)",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "214",
+          "cita": "Split applications of mineral fertiliser N had a significant positive effect in one experiment where rainfall was excessive but not in the others",
+          "de": "fert.frecuencia",
+          "a": "cultivo.rendimiento",
+          "sentido": "0",
+          "base": "medido",
+          "resultado": "Fraccionar el N mineral (40 kg/ha en banda a las 4–6 hojas) subió el rendimiento solo en uno de cuatro ensayos, el de lluvia excesiva",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "214",
+          "cita": "spring-applied slurry without DCD was on average associated with even lower N losses and higher maize DM yields",
+          "de": "fert.meses",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Aplicar el purín en otoño (antes del invierno lluvioso, sin cultivo) perdió más N que en primavera; en primavera hubo menos pérdidas y más rendimiento (ocho ensayos)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "215",
+          "cita": "At low N input levels, cover crops reduced N leaching in accordance with their N uptake",
+          "de": "suelo.desnudoMeses",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Dejar el suelo sin cultivo de cobertura en invierno lixivia más N: con centeno o pasto la lixiviación bajó en proporción al N que absorbieron (dosis bajas de N, seis años)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "213",
+          "cita": "Positioning fertiliser N close to the plant increased the recovery by a factor of 1.3 to 1.4",
+          "de": "fert.incorporacion",
+          "a": "cultivo.absorcionNutrientes",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Colocar el N cerca de la planta subió su recuperación 1,3 a 1,4 veces (Rhizolab de Wageningen)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "213",
+          "cita": "Dry matter (DM) yields of maize were not significantly affected by the application method of N, however",
+          "de": "fert.incorporacion",
+          "a": "cultivo.rendimiento",
+          "sentido": "0",
+          "base": "medido",
+          "resultado": "La forma de aplicar el N no cambió el rendimiento de materia seca",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "217",
+          "cita": "the soil mineral N residue at the end of the growing season (0-60 cm) decreased by 24 kg N ha-1",
+          "de": "fert.dosisN",
+          "a": "suelo.nitrogenoMineral",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Abonar 100 kg N/ha por debajo del óptimo económico dejó 24 kg N/ha menos de N mineral en 0–60 cm al final del ciclo (25 ensayos en arena)",
+          "coincidencia": "aproximada (OCR, 0.96)"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "217",
+          "cita": "The associated reduction in DM yield averaged 16%",
+          "de": "fert.dosisN",
+          "a": "cultivo.rendimiento",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Con esos 100 kg N/ha menos, el rendimiento de materia seca bajó 16 % en promedio",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "103",
+          "cita": "A 100 mm increase of rainfall reduced residual SMN with 25 kg ha-1",
+          "de": "clima.lluvia",
+          "a": "suelo.nitrogenoMineral",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Cada 100 mm más de lluvia entre mayo y el muestreo dejaron 25 kg/ha menos de N mineral residual (el N se fue con el agua o lo tomó el cultivo)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "217",
+          "cita": "These soils have a limited capacity to retain water and therefore N may easily be lost to greater depths when it is available or applied too early",
+          "de": "suelo.retencionAgua",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "−",
+          "base": "afirmado",
+          "resultado": "Los suelos arenosos retienen poca agua, así que el N baja a capas profundas si sobra o se aplica temprano (síntesis del capítulo 9)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "217",
+          "cita": "The values obtained for the economically optimal SUMN in the upper 30 and 60 cm of soil were respectively 173 and 195 kg N ha-1",
+          "variable": "fert.dosisN",
+          "umbral": "Óptimo económico del N disponible (N mineral del suelo en marzo–abril más N del fertilizante): 173 kg N/ha midiendo 0–30 cm y 195 kg N/ha midiendo 0–60 cm (25 ensayos en arena)",
+          "coincidencia": "aproximada (OCR, 0.98)"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "215",
+          "cita": "the financial return from a 40 kg ha-1 supplementation with mineral fertiliser N, is questionable if there is more than 175 kg N ha-1 in the upper 0.6 m soil layer at the 4-6 leaf stage",
+          "variable": "suelo.nitrogenoMineral",
+          "umbral": "Con más de 175 kg N/ha en 0–60 cm a las 4–6 hojas, agregar 40 kg N/ha de fertilizante mineral tiene un retorno dudoso",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "215",
+          "cita": "results provide insufficient evidence to justify recommending farmers to split applications",
+          "dato": "Recomendación sobre fraccionar",
+          "valor": "no hay evidencia suficiente para recomendarlo de rutina",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "215",
+          "cita": "rye and grass cover crops were able to absorb on average 40 kg N ha-1 in the aboveground plant parts",
+          "dato": "N absorbido por los cultivos de cobertura",
+          "valor": "40 kg N/ha en promedio en la parte aérea",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "217",
+          "cita": "adjusting the N input to a level below the economically optimal rate can reduce the risks for N losses to the environment associated with conventional maize production, with a limited effect on silage yields",
+          "dato": "Conclusión sobre la dosis",
+          "valor": "bajar el N por debajo del óptimo económico reduce el riesgo de pérdidas con poco efecto en el rendimiento",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "214",
+          "cita": "Postponing slurry applications to spring and adjusting N inputs to crop requirements were insufficient to keep the nitrate concentration in groundwater below the EC threshold for drinking water",
+          "dato": "Nitrato en el agua subterránea",
+          "valor": "siguió sobre el límite de la UE para agua potable aun aplicando en primavera y con la dosis ajustada",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Clima templado y suelos arenosos de Países Bajos, con purín de vaca; el fraccionamiento solo ayudó en el ensayo de lluvia excesiva, que es la condición que más se parece a la época lluviosa del trópico.",
+        "La banda de purín después de la emergencia, la única forma en que fraccionar el purín subió el rendimiento, no estaba permitida por la ley neerlandesa de entonces (pág. 214)."
+      ]
+    },
+    {
+      "clave": "sigunga-1997",
+      "cita": "Sigunga, D. O. (1997). Fertilizer nitrogen use efficiency and nutrient uptake by maize (Zea mays L.) in Vertisols in Kenya. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "maíz",
+      "lugar": "Kenia (vertisoles)",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "Denitrification rate depended primarily on soil moisture content and available C",
+          "de": "suelo.humedad",
+          "a": "suelo.desnitrificacion",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "La tasa de desnitrificación depende sobre todo de la humedad del suelo y del carbono disponible (laboratorio)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "NH3 volatilization depended primarily on soil pH and fertilizer properties",
+          "de": "suelo.pH",
+          "a": "aire.amoniaco",
+          "sentido": "?",
+          "base": "medido",
+          "resultado": "La volatilización de NH3 depende sobre todo del pH del suelo y del tipo de fertilizante; el resumen no dice la dirección",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "Incorporating fertilizer materials within the 0-5 cm soil layer significantly reduced NH3-N losses",
+          "de": "fert.incorporacion",
+          "a": "aire.amoniaco",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Incorporar el fertilizante en los primeros 0–5 cm bajó de forma significativa las pérdidas de NH3",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "bypass flow can be an important avenue of NO3-N loss from Vertisols especially if applied early in the season when the characteristic cracks of Vertisols have not closed",
+          "de": "fert.meses",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "En vertisoles el nitrato se pierde por flujo preferente en las grietas, sobre todo si se aplica temprano, cuando las grietas todavía no se han cerrado",
+          "coincidencia": "aproximada (OCR, 0.94)"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "the amount of N recovered increased with increasing rate of NO3-N application",
+          "de": "fert.dosisN",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Más nitrato aplicado, más N recuperado en el flujo preferente; el amonio no tuvo efecto",
+          "coincidencia": "aproximada (OCR, 0.92)"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "Drains, 40 and 60 cm deep, led to deeper rooting depth and higher yields of maize than the 0 and 20 cm deep drains",
+          "de": "finca.drenes",
+          "a": "cultivo.rendimiento",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Drenes de 40 y 60 cm dieron raíces más profundas y más rendimiento de maíz que drenes de 0 y 20 cm",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "8",
+          "cita": "the uptake of N, P, and K was higher on drained than undrained plots",
+          "de": "finca.drenes",
+          "a": "cultivo.absorcionNutrientes",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "La absorción de N, P y K fue mayor en parcelas drenadas",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "8",
+          "cita": "the critical soil moisture content for denitrification to commence was 60% of the water holding capacity (WHC), but substantial denitrification occurred at > 80% WHC",
+          "variable": "suelo.humedad",
+          "umbral": "La desnitrificación empieza a 60 % de la capacidad de retención de agua y es fuerte sobre 80 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "9",
+          "cita": "It is recommended that 40 cm deep drains with inter-drain spacing of 15 - 20 metres be provided as prerequisite step in the management of Vertisols for maize production",
+          "variable": "finca.drenes",
+          "umbral": "Drenes de 40 cm de profundidad cada 15 a 20 m como paso previo para sembrar maíz en vertisoles",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "8",
+          "cita": "Kenya Vertisols have pH ranging between 5.5 and 9.1",
+          "dato": "pH de los vertisoles de Kenia",
+          "valor": "de 5,5 a 9,1, con distinto potencial de volatilización",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": []
+    },
+    {
       "clave": "t215-1990",
       "cita": "[Autor no legible en el escaneo] (1990). Densidades de siembra de pepino (Cucumis sativus L.) cultivar Super Poinsett para el valle de Yeguare. Tesis de Ingeniero Agrónomo, Escuela Agrícola Panamericana, El Zamorano, Honduras.",
       "tema": "cultivo",
@@ -1166,6 +1914,260 @@ export const TESIS = {
       ],
       "alertas": [
         "El nombre del autor no se lee en el escaneo: la cita queda incompleta hasta revisar el PDF a mano."
+      ]
+    },
+    {
+      "clave": "trinh-2007",
+      "cita": "Trinh Van Mai (2007). Soil erosion and nitrogen leaching in northern Vietnam: experimentation and modelling. Tesis doctoral, Wageningen University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "arroz, maíz, yuca, hortalizas y flores",
+      "lugar": "Tam Duong, norte de Vietnam (cuenca del río Rojo)",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "180",
+          "cita": "Experimental results showed regular high N concentrations in deeper soil layers, indicative for substantial leaching losses, associated with high rainfall and/or irrigation, low crop demand and high fertilizer doses",
+          "de": "fert.dosisN",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "En las terrazas se midió N alto en capas profundas, señal de lixiviación fuerte, ligado a lluvia o riego altos, poca demanda del cultivo y dosis altas de fertilizante",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "180",
+          "cita": "associated with high rainfall and/or irrigation, low crop demand and high fertilizer doses",
+          "de": "clima.mesesLluvia",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Misma frase: la lluvia (o el riego) alta va con la lixiviación de N",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "180",
+          "cita": "showed increased N leaching with increasing fertilizer doses",
+          "de": "fert.dosisN",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "Con un modelo de balance de N calibrado con sus datos, la lixiviación sube con la dosis: en arroz–arroz–maíz, de 52–60 a 58–154 kg N/ha de dosis baja a alta (simulado)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "180",
+          "cita": "The high values for 2005 were associated with one extraordinary rainfall event",
+          "de": "clima.mesesLluvia",
+          "a": "suelo.erosion",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Las pérdidas altas de 2005 vinieron de una sola lluvia extraordinaria",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "180",
+          "cita": "annual leaching losses were calculated of up to 193 kg ha-1 in flowers and 115 in vegetables, compared to about 50 in rice",
+          "dato": "Lixiviación anual calculada por cultivo",
+          "valor": "hasta 193 kg N/ha en flores y 115 en hortalizas, frente a unos 50 en arroz",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "180",
+          "cita": "was 538 and 3324 m3 ha-1 and the associated sediment loss 163 and 1722 kg ha-1",
+          "dato": "Escorrentía y sedimento de la cuenca",
+          "valor": "538 y 3324 m3/ha de agua; 163 y 1722 kg/ha de sedimento (2004 y 2005)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "181",
+          "cita": "Percolation was the main process leading to high N leaching losses to groundwater",
+          "dato": "Vía principal de pérdida de N en la zona plana",
+          "valor": "la percolación hacia el agua subterránea",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "La erosión fue muy fuerte en cada parcela pero mucho menor a escala de cuenca, porque el sedimento queda atrapado en el camino, sobre todo en los arrozales en terraza (pág. 180).",
+        "Las cifras por cultivo salen de un modelo que la tesis dice que todavía necesita calibración y validación (pág. 181)."
+      ]
+    },
+    {
+      "clave": "uwimana-2019",
+      "cita": "Uwimana, A. (2019). Effects of wetland conversion to farming on water quality and sediment and nutrient retention in a tropical catchment. Tesis doctoral, Wageningen University e IHE Delft, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "arroz, hortalizas y estanques de peces en humedales convertidos",
+      "lugar": "Ruanda (cuenca tropical)",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "10",
+          "cita": "with 93%, 60% and 67% of the annual TSS, TP and TN yields, respectively, transported during 115 days with rain",
+          "de": "clima.mesesLluvia",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "El 93 % del sedimento, el 60 % del P total y el 67 % del N total que salen en un año salieron en los 115 días con lluvia",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "11",
+          "cita": "with peaks of concentrations associated with the periods of land ploughing, weeding and fertilizer application",
+          "de": "fert.meses",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Los picos de N y P en el agua coincidieron con arar, deshierbar y abonar (y con vaciar y dragar los estanques)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "10",
+          "cita": "Valley bottoms dominated by grass/forest and ponds/reservoir types were generally associated with positive net yields of nutrients and sediments, while those with agricultural land covers had a net negative yield, resulting in net export",
+          "de": "finca.humedalNatural",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Los fondos de valle con pasto o bosque, y con estanques, retuvieron nutrientes y sedimento; los cultivados los exportaron",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "11",
+          "cita": "In wetland plots, TSS and TN significantly decreased from the inlet to the outlet",
+          "dato": "Parcelas de humedal sin disturbar",
+          "valor": "los sólidos y el N total bajaron de la entrada a la salida",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "10",
+          "cita": "total suspended solids (TSS) related positively to discharge, increasing 2-8 times during high flow periods",
+          "dato": "Sólidos en suspensión en época de caudal alto",
+          "valor": "de 2 a 8 veces más",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "En caudal bajo todos los usos del suelo retuvieron sedimento y nutrientes, y en caudal alto todos los exportaron (pág. 10–11)."
+      ]
+    },
+    {
+      "clave": "van-der-eijk-1997",
+      "cita": "van der Eijk, D. (1997). Phosphate fixation and the response of maize to fertilizer phosphate in Kenyan soils. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "maíz híbrido",
+      "lugar": "Kisii, suroeste de Kenia (Ultisoles y Mollisoles)",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "9",
+          "cita": "Subseed placement at the start of each growing season is recommended, either placed alone or together with small amounts of cowdung",
+          "de": "fert.incorporacion",
+          "a": "cultivo.rendimiento",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "Recomienda colocar el P bajo la semilla al inicio de cada ciclo, solo o con un poco de estiércol de vaca, para aprovechar el P nuevo y el residual",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "9",
+          "cita": "P application rates of 20 to 40 kg/ha (in P2O5: 45 to 90 kg/ha) are advised for maize",
+          "variable": "fert.dosisP",
+          "umbral": "Para maíz, 20 a 40 kg P/ha por ciclo (45 a 90 kg P2O5/ha), colocado bajo la semilla: un poco más de lo que la planta necesita, y el P del suelo sube poco a poco",
+          "coincidencia": "aproximada (OCR, 0.96)"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "9",
+          "cita": "Thus, P fixation is much less of a problem for farmers than expected",
+          "dato": "Fijación de P en los suelos de Kisii",
+          "valor": "mucho menos problema para el productor de lo esperado: la fase lenta de fijación avanza muy despacio en el campo",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "9",
+          "cita": "The efficiency of utilization increased with P application to about 550 kg/kg at P rates of 22 to 131 kg/ha and decreased at higher rates due to a luxurious P uptake",
+          "dato": "Eficiencia de uso del P absorbido",
+          "valor": "sube hasta unos 550 kg de grano por kg de P con 22 a 131 kg P/ha y baja con más P (consumo de lujo)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "9",
+          "cita": "They were about 10% each growing season at a P rate of 22 kg/ha",
+          "dato": "Recuperación aparente del P del fertilizante",
+          "valor": "cerca de 10 % por ciclo con 22 kg P/ha",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "9",
+          "cita": "They were low in available native P (P-Olsen 1.6 to 3.2 mg/kg) and had medium to high P sorption capacities (445 to 870 mg/kg)",
+          "dato": "Suelos del estudio",
+          "valor": "P Olsen nativo bajo (1,6 a 3,2 mg/kg) y capacidad de sorción de P media a alta (445 a 870 mg/kg)",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "El P del fertilizante quedó concentrado alrededor de los gránulos (más de 8000 mg/kg de P total) hasta unos 600 días después de aplicarlo: el residuo existe pero pocas raíces llegan a él (pág. 9)."
+      ]
+    },
+    {
+      "clave": "vanek-2011",
+      "cita": "Vanek, S. J. (2011). Legume-phosphorus synergies in mountain agroecosystems: field nutrient balances, soil fertility gradients, and effects on legume attributes and nutrient cycling in the Bolivian Andes. Tesis doctoral, Cornell University, Estados Unidos.",
+      "tema": "suelo",
+      "cultivo": "papa, cereales y leguminosas con ganado",
+      "lugar": "Andes de Bolivia (pequeños productores de montaña)",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Field nutrient balances showed that manuring rates, rangeland productivity, and soil erosion were dominant drivers of soil nutrient trends",
+          "de": "suelo.erosion",
+          "a": "suelo.balanceNutrientes",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "La dosis de estiércol, la productividad del pastizal y la erosión fueron lo que más movió el balance de nutrientes de los campos",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "3",
+          "cita": "Fields near to communities received more manure and were less steep than far fields, resulting in more positive near field balances",
+          "de": "finca.pendiente",
+          "a": "suelo.balanceNutrientes",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "Los campos cercanos al pueblo, menos empinados y con más estiércol, tuvieron balances más positivos que los lejanos (pendiente y estiércol van juntos, no se separan)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "4",
+          "cita": "Soil texture and Ca-P levels determined impacts of P fertilization: the largest increases in N fixed were 67% for RP and 150% for TSP in soils with low levels of clay and Ca-P",
+          "de": "fert.dosisP",
+          "a": "cultivo.fijacionN",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Abonar con P subió el N fijado por las leguminosas hasta 67 % con roca fosfórica y 150 % con superfosfato triple, sobre todo en suelos con poca arcilla y poco fósforo de calcio",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "El balance de potasio fue negativo por la cosecha de tubérculos y porque los rastrojos se dan al ganado (pág. 3)."
       ]
     },
     {
@@ -1367,6 +2369,166 @@ export const TESIS = {
         }
       ],
       "alertas": []
+    },
+    {
+      "clave": "xiao-2016",
+      "cita": "Xiao, M. (2016). Nutrient runoff and leachate after land-application of digestate in a laboratory study using rainfall simulations. Tesis de maestría, Purdue University, Estados Unidos.",
+      "tema": "fertilización",
+      "cultivo": "sin cultivo (bandejas de suelo franco limoso en laboratorio)",
+      "lugar": "Indiana, Estados Unidos (laboratorio de erosión del USDA-ARS)",
+      "aporta": "conocimiento",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "16",
+          "cita": "Application of liquid digestate significantly reduced the phosphorus losses for runoff",
+          "de": "fert.abonoOrganico",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "El digestato líquido perdió menos fósforo por escorrentía que el fertilizante químico (nueve lluvias simuladas en seis meses)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "66",
+          "cita": "did not ameliorate the nutrient losses from leachate. It even caused more losses for NO3-N",
+          "de": "fert.abonoOrganico",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "En el lixiviado no mejoró al químico y perdió más nitrato",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "65",
+          "cita": "all the treatments had higher losses for runoff and leachate when soil was under wet condition. This consequently caused more nutrient losses from soil trays",
+          "de": "suelo.humedad",
+          "a": "agua.nutrientesEscorrentia",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Con el suelo húmedo todos los tratamientos perdieron más agua por escorrentía y lixiviado, y por eso más nutrientes",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "65",
+          "cita": "a rainfall happened within 24 hours after fertilizer application was made",
+          "dato": "Primera lluvia simulada",
+          "valor": "dentro de las 24 horas después de abonar",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "28",
+          "cita": "The trays were positioned on shelves with a 3% slope",
+          "dato": "Pendiente de las bandejas",
+          "valor": "3 %",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Ensayo de laboratorio con suelo tamizado en bandejas de 1 m y sin cultivo (pág. 28): sirve para comparar fuentes de abono, no para estimar pérdidas de una finca.",
+        "Uno de los cuatro digestatos (D3) perdió más amonio y nitrógeno Kjeldahl por escorrentía que el químico (pág. 65)."
+      ]
+    },
+    {
+      "clave": "zhu-2024",
+      "cita": "Zhu, X. (2024). Impacts of management, climate and soil properties on nitrogen use efficiency and soil acidification in croplands in China. Tesis doctoral, Wageningen University, Países Bajos.",
+      "tema": "fertilización",
+      "cultivo": "arroz, cultivos de secano y rotaciones (13 ensayos de largo plazo)",
+      "lugar": "sur de China",
+      "aporta": "puntaje",
+      "items": [
+        {
+          "seccion": "Relaciones",
+          "pagina": "172",
+          "cita": "N transformation was the main driver of soil acidification in non-calcareous upland soils, accounting for 72% of total acid production rate",
+          "de": "fert.dosisN",
+          "a": "suelo.pH",
+          "sentido": "−",
+          "base": "medido",
+          "resultado": "En suelos de secano no calcáreos, la transformación del N del fertilizante fue la causa principal de la acidificación (72 % del ácido producido; balance con datos de 13 ensayos y lixiviación modelada)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "170",
+          "cita": "Excessive nitrogen (N) fertilizer application in China's croplands has led to low nitrogen use efficiency (NUE), leading to enhanced nitrate leaching which is accompanied by soil acidification",
+          "de": "fert.dosisN",
+          "a": "suelo.nutrientesLixiviados",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "El exceso de N baja la eficiencia de uso y sube la lixiviación de nitrato, con acidificación si el estiércol o la cal no reponen las bases (premisa de la tesis)",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "170",
+          "cita": "The use of manure, which contains base cations and HCO3-, mitigates the acidifying impact of N fertilizer inputs",
+          "de": "fert.abonoOrganico",
+          "a": "suelo.pH",
+          "sentido": "+",
+          "base": "afirmado",
+          "resultado": "El estiércol trae cationes básicos y bicarbonato que frenan la acidificación del N, pero puede acumular P en suelos con P alto",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Relaciones",
+          "pagina": "171",
+          "cita": "In addition to pH, an increase in phosphorus availability increased NUE",
+          "de": "suelo.fosforo",
+          "a": "cultivo.eficienciaN",
+          "sentido": "+",
+          "base": "medido",
+          "resultado": "Además del pH, más P disponible subió la eficiencia de uso del N",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "171",
+          "cita": "soil pH was the most important factor controlling NUE with an optimum pH around 6",
+          "variable": "suelo.pH",
+          "umbral": "El pH fue lo que más controló la eficiencia de uso del N, con un óptimo cerca de 6",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Umbrales",
+          "pagina": "171",
+          "cita": "the highest NUE was found when 25 to 30% of the total N input was supplied in organic form",
+          "variable": "fert.abonoOrganico",
+          "umbral": "La mayor eficiencia de uso del N se dio con 25 a 30 % del N total en forma orgánica",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "171",
+          "cita": "Current NUE equalled on average 30% in paddy soils, 39% in upland soils and 42% in paddy upland soils",
+          "dato": "Eficiencia de uso del N actual",
+          "valor": "30 % en arrozales, 39 % en secano y 42 % en arroz con secano",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "172",
+          "cita": "the need for total fertilizer and manure N and P inputs in China decreased by 49% and 70% respectively",
+          "dato": "Con manejo óptimo en China",
+          "valor": "el N y el P totales que se aplican bajarían 49 % y 70 %",
+          "coincidencia": "exacta"
+        },
+        {
+          "seccion": "Datos",
+          "pagina": "172",
+          "cita": "reduced soil acidification rates by 84%",
+          "dato": "Acidificación con manejo óptimo",
+          "valor": "−84 %, por menos nitrato lixiviado y más bases del estiércol",
+          "coincidencia": "exacta"
+        }
+      ],
+      "alertas": [
+        "Los porcentajes del manejo óptimo salen de un cálculo por provincia (capítulo 4, en preparación al publicarse la tesis), no de ensayos (pág. 172)."
+      ]
     }
   ],
   "relaciones": [
@@ -1406,6 +2568,22 @@ export const TESIS = {
       "vinculos": []
     },
     {
+      "de": "fert.dosisN",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "sigunga-1997",
+        "trinh-2007",
+        "zhu-2024"
+      ],
+      "medido": {
+        "sube": 2,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 2,
+      "vinculos": []
+    },
+    {
       "de": "riego.sistema",
       "a": "cultivo.rendimiento",
       "tesis": [
@@ -1417,6 +2595,51 @@ export const TESIS = {
         "sube": 0,
         "baja": 0,
         "sinEfecto": 2
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.incorporacion",
+      "a": "aire.amoniaco",
+      "tesis": [
+        "huijsmans-2003",
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 3,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.incorporacion",
+      "a": "cultivo.rendimiento",
+      "tesis": [
+        "schroder-1998",
+        "van-der-eijk-1997"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 1
+      },
+      "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "fert.meses",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "schroder-1998",
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 2,
+        "baja": 0,
+        "sinEfecto": 0
       },
       "otras": 0,
       "vinculos": []
@@ -1437,6 +2660,21 @@ export const TESIS = {
       "vinculos": []
     },
     {
+      "de": "suelo.humedad",
+      "a": "suelo.desnitrificacion",
+      "tesis": [
+        "anderson-2013",
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 2,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
       "de": "clima.alteraciones",
       "a": "riesgo.poli",
       "tesis": [
@@ -1448,6 +2686,76 @@ export const TESIS = {
         "sinEfecto": 0
       },
       "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "clima.lluvia",
+      "a": "suelo.nitrogenoMineral",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "clima.mesesLluvia",
+      "a": "aire.oxidoNitroso",
+      "tesis": [
+        "molodovskaya-2010"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "clima.mesesLluvia",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "trinh-2007"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "clima.mesesLluvia",
+      "a": "suelo.erosion",
+      "tesis": [
+        "trinh-2007"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "clima.mesesLluvia",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "uwimana-2019"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
       "vinculos": []
     },
     {
@@ -1521,6 +2829,188 @@ export const TESIS = {
       "vinculos": []
     },
     {
+      "de": "fert.abonoOrganico",
+      "a": "aire.amoniaco",
+      "tesis": [
+        "huijsmans-2003"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.abonoOrganico",
+      "a": "aire.oxidoNitroso",
+      "tesis": [
+        "molodovskaya-2010"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.abonoOrganico",
+      "a": "suelo.fosforo",
+      "tesis": [
+        "pacenka-2012"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.abonoOrganico",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "xiao-2016"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.abonoOrganico",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "xiao-2016"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.abonoOrganico",
+      "a": "suelo.pH",
+      "tesis": [
+        "zhu-2024"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisK",
+      "a": "suelo.zincLixiviado",
+      "tesis": [
+        "fallas-2022"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisN",
+      "a": "suelo.nitrogenoMineral",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisN",
+      "a": "cultivo.rendimiento",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisN",
+      "a": "suelo.pH",
+      "tesis": [
+        "zhu-2024"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisP",
+      "a": "suelo.boroAdsorbido",
+      "tesis": [
+        "fallas-2022"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 1
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisP",
+      "a": "suelo.fosforoLixiviado",
+      "tesis": [
+        "schoumans-2015"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "fert.dosisP",
+      "a": "cultivo.fijacionN",
+      "tesis": [
+        "vanek-2011"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
       "de": "fert.frecuencia",
       "a": "suelo.nutrientesLixiviados",
       "tesis": [
@@ -1530,6 +3020,118 @@ export const TESIS = {
         "sube": 0,
         "baja": 0,
         "sinEfecto": 1
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.frecuencia",
+      "a": "cultivo.rendimiento",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 1
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.incorporacion",
+      "a": "cultivo.absorcionNutrientes",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.meses",
+      "a": "aire.oxidoNitroso",
+      "tesis": [
+        "molodovskaya-2010"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "fert.meses",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "uwimana-2019"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "finca.distAgua",
+      "a": "agua.fosforoSubterranea",
+      "tesis": [
+        "flores-lopez-2009"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "finca.drenes",
+      "a": "cultivo.rendimiento",
+      "tesis": [
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "finca.drenes",
+      "a": "cultivo.absorcionNutrientes",
+      "tesis": [
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "finca.humedalNatural",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "uwimana-2019"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
       },
       "otras": 0,
       "vinculos": []
@@ -1549,6 +3151,20 @@ export const TESIS = {
       "vinculos": [
         "suelo-pendiente"
       ]
+    },
+    {
+      "de": "finca.pendiente",
+      "a": "suelo.balanceNutrientes",
+      "tesis": [
+        "vanek-2011"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
     },
     {
       "de": "finca.sombra",
@@ -1793,6 +3409,34 @@ export const TESIS = {
       "vinculos": []
     },
     {
+      "de": "suelo.biocarbon",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "major-2009"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.biocarbon",
+      "a": "cultivo.rendimiento",
+      "tesis": [
+        "major-2009"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
       "de": "suelo.compactacion",
       "a": "cultivo.absorcionNutrientes",
       "tesis": [
@@ -1807,10 +3451,178 @@ export const TESIS = {
       "vinculos": []
     },
     {
+      "de": "suelo.desnudoMeses",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.erosion",
+      "a": "suelo.balanceNutrientes",
+      "tesis": [
+        "vanek-2011"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.fosforo",
+      "a": "cultivo.eficienciaN",
+      "tesis": [
+        "zhu-2024"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
       "de": "suelo.humedad",
       "a": "cultivo.rendimiento",
       "tesis": [
         "brenes-2004"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.humedad",
+      "a": "suelo.fosforo",
+      "tesis": [
+        "pacenka-2012"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.humedad",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "xiao-2016"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.pH",
+      "a": "suelo.zincLixiviado",
+      "tesis": [
+        "fallas-2022"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 1,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.pH",
+      "a": "aire.amoniaco",
+      "tesis": [
+        "sigunga-1997"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.retencionAgua",
+      "a": "suelo.nutrientesLixiviados",
+      "tesis": [
+        "schroder-1998"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.saturacionFosforo",
+      "a": "suelo.fosforoLixiviado",
+      "tesis": [
+        "schoumans-2015"
+      ],
+      "medido": {
+        "sube": 0,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 1,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.usoIntensivo",
+      "a": "suelo.compactacion",
+      "tesis": [
+        "recha-2011"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.usoIntensivo",
+      "a": "suelo.escorrentia",
+      "tesis": [
+        "recha-2011"
+      ],
+      "medido": {
+        "sube": 1,
+        "baja": 0,
+        "sinEfecto": 0
+      },
+      "otras": 0,
+      "vinculos": []
+    },
+    {
+      "de": "suelo.usoIntensivo",
+      "a": "agua.nutrientesEscorrentia",
+      "tesis": [
+        "recha-2011"
       ],
       "medido": {
         "sube": 1,
@@ -1851,6 +3663,37 @@ export const TESIS = {
   ],
   "candidatas": [
     {
+      "id": "agua.fosforoSubterranea",
+      "nombre": "Fósforo soluble en el agua subterránea",
+      "tesis": [
+        "flores-lopez-2009"
+      ]
+    },
+    {
+      "id": "agua.nutrientesEscorrentia",
+      "nombre": "Nitrógeno y fósforo que la escorrentía arrastra hacia el cauce",
+      "tesis": [
+        "recha-2011",
+        "uwimana-2019",
+        "xiao-2016"
+      ]
+    },
+    {
+      "id": "aire.amoniaco",
+      "nombre": "Amoníaco (NH3) que se volatiliza del fertilizante o del estiércol",
+      "tesis": [
+        "huijsmans-2003",
+        "sigunga-1997"
+      ]
+    },
+    {
+      "id": "aire.oxidoNitroso",
+      "nombre": "Óxido nitroso (N2O) que emite el suelo",
+      "tesis": [
+        "molodovskaya-2010"
+      ]
+    },
+    {
       "id": "clima.alteraciones",
       "nombre": "Alteraciones del clima",
       "tesis": [
@@ -1858,10 +3701,19 @@ export const TESIS = {
       ]
     },
     {
+      "id": "clima.lluvia",
+      "nombre": "Lluvia acumulada en el período (mm)",
+      "tesis": [
+        "schroder-1998"
+      ]
+    },
+    {
       "id": "cultivo.absorcionNutrientes",
       "nombre": "Absorción de nutrientes por la planta",
       "tesis": [
-        "brenes-2004"
+        "brenes-2004",
+        "schroder-1998",
+        "sigunga-1997"
       ]
     },
     {
@@ -1902,10 +3754,24 @@ export const TESIS = {
       ]
     },
     {
+      "id": "cultivo.eficienciaN",
+      "nombre": "Eficiencia de uso del nitrógeno (NUE)",
+      "tesis": [
+        "zhu-2024"
+      ]
+    },
+    {
       "id": "cultivo.enfermedades",
       "nombre": "Enfermedades del cultivo",
       "tesis": [
         "flores-2002"
+      ]
+    },
+    {
+      "id": "cultivo.fijacionN",
+      "nombre": "Nitrógeno fijado por las leguminosas",
+      "tesis": [
+        "vanek-2011"
       ]
     },
     {
@@ -1924,21 +3790,88 @@ export const TESIS = {
         "castillo-2007",
         "chi-bautista-2011",
         "echeverria-2015",
+        "major-2009",
         "mejia-reyes-2020",
         "molina-2009",
         "ordonez-ventura-2015",
         "plaza-2004",
         "poquiviqui-1998",
         "saltos-2009",
+        "schroder-1998",
+        "sigunga-1997",
         "t215-1990",
+        "van-der-eijk-1997",
         "vargas-cazar-2019"
+      ]
+    },
+    {
+      "id": "fert.abonoOrganico",
+      "nombre": "Estiércol, purín o digestato aplicado como abono",
+      "tesis": [
+        "huijsmans-2003",
+        "molodovskaya-2010",
+        "pacenka-2012",
+        "xiao-2016",
+        "zhu-2024"
+      ]
+    },
+    {
+      "id": "fert.dosisK",
+      "nombre": "Dosis de potasio aplicada (KCl)",
+      "tesis": [
+        "fallas-2022"
+      ]
+    },
+    {
+      "id": "fert.dosisN",
+      "nombre": "Dosis de nitrógeno aplicada",
+      "tesis": [
+        "schroder-1998",
+        "sigunga-1997",
+        "trinh-2007",
+        "zhu-2024"
+      ]
+    },
+    {
+      "id": "fert.dosisP",
+      "nombre": "Dosis de fósforo aplicada",
+      "tesis": [
+        "fallas-2022",
+        "schoumans-2015",
+        "van-der-eijk-1997",
+        "vanek-2011"
       ]
     },
     {
       "id": "fert.frecuencia",
       "nombre": "Frecuencia o fraccionamiento de la fertilización",
       "tesis": [
-        "alpizar-2000"
+        "alpizar-2000",
+        "schroder-1998"
+      ]
+    },
+    {
+      "id": "fert.incorporacion",
+      "nombre": "Fertilizante incorporado, inyectado o colocado en banda (frente a dejarlo al voleo en la superficie)",
+      "tesis": [
+        "huijsmans-2003",
+        "schroder-1998",
+        "sigunga-1997",
+        "van-der-eijk-1997"
+      ]
+    },
+    {
+      "id": "finca.drenes",
+      "nombre": "Drenes abiertos en el campo",
+      "tesis": [
+        "sigunga-1997"
+      ]
+    },
+    {
+      "id": "finca.humedalNatural",
+      "nombre": "Humedal, pasto o bosque natural en el fondo del valle",
+      "tesis": [
+        "uwimana-2019"
       ]
     },
     {
@@ -2068,39 +4001,141 @@ export const TESIS = {
       ]
     },
     {
+      "id": "suelo.balanceNutrientes",
+      "nombre": "Balance de nutrientes del campo (entradas menos salidas)",
+      "tesis": [
+        "vanek-2011"
+      ]
+    },
+    {
+      "id": "suelo.biocarbon",
+      "nombre": "Biocarbón (biochar) aplicado al suelo",
+      "tesis": [
+        "major-2009"
+      ]
+    },
+    {
+      "id": "suelo.boroAdsorbido",
+      "nombre": "Boro retenido (adsorbido) por el suelo",
+      "tesis": [
+        "fallas-2022"
+      ]
+    },
+    {
       "id": "suelo.compactacion",
       "nombre": "Compactación del suelo",
       "tesis": [
-        "brenes-2004"
+        "brenes-2004",
+        "recha-2011"
+      ]
+    },
+    {
+      "id": "suelo.desnitrificacion",
+      "nombre": "Desnitrificación (nitrato que el suelo convierte en gas)",
+      "tesis": [
+        "anderson-2013",
+        "sigunga-1997"
+      ]
+    },
+    {
+      "id": "suelo.erosion",
+      "nombre": "Suelo perdido por erosión",
+      "tesis": [
+        "trinh-2007",
+        "vanek-2011"
+      ]
+    },
+    {
+      "id": "suelo.escorrentia",
+      "nombre": "Lluvia que escurre sobre el suelo (fracción de la lluvia)",
+      "tesis": [
+        "recha-2011"
+      ]
+    },
+    {
+      "id": "suelo.fosforo",
+      "nombre": "Fósforo disponible en el suelo (análisis de suelo)",
+      "tesis": [
+        "pacenka-2012",
+        "zhu-2024"
+      ]
+    },
+    {
+      "id": "suelo.fosforoLixiviado",
+      "nombre": "Fósforo que se lava del suelo hacia el agua",
+      "tesis": [
+        "schoumans-2015"
       ]
     },
     {
       "id": "suelo.humedad",
       "nombre": "Humedad del suelo",
       "tesis": [
+        "anderson-2013",
         "brenes-2004",
-        "cerrato-2022"
+        "cerrato-2022",
+        "pacenka-2012",
+        "sigunga-1997",
+        "xiao-2016"
+      ]
+    },
+    {
+      "id": "suelo.nitrogenoMineral",
+      "nombre": "Nitrógeno mineral del suelo (nitrato y amonio, por análisis)",
+      "tesis": [
+        "schroder-1998"
       ]
     },
     {
       "id": "suelo.nutrientesLixiviados",
       "nombre": "Nitrato y potasio lixiviados bajo la zona de raíces",
       "tesis": [
-        "alpizar-2000"
+        "alpizar-2000",
+        "major-2009",
+        "schroder-1998",
+        "sigunga-1997",
+        "trinh-2007",
+        "xiao-2016",
+        "zhu-2024"
+      ]
+    },
+    {
+      "id": "suelo.pH",
+      "nombre": "pH del suelo",
+      "tesis": [
+        "fallas-2022",
+        "sigunga-1997",
+        "zhu-2024"
       ]
     },
     {
       "id": "suelo.retencionAgua",
       "nombre": "Capacidad del suelo para retener agua",
       "tesis": [
-        "rios-2024"
+        "rios-2024",
+        "schroder-1998"
+      ]
+    },
+    {
+      "id": "suelo.saturacionFosforo",
+      "nombre": "Grado de saturación de fosfato del suelo (PSD)",
+      "tesis": [
+        "schoumans-2015"
       ]
     },
     {
       "id": "suelo.usoIntensivo",
       "nombre": "Uso agrícola intensivo del suelo (monocultivo convencional)",
       "tesis": [
+        "recha-2011",
         "rios-2024"
+      ]
+    },
+    {
+      "id": "suelo.zincLixiviado",
+      "nombre": "Zinc que se desorbe y se lava del suelo",
+      "tesis": [
+        "fallas-2022"
       ]
     },
     {

@@ -297,6 +297,13 @@ export const BOVEDA = {
       "acceso": "tesis leída: CPA-2000-T005.pdf",
       "tesis": true
     },
+    "anderson-2013": {
+      "cita": "Anderson, T. R. (2013). Denitrification in riparian zones and other saturated soils of a northeastern agricultural landscape. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-34368.pdf",
+      "tesis": true
+    },
     "benavides-jara-2014": {
       "cita": "Benavides Cabezas, Á. V. y Jara Velasteguí, E. I. (2014). Comparación de tres sistemas de riego para la producción de arroz con tres densidades de siembra en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
@@ -339,6 +346,13 @@ export const BOVEDA = {
       "acceso": "tesis leída: CPA-2015-031.pdf",
       "tesis": true
     },
+    "fallas-2022": {
+      "cita": "Fallas Corrales, R. A. (2022). Fertilizer interactions with micronutrients in tropical volcanic soils. Tesis doctoral, Wageningen University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-576126.pdf",
+      "tesis": true
+    },
     "flores-2002": {
       "cita": "Flores Fukuda, V. (2002). Evaluación de cuatro medios de enraizamiento y tres instalaciones para la producción de la Flor de Pascua (Euphorbia pulcherrima). Proyecto especial, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
@@ -346,11 +360,32 @@ export const BOVEDA = {
       "acceso": "tesis leída: CPA-2002-T050.pdf",
       "tesis": true
     },
+    "flores-lopez-2009": {
+      "cita": "Flores-Lopez, F. J. (2009). Soluble phosphorus and nitrate transport by monitoring ground water and stream flow discharges in the New York City source watersheds. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-13846.pdf",
+      "tesis": true
+    },
     "godoy-garzon-2015": {
       "cita": "Godoy Franco, G. C. y Garzón Andrade, R. M. (2015). Diagnóstico del estado de la parcela de conservación de Zamorano: estudio de suelos, producción de cultivos y prácticas de conservación de suelos. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: CPA-2015-042.pdf",
+      "tesis": true
+    },
+    "huijsmans-2003": {
+      "cita": "Huijsmans, J. F. M. (2003). Manure application and ammonia volatilization. Tesis doctoral, Wageningen University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-121465.pdf",
+      "tesis": true
+    },
+    "major-2009": {
+      "cita": "Major, J. (2009). Biochar application to a Colombian savanna Oxisol: fate and effect on soil fertility, crop production, nutrient leaching and soil hydrology. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-13491.pdf",
       "tesis": true
     },
     "mata-2021": {
@@ -374,11 +409,25 @@ export const BOVEDA = {
       "acceso": "tesis leída: T2795.pdf",
       "tesis": true
     },
+    "molodovskaya-2010": {
+      "cita": "Molodovskaya, M. (2010). The emissions of nitrous oxide from agricultural fields in New York State: effect of fertilization and analysis of temporal and spatial variability. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-14809.pdf",
+      "tesis": true
+    },
     "ordonez-ventura-2015": {
       "cita": "Ordoñez Bonilla, J. A. y Ventura Hernández, A. J. (2015). Evaluación técnica de tres laterales de riego por goteo a baja presión en un huerto biointensivo. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: CPA-2015-064.pdf",
+      "tesis": true
+    },
+    "pacenka-2012": {
+      "cita": "Pacenka, S. (2012). Can soil test phosphorus track phosphorus changes for water quality management? Tesis de maestría, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-31236.pdf",
       "tesis": true
     },
     "plaza-2004": {
@@ -395,6 +444,13 @@ export const BOVEDA = {
       "acceso": "tesis leída: CPA -1998-T 086.pdf",
       "tesis": true
     },
+    "recha-2011": {
+      "cita": "Recha, J. W. (2011). Streamwater dynamics and carbon and nutrient losses in tropical headwater catchments at a soil degradation gradient. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-30676.pdf",
+      "tesis": true
+    },
     "rios-2024": {
       "cita": "Ríos Morantes, F. J. (2024). Caracterización de la capacidad de retención de agua de cinco lotes contrastantes en manejo en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
@@ -409,11 +465,60 @@ export const BOVEDA = {
       "acceso": "tesis leída: T2841.pdf",
       "tesis": true
     },
+    "schoumans-2015": {
+      "cita": "Schoumans, O. F. (2015). Phosphorus leaching from soils: process description, risk assessment and mitigation. Tesis doctoral, Wageningen University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-342395.pdf",
+      "tesis": true
+    },
+    "schroder-1998": {
+      "cita": "Schröder, J. J. (1998). Towards improved nitrogen management in silage maize production on sandy soils. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-210937.pdf",
+      "tesis": true
+    },
+    "sigunga-1997": {
+      "cita": "Sigunga, D. O. (1997). Fertilizer nitrogen use efficiency and nutrient uptake by maize (Zea mays L.) in Vertisols in Kenya. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-211145.pdf",
+      "tesis": true
+    },
     "t215-1990": {
       "cita": "[Autor no legible en el escaneo] (1990). Densidades de siembra de pepino (Cucumis sativus L.) cultivar Super Poinsett para el valle de Yeguare. Tesis de Ingeniero Agrónomo, Escuela Agrícola Panamericana, El Zamorano, Honduras.",
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: T215.pdf",
+      "tesis": true
+    },
+    "trinh-2007": {
+      "cita": "Trinh Van Mai (2007). Soil erosion and nitrogen leaching in northern Vietnam: experimentation and modelling. Tesis doctoral, Wageningen University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-26227.pdf",
+      "tesis": true
+    },
+    "uwimana-2019": {
+      "cita": "Uwimana, A. (2019). Effects of wetland conversion to farming on water quality and sediment and nutrient retention in a tropical catchment. Tesis doctoral, Wageningen University e IHE Delft, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-497779.pdf",
+      "tesis": true
+    },
+    "van-der-eijk-1997": {
+      "cita": "van der Eijk, D. (1997). Phosphate fixation and the response of maize to fertilizer phosphate in Kenyan soils. Tesis doctoral, Wageningen Agricultural University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-210644.pdf",
+      "tesis": true
+    },
+    "vanek-2011": {
+      "cita": "Vanek, S. J. (2011). Legume-phosphorus synergies in mountain agroecosystems: field nutrient balances, soil fertility gradients, and effects on legume attributes and nutrient cycling in the Bolivian Andes. Tesis doctoral, Cornell University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: cornell-1813-33615.pdf",
       "tesis": true
     },
     "vargas-2008": {
@@ -435,6 +540,20 @@ export const BOVEDA = {
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: CPA-2023-T088.pdf",
+      "tesis": true
+    },
+    "xiao-2016": {
+      "cita": "Xiao, M. (2016). Nutrient runoff and leachate after land-application of digestate in a laboratory study using rainfall simulations. Tesis de maestría, Purdue University, Estados Unidos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: purdue-oat-1019.pdf",
+      "tesis": true
+    },
+    "zhu-2024": {
+      "cita": "Zhu, X. (2024). Impacts of management, climate and soil properties on nitrogen use efficiency and soil acidification in croplands in China. Tesis doctoral, Wageningen University, Países Bajos.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: wur-651476.pdf",
       "tesis": true
     },
     "fao-tm4": {

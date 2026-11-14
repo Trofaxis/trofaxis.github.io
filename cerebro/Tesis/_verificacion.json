@@ -12,6 +12,14 @@
       "0be2e94427111c7b": "aproximada (OCR, 0.96)"
     }
   },
+  "anderson-2013": {
+    "texto_sha256": "2ac8225249f8f50e3939681f3ef9e987c06d3fa1649db739f648a75966fe401f",
+    "items": {
+      "add668921444b686": "exacta",
+      "1f51ed7021abc2a2": "exacta",
+      "a817b590ea8685ab": "exacta"
+    }
+  },
   "benavides-jara-2014": {
     "texto_sha256": "93eb8c7a762ad5c20d64b8a4cf11ba1ec203ba65d8e846fa114e86396bfa3b86",
     "items": {
@@ -63,11 +71,30 @@
       "a0ab967775e83df5": "exacta"
     }
   },
+  "fallas-2022": {
+    "texto_sha256": "059651baa90a492eade640687c087bcc5aefc944f73fb31e387b34c571daa64b",
+    "items": {
+      "b660ecc55e00b2ad": "exacta",
+      "33281e5a0a395010": "exacta",
+      "1b47b25bcabb1ac2": "exacta",
+      "96ec84b9fc3845f2": "exacta"
+    }
+  },
   "flores-2002": {
     "texto_sha256": "85e2d7721fdad8cdc8874a8ac30a1799a36969c82eb01d2871c2bbdb70b8f5e9",
     "items": {
       "150fbaf8bac7a479": "exacta",
       "d87ba3287bdd3579": "exacta"
+    }
+  },
+  "flores-lopez-2009": {
+    "texto_sha256": "afeac065fe741d43605d75fffdb6c3b039b07a1b44932905f8edcd30b91304c0",
+    "items": {
+      "e3c2135fe0015a33": "exacta",
+      "a990ef219b46f461": "exacta",
+      "2135cc46c04b723a": "exacta",
+      "1332b12cc7ed2f88": "exacta",
+      "19767e4cbb6506a2": "exacta"
     }
   },
   "godoy-garzon-2015": {
@@ -79,6 +106,15 @@
       "852cb64e1a9c8872": "exacta",
       "18873d249d91c787": "exacta",
       "61176bcd0ece97c7": "exacta"
+    }
+  },
+  "huijsmans-2003": {
+    "texto_sha256": "5791a694e83ac33a340088c8601789c41571e7b3418319b964ee441635235476",
+    "items": {
+      "8cefaa0ff701f965": "exacta",
+      "0d3bbc9fabad87c5": "exacta",
+      "f1ce4caf384d9f51": "exacta",
+      "aacbb72b8e117452": "exacta"
     }
   },
   "kuniyoshi": {
@@ -102,6 +138,14 @@
       "1e057be9d4a93955": "exacta"
     }
   },
+  "major-2009": {
+    "texto_sha256": "8f457c9273b4150f405640f493c49ac607aa18b4c8b31b7f93eee96c187660f2",
+    "items": {
+      "42090482573e83a5": "exacta",
+      "b5e98667a78b3ff7": "exacta",
+      "bec137328feb9f5e": "exacta"
+    }
+  },
   "mata-2021": {
     "texto_sha256": "86dbe7be4474dafa2f4360703d344849b071a6928939904518ad78777576c844",
     "items": {
@@ -123,6 +167,15 @@
       "9e987317f313908d": "exacta",
       "5e28beaf315ae6c6": "exacta",
       "9c6e898626d9f3e3": "exacta"
+    }
+  },
+  "molodovskaya-2010": {
+    "texto_sha256": "28c6442a1804709b61471cd546b680d9a045226955093986b51ef9512a7c8f6a",
+    "items": {
+      "b4924ff8b24c06cf": "exacta",
+      "bf48fb66233237c9": "exacta",
+      "e9d5c6f2406a85fe": "exacta",
+      "b83e7f28eb6c213a": "exacta"
     }
   },
   "ordonez-ventura-2015": {
@@ -155,6 +208,14 @@
       "d4f7b87a759f17b2": "exacta"
     }
   },
+  "pacenka-2012": {
+    "texto_sha256": "555fbee90451dab7d3fb3edd4317583d3551ba72ff1d789e78b16d174cfe4754",
+    "items": {
+      "6c91902264ebf352": "exacta",
+      "b0f8048d000293be": "exacta",
+      "f6cc8143307b1c0a": "exacta"
+    }
+  },
   "plaza-2004": {
     "texto_sha256": "29729786724fe8f29136a506d54c6acb6df0fbaf387794144fbf490b87fc6306",
     "items": {
@@ -176,6 +237,15 @@
       "9471450b7a6cd0a7": "aproximada (OCR, 0.95)"
     }
   },
+  "recha-2011": {
+    "texto_sha256": "2371b7cbcd5e7a70ac516d955d0badd660e82049d435ea25db937ff0cd9f8bf9",
+    "items": {
+      "cf5adf5ddc0e8240": "exacta",
+      "49bb94ee0d12532a": "exacta",
+      "4535448776dbb2d3": "exacta",
+      "a3f8e0ecf73c149f": "exacta"
+    }
+  },
   "rios-2024": {
     "texto_sha256": "c09bed886b03d2f938422f8901727f1d3ad231aac5b666a86c8361bd1f88da41",
     "items": {
@@ -192,10 +262,98 @@
       "e037b49b133c2f86": "exacta"
     }
   },
+  "schoumans-2015": {
+    "texto_sha256": "c2467bf87267f8113cdefc1fd1b2cb5c6681ec698f9501eb7ad7040c5705b7f2",
+    "items": {
+      "de04201164317a8d": "exacta",
+      "854a76d19ff47dc1": "exacta",
+      "1e74b8343cd0f183": "exacta",
+      "bf8fcd88d4015486": "exacta",
+      "e1187095d9cc34c8": "exacta",
+      "adddd1d406f0feb8": "exacta",
+      "1d932b0e2740833a": "exacta"
+    }
+  },
+  "schroder-1998": {
+    "texto_sha256": "d3ca60af7c5d5662adcf129910f93cceee307d5b12e36fe857eab3a147837dab",
+    "items": {
+      "98c5a46e85ec055a": "exacta",
+      "91b298049dcc8ec6": "exacta",
+      "42e21fe754290c1a": "exacta",
+      "2aed11fef88babe4": "exacta",
+      "1bbeacee574c41b9": "exacta",
+      "99a6d3ba26773c2e": "aproximada (OCR, 0.96)",
+      "c4475c12a6137768": "exacta",
+      "2db1ce9470114f10": "exacta",
+      "f89e3e91d843eb96": "exacta",
+      "dee2f6e4951c47c7": "aproximada (OCR, 0.98)",
+      "f2b750185bdde49f": "exacta",
+      "5db2f907b0c3674c": "exacta",
+      "db0a353afc7d0d0f": "exacta",
+      "34676d9b63ba3b5d": "exacta",
+      "68ddb7f864b0869c": "exacta"
+    }
+  },
+  "sigunga-1997": {
+    "texto_sha256": "25d4034386d7bb65c64d234dc3330729d88389a6f9f6ca9b58e34564845ed58c",
+    "items": {
+      "5b778c1ae696b23d": "exacta",
+      "4776bd290e356222": "exacta",
+      "c8693983e8938721": "exacta",
+      "e932ad7c81ead18b": "aproximada (OCR, 0.94)",
+      "ffbe8579b55f42b8": "aproximada (OCR, 0.92)",
+      "f75a842d8eec8d97": "exacta",
+      "ead28adfede225ec": "exacta",
+      "6641da36d97300dc": "exacta",
+      "981f0a61e7befa4e": "exacta",
+      "54849069e70bc60a": "exacta"
+    }
+  },
   "t215-1990": {
     "texto_sha256": "92b20707fc77173c2c678f271846ce2115e1986e4c8f51ee7ad82d92857f5441",
     "items": {
       "e53253a59ec78200": "aproximada (OCR, 0.88)"
+    }
+  },
+  "trinh-2007": {
+    "texto_sha256": "dbdba5343f3e0dfb25a9556f54c3aec43d014312d4a8dde92ac25062e265a6b3",
+    "items": {
+      "85de1ef4bc759f71": "exacta",
+      "15cf9f438051abb6": "exacta",
+      "7bf85dce2af7bbb9": "exacta",
+      "ba71810a41e2a208": "exacta",
+      "9c45f82624b40ea5": "exacta",
+      "69b7ccbc14a45755": "exacta",
+      "e7e4ce399899398a": "exacta"
+    }
+  },
+  "uwimana-2019": {
+    "texto_sha256": "273b191d66f95d406f92e2fc76ac33b9e3e9c458c45edff8882817241d2cf8eb",
+    "items": {
+      "1bde155930880dc5": "exacta",
+      "4b065d664f3a21cc": "exacta",
+      "dd3988ca36b90e69": "exacta",
+      "7424952fed9177bf": "exacta",
+      "77062592cf76bdf3": "exacta"
+    }
+  },
+  "van-der-eijk-1997": {
+    "texto_sha256": "e6014341d582c8259585290638bbf9fe39391460b01c4992f32ef4e46d7a4b5a",
+    "items": {
+      "2f111d44e3adb126": "exacta",
+      "afa16c02e619c74f": "aproximada (OCR, 0.96)",
+      "ff83635a5ca3d4d1": "exacta",
+      "5ede2b0491f12297": "exacta",
+      "d462388cb19e1903": "exacta",
+      "e054eafd36282725": "exacta"
+    }
+  },
+  "vanek-2011": {
+    "texto_sha256": "8a340e96eeb8a353fe3fa6a74366fb2e9cb4b0fb770eae85ca7013eb7135e358",
+    "items": {
+      "08cd29adf51063c8": "exacta",
+      "bba50e265f97623c": "exacta",
+      "c6cb457f1e01f83a": "exacta"
     }
   },
   "vargas-2008": {
@@ -230,6 +388,30 @@
       "a480d51a63a822c8": "exacta",
       "55fde4be07bb86fc": "exacta",
       "b349e25f06cf0368": "exacta"
+    }
+  },
+  "xiao-2016": {
+    "texto_sha256": "5fdfa3cbf5a096ea6638ba8894d214fd237d555807f3ddf5c51155a60762b9bc",
+    "items": {
+      "a3eef1287f1a8033": "exacta",
+      "fcc206a8fff89ff1": "exacta",
+      "4f158a983fca2ba8": "exacta",
+      "7b9cb44fd0028b44": "exacta",
+      "37bc07d957c45c0f": "exacta"
+    }
+  },
+  "zhu-2024": {
+    "texto_sha256": "e9016782694a9cc04af54f25013e71241046f7168d906c6f3367191761de136f",
+    "items": {
+      "4047884eddbae587": "exacta",
+      "74eff440810179a6": "exacta",
+      "a097373bc33c06e1": "exacta",
+      "96069098bb7249bf": "exacta",
+      "692dde558f623b8e": "exacta",
+      "9a54a9804f88f5f5": "exacta",
+      "3d21c4c19185dd5b": "exacta",
+      "93502c1ff5c41dbf": "exacta",
+      "5846a0e480503fd6": "exacta"
     }
   }
 }
