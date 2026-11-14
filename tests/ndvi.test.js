@@ -16,7 +16,7 @@ const lote1ha = [[14.01, -87.01], [14.01, -87.009], [14.009, -87.009], [14.009, 
 const env = new Map([
   ['SUPABASE_URL', 'https://proyecto-ficticio.supabase.co'],
   ['SUPABASE_ANON_KEY', 'clave-publica-ficticia'],
-  ['CDSE_CLIENT_ID', 'cliente-ficticio'],
+  ['CDSE_CLIENT_ID', ' cliente-ficticio\n'],
   ['CDSE_CLIENT_SECRET', 'secreto-ficticio'],
 ]);
 const pedido = (cuerpo, { origen = 'https://trofaxis.github.io', token = 'jwt-ficticio' } = {}) => new Request('https://proyecto-ficticio.supabase.co/functions/v1/ndvi', {
@@ -99,6 +99,7 @@ test('la función exige origen permitido y sesión, verifica la sesión y no res
   assert.doesNotMatch(JSON.stringify(o), /14\.01|87\.0|coordinates/, 'la respuesta no devuelve el contorno');
   assert.deepEqual(f.llamadas.map((x) => x.url), ['https://proyecto-ficticio.supabase.co/auth/v1/user', E.URL_TOKEN, E.URL_ESTADISTICAS]);
   assert.match(f.llamadas[1].op.body, /grant_type=client_credentials/);
+  assert.match(f.llamadas[1].op.body, /client_id=cliente-ficticio&/, 'sin los espacios que quedaron al pegar el secreto');
   assert.equal(f.llamadas[2].op.headers.Authorization, 'Bearer token-cdse');
 
   // El token de Copernicus se reutiliza mientras no venza.

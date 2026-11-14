@@ -172,7 +172,8 @@ export async function handleNdvi(request, { env = globalThis.Deno?.env, fetchFn 
 
   const url = String(valorEnv(env, 'SUPABASE_URL') || '').replace(/\/$/, '');
   const clavePublica = valorEnv(env, 'SUPABASE_ANON_KEY') || valorEnv(env, 'SUPABASE_PUBLISHABLE_KEY');
-  const id = valorEnv(env, 'CDSE_CLIENT_ID'), secreto = valorEnv(env, 'CDSE_CLIENT_SECRET');
+  // Se quitan espacios por si quedaron al pegar los secretos en Supabase.
+  const id = String(valorEnv(env, 'CDSE_CLIENT_ID') || '').trim(), secreto = String(valorEnv(env, 'CDSE_CLIENT_SECRET') || '').trim();
   if (!url || !clavePublica || !id || !secreto) return error(503, 'El NDVI todavía no está configurado en el servidor.', cors);
 
   // Solo personas con sesión: la cuota de Copernicus es de la cuenta de Trofaxis.
