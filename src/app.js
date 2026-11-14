@@ -15,7 +15,8 @@ import { mostrarBienvenida, guardarBienvenida, leerBienvenida } from './core/bie
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewCasos } from './ui/casos.js';
-import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual, descargarRespaldoMapa } from './ui/mapa.js';
+import { viewLotes } from './ui/vista-lotes.js';
+import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual, descargarRespaldoMapa, usarSesion } from './ui/mapa.js';
 import { descargarImagenPlan } from './ui/plan-imagen.js';
 import { apiRadar } from './apiradar/diagnostico.js';
 import { marcarManual } from './ui/clima.js';
@@ -94,6 +95,7 @@ function sesionLista() {
   renovando ??= nube.renovarSesion(n.sesion).then((s) => { guardarSesion(s); n.sesion = s; return s; }).finally(() => { renovando = null; });
   return renovando;
 }
+usarSesion(sesionLista); // el NDVI del lote pide la sesión ya renovada
 
 function applyTheme(){const r=document.documentElement;r.setAttribute('data-theme',S.theme==='dark'?'dark':'light');
 }
@@ -147,7 +149,7 @@ function avisoGuardado(){const app=document.getElementById('app');if(!app)return
   const nuevo=visible&&!avisoVisible;avisoVisible=visible;return nuevo?TEXTO_AVISO:'';}
 function getRef(path){const p=path.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];return[o,p[p.length-1]];}
 // Vistas que se descargan la primera vez que se abren; las demás vienen con la página.
-const VISTAS={bienvenida:viewBienvenida,entrar:viewEntrar,dashboard:viewDashboard,auditoria:viewAuditoria,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,ajustes:viewSettings};
+const VISTAS={bienvenida:viewBienvenida,entrar:viewEntrar,dashboard:viewDashboard,auditoria:viewAuditoria,wizard:viewWizard,plantillas:viewTemplates,casos:viewCasos,lotes:viewLotes,ajustes:viewSettings};
 const cargador=crearCargador({
   riego:(i)=>import(conIntento('./ui/riego.js',i)).then(m=>m.viewRiego),
   fertilizacion:(i)=>import(conIntento('./ui/fertilizacion.js',i)).then(m=>m.viewFertilizacion),

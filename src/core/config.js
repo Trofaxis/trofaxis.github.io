@@ -135,6 +135,7 @@ export const CONFIG = {
     // Rectángulo aproximado de Honduras continental e islas (criterio propio, solo para avisar).
     honduras: { latMin: 12.9, latMax: 17.5, lonMin: -89.4, lonMax: -83.1 },
     toleranciaArea: 0.2, // aviso si el área dibujada difiere más de 20 % de la declarada (criterio propio)
+    maxLotes: 30, // lotes que se pueden dibujar en una finca (criterio propio, límite de almacenamiento)
   },
 
   // Clima por ubicación (Issue #8, crítica 3): Open-Meteo, clima histórico (ERA5 / ERA5-Land de Copernicus).
@@ -152,6 +153,11 @@ export const CONFIG = {
     decimalesCoord: 2, // coordenadas que se envían al servicio: 2 decimales (~1 km)
     esperaMs: 30000, // tiempo máximo de espera de la descarga
     cacheDias: 180, // días que se reutiliza una descarga del mismo punto
+    // Clima de ahora (vista de lotes): pronóstico de Open-Meteo, mismo redondeo de coordenadas.
+    // Variables «current» y códigos WMO: https://open-meteo.com/en/docs
+    urlAhora: 'https://api.open-meteo.com/v1/forecast',
+    ahoraVigenciaMin: 30, // minutos que se reutiliza el clima de ahora del mismo punto (criterio propio)
+    ahoraEsperaMs: 15000, // tiempo máximo de espera (criterio propio)
   },
 
   // Riego: hidráulica y reservorio. Fuente de cada valor al lado.
@@ -219,6 +225,20 @@ export const CONFIG = {
   // Nube (Etapa 2 de la memoria de casos): proyecto Supabase "biogap".
   // La clave publicable es pública por diseño; el acceso lo limita la seguridad por filas (RLS) de la base.
   // NUNCA pongas aquí la clave service_role. Con url o clave vacías, la app funciona solo en local.
+  // NDVI por lote (vista de lotes): función «ndvi» de Supabase, que consulta la Statistical API de Copernicus Data Space
+  // con imágenes Sentinel-2 L2A de 10 m. Solo con sesión iniciada y cuando la persona lo pide. Ver docs/lotes.md.
+  ndvi: {
+    funcion: 'ndvi', // supabase/functions/ndvi
+    dias: 60, // días hacia atrás en que se buscan imágenes (criterio propio; Sentinel-2 pasa cada ~5 días en el trópico)
+    // Clases de la capa SCL de Sentinel-2 que no cuentan: sin dato, saturado, sombra de nube, nube media y alta, cirro y nieve
+    // (criterio propio sobre la clasificación de ESA; la documentación de Copernicus no recomienda un conjunto).
+    scl: [0, 1, 3, 8, 9, 10, 11],
+    minValidos: 0.6, // una fecha se usa si al menos el 60 % del lote se ve sin nubes (criterio propio)
+    cambioMin: 0.05, // cambio de NDVI menor a esto se muestra como «estable» (criterio propio)
+    cacheHoras: 24, // horas que se reutiliza el NDVI de un lote en este dispositivo (criterio propio, cuida la cuota)
+    esperaMs: 40000, // tiempo máximo de espera (criterio propio)
+  },
+
   nube: {
     url: 'https://kfybqlknlkxrqphwopfx.supabase.co',
     clavePublicable: 'sb_publishable_GZY64ytTNLaL9898VrIGKA_P0ZdFOXb',

@@ -26,9 +26,10 @@ test('los scripts solo salen del propio sitio: sin unsafe-inline ni unsafe-eval'
 
 test('connect-src e img-src nombran solo los servicios que usa la app, tomados de config.js', () => {
   assert.ok(directivas['connect-src'].includes(origen(CONFIG.clima.url)), 'falta Open-Meteo');
+  assert.ok(directivas['connect-src'].includes(origen(CONFIG.clima.urlAhora)), 'falta el pronóstico de Open-Meteo (clima de ahora)');
   assert.ok(directivas['connect-src'].includes(origen(CONFIG.nube.url)), 'falta Supabase');
   assert.ok(directivas['img-src'].includes(origen(CONFIG.mapa.capa.url)), 'faltan las teselas del mapa');
-  const permitidos = new Set(["'self'", origen(CONFIG.clima.url), origen(CONFIG.nube.url), origen(CONFIG.mapa.capa.url)]);
+  const permitidos = new Set(["'self'", origen(CONFIG.clima.url), origen(CONFIG.clima.urlAhora), origen(CONFIG.nube.url), origen(CONFIG.mapa.capa.url)]);
   for (const d of ['connect-src', 'img-src', 'font-src', 'script-src']) {
     for (const v of directivas[d]) assert.ok(permitidos.has(v), `${d}: origen no previsto ${v}`);
   }
