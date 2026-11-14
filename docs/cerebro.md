@@ -82,6 +82,14 @@ Piloto: 13 tesis (11 de riego y suelos de la carpeta CPA de Diego, Osorio 2025 y
 Los PDF y los textos completos no se suben al repositorio (derechos de autor): viven en la carpeta del proyecto. Solo van
 frases cortas con su página.
 
+## Auditoría de integridad y diccionario de variables (2026-11-14)
+
+- `src/cerebro/diccionario.js` tiene una ficha por cada variable usada (las de `VARIABLES` y las candidatas de las tesis) con unidad, tipo (abiótica, biótica, manejo, riesgo o económica), capa, escala y de dónde saldría el dato para un lote. Los rangos son solo límites físicos o de definición. Las unidades son una convención del diccionario (criterio propio).
+- `POR_REVISAR` lista los posibles duplicados (p. ej. lámina y volumen de riego). No se unen solos: los decide Diego en un PR.
+- `src/cerebro/auditoria.js` (`auditar()`) devuelve las tesis sin revisión humana (`revisado_por`), las líneas por OCR, los pares con resultados distintos entre líneas medidas (con el cultivo de cada lado), las variables de una sola tesis, los umbrales con una cifra sin unidad y la matriz de uniones entre capas.
+- El panel la muestra en la tarjeta «Auditoría de integridad», debajo del cerebro. `tests/cerebro-auditoria.test.js` falla si entra una variable sin ficha, si sobra una ficha o si una ficha está mal escrita.
+- Una variable nueva en una tesis necesita su ficha en el diccionario en el mismo PR.
+
 ## Evidencia del puntaje en la app
 
 - `src/core/evidencia.js` suma el peso de cada variable de una rúbrica según su estado: **con fuente** (verificado o fuente

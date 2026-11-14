@@ -228,6 +228,7 @@ export function datosApp(tesis, registro, ag) {
   return {
     tesis: tesis.map((t) => ({
       clave: t.clave, cita: t.props.cita, tema: t.props.tema, cultivo: t.props.cultivo ?? '', lugar: t.props.lugar ?? '', aporta: t.props.aporta ?? '',
+      ocr: /^s[ií]$/i.test(t.props.ocr ?? ''), revisado: t.props.revisado_por ? { por: t.props.revisado_por, fecha: t.props.revisado_fecha ?? '' } : null,
       items: t.items.map((it) => ({ ...it, pagina: [...new Set(it.pagina)].join('–'), coincidencia: registro[t.clave].items[huella(it)] })),
       alertas: t.alertas,
     })),

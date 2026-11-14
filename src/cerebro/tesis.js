@@ -9,6 +9,8 @@ export const TESIS = {
       "cultivo": "banano",
       "lugar": "Coyoles, Yoro, Honduras (Standard Fruit Company)",
       "aporta": "puntaje",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -96,6 +98,8 @@ export const TESIS = {
       "cultivo": "finca lechera con cultivos y pasturas",
       "lugar": "noreste de Estados Unidos",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -136,6 +140,8 @@ export const TESIS = {
       "cultivo": "arroz",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -197,6 +203,8 @@ export const TESIS = {
       "cultivo": "caña de azúcar",
       "lugar": "Compañía Azucarera Tres Valles, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -252,6 +260,8 @@ export const TESIS = {
       "cultivo": "maíz dulce",
       "lugar": "Hortifresh, Francisco Morazán, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -293,6 +303,8 @@ export const TESIS = {
       "cultivo": "café",
       "lugar": "finca Santa Teresa, El Paraíso, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -326,6 +338,8 @@ export const TESIS = {
       "cultivo": "caña de azúcar",
       "lugar": "Compañía Azucarera Tres Valles, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -378,6 +392,8 @@ export const TESIS = {
       "cultivo": "arroz",
       "lugar": "Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -424,6 +440,8 @@ export const TESIS = {
       "cultivo": "suelos agrícolas de ceniza volcánica aluvial (ensayos de laboratorio y columnas)",
       "lugar": "San Bosco y La Sonia, Pococí, Costa Rica",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -478,6 +496,8 @@ export const TESIS = {
       "cultivo": "flor de pascua",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -508,6 +528,8 @@ export const TESIS = {
       "cultivo": "lechería con pasturas (más de 100 años de estiércol)",
       "lugar": "montes Catskill, Nueva York, Estados Unidos",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -564,6 +586,8 @@ export const TESIS = {
       "cultivo": "hortalizas, plátano y café",
       "lugar": "Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -626,6 +650,8 @@ export const TESIS = {
       "cultivo": "pastura y tierra arable (estiércol líquido)",
       "lugar": "Países Bajos",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -681,6 +707,8 @@ export const TESIS = {
       "cultivo": "Spathodea campanulata (árbol ornamental)",
       "lugar": "campus de la Universidad Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -832,6 +860,8 @@ export const TESIS = {
       "cultivo": "maíz",
       "lugar": "sabana de los Llanos Orientales, Colombia (Oxisol)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -876,6 +906,8 @@ export const TESIS = {
       "cultivo": "frijol",
       "lugar": "Zamorano, Honduras (macrotúnel)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -917,6 +949,8 @@ export const TESIS = {
       "cultivo": "forraje verde hidropónico (maíz y sorgo)",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -939,6 +973,8 @@ export const TESIS = {
       "cultivo": "crisantemo",
       "lugar": "Antioquia, Colombia",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -991,6 +1027,8 @@ export const TESIS = {
       "cultivo": "maíz y alfalfa abonados con estiércol de lechería",
       "lugar": "Nueva York, Estados Unidos",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1045,6 +1083,8 @@ export const TESIS = {
       "cultivo": "lechuga escarola",
       "lugar": "Monte Redondo, Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1096,6 +1136,8 @@ export const TESIS = {
       "cultivo": "Spathodea campanulata (árbol ornamental)",
       "lugar": "campus de la Universidad Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1246,6 +1288,8 @@ export const TESIS = {
       "cultivo": "fincas lecheras (maíz y pasturas)",
       "lugar": "cuencas que abastecen de agua a Nueva York, Estados Unidos",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1289,6 +1333,8 @@ export const TESIS = {
       "cultivo": "pastos (Andropogon, Mulato, Transvala y Tobiatá)",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1372,6 +1418,8 @@ export const TESIS = {
       "cultivo": "algodón",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1413,6 +1461,8 @@ export const TESIS = {
       "cultivo": "maíz (5, 10 y 50 años después de talar el bosque) y bosque como testigo",
       "lugar": "Kapchorwa, distrito de Nandi, oeste de Kenia (cuencas de cabecera)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1467,6 +1517,8 @@ export const TESIS = {
       "cultivo": "varios (bosque, monocultivo, frutales, pastura y agricultura orgánica)",
       "lugar": "Zamorano, Honduras",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1502,6 +1554,8 @@ export const TESIS = {
       "cultivo": "pepino",
       "lugar": "Zamorano, Honduras (macrotúnel)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1551,6 +1605,8 @@ export const TESIS = {
       "cultivo": "tierras agrícolas en general",
       "lugar": "Países Bajos",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1626,6 +1682,8 @@ export const TESIS = {
       "cultivo": "maíz para ensilaje",
       "lugar": "Países Bajos (suelos arenosos)",
       "aporta": "puntaje",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1787,6 +1845,8 @@ export const TESIS = {
       "cultivo": "maíz",
       "lugar": "Kenia (vertisoles)",
       "aporta": "puntaje",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1899,6 +1959,8 @@ export const TESIS = {
       "cultivo": "pepino",
       "lugar": "valle de Yeguare, Honduras",
       "aporta": "conocimiento",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -1923,6 +1985,8 @@ export const TESIS = {
       "cultivo": "arroz, maíz, yuca, hortalizas y flores",
       "lugar": "Tam Duong, norte de Vietnam (cuenca del río Rojo)",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2005,6 +2069,8 @@ export const TESIS = {
       "cultivo": "arroz, hortalizas y estanques de peces en humedales convertidos",
       "lugar": "Ruanda (cuenca tropical)",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2067,6 +2133,8 @@ export const TESIS = {
       "cultivo": "maíz híbrido",
       "lugar": "Kisii, suroeste de Kenia (Ultisoles y Mollisoles)",
       "aporta": "puntaje",
+      "ocr": true,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2131,6 +2199,8 @@ export const TESIS = {
       "cultivo": "papa, cereales y leguminosas con ganado",
       "lugar": "Andes de Bolivia (pequeños productores de montaña)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2177,6 +2247,8 @@ export const TESIS = {
       "cultivo": "ninguno (laboratorio)",
       "lugar": "Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2274,6 +2346,8 @@ export const TESIS = {
       "cultivo": "arroz",
       "lugar": "Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2315,6 +2389,8 @@ export const TESIS = {
       "cultivo": "sorgo",
       "lugar": "Zamorano, Honduras",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2377,6 +2453,8 @@ export const TESIS = {
       "cultivo": "sin cultivo (bandejas de suelo franco limoso en laboratorio)",
       "lugar": "Indiana, Estados Unidos (laboratorio de erosión del USDA-ARS)",
       "aporta": "conocimiento",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
@@ -2440,6 +2518,8 @@ export const TESIS = {
       "cultivo": "arroz, cultivos de secano y rotaciones (13 ensayos de largo plazo)",
       "lugar": "sur de China",
       "aporta": "puntaje",
+      "ocr": false,
+      "revisado": null,
       "items": [
         {
           "seccion": "Relaciones",
