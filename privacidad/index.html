@@ -23,8 +23,11 @@
       <li>Mientras la sesión esté abierta, tu finca se guarda sola en la nube de Supabase para que la tengas en otros equipos. La finca de ejemplo nunca se sube.</li>
       <li>Tu finca en la nube no es pública. La ves tú y también el administrador de Trofaxis, para soporte y para mejorar la app, pero sin el nombre de la finca, sin tu correo y sin coordenadas. Sí ve los textos que escribas en la finca (por ejemplo, acciones o fuente de agua): no pongas ahí nombres de personas ni lugares. Cada consulta del administrador queda registrada.</li>
       <li>Si no quieres que tu finca se suba, cierra la sesión: sin sesión nada sale de tu navegador.</li>
-      <li>La finca, el mapa, los lotes y el censo se guardan en este equipo. Las coordenadas exactas del mapa y de los lotes no se guardan en Supabase ni se envían a Open-Meteo.</li>
+      <li>La finca, el mapa, los lotes y el censo se guardan en este equipo. Las coordenadas exactas del mapa y de los lotes no se guardan en Supabase ni se envían a Open-Meteo. La única excepción es el NDVI de un lote, solo cuando lo pides (ver abajo).</li>
     </ul>
+
+    <h2>NDVI de un lote (solo si lo pides)</h2>
+    <p>En la vista de lotes, con la sesión iniciada, puedes pulsar «Ver NDVI del lote». Solo entonces el contorno del lote (sus coordenadas exactas) se envía a una función de Trofaxis en Supabase, que lo reenvía a Copernicus Data Space Ecosystem para calcular el NDVI con imágenes Sentinel-2. La función no guarda el contorno, y la respuesta trae solo los valores de NDVI por fecha, que se guardan un día en este equipo. Si no pulsas el botón, el contorno no sale del equipo.</p>
 
     <h2>Casos compartidos</h2>
     <p>Solo si marcas el consentimiento y pulsas «Compartir mi caso anónimo» se publica un resumen sin nombre, lugar ni coordenadas. Supabase conserva la asociación privada con tu cuenta para que puedas retirar los casos y para borrarlos si eliminas la cuenta; esa asociación no aparece en la consulta pública. Puedes ver antes exactamente qué contenido se envía.</p>
@@ -36,6 +39,7 @@
     <ul>
       <li><b>Open-Meteo</b>: al pedir el clima histórico, o el clima de ahora en la vista de lotes, se envían la latitud y la longitud redondeadas a 2 decimales (aproximadamente 1 km de precisión), además de la solicitud de clima. En la vista de lotes ese punto es el centro del lote elegido o la ubicación de la finca. No se envían las coordenadas exactas del mapa ni el contorno de los lotes.</li>
       <li><b>EOX</b>: el mapa pide imágenes de teselas para el área que estás viendo. La solicitud revela a EOX el área aproximada del mapa y la dirección de red desde la que navegas.</li>
+      <li><b>Copernicus Data Space Ecosystem</b> (programa Copernicus de la Unión Europea, operado con la ESA): solo si pides el NDVI de un lote, recibe su contorno desde la función de Trofaxis para calcular el NDVI. Aplica su propia política de privacidad.</li>
       <li><b>Supabase</b>: administra la autenticación y guarda las fincas en la nube, los casos compartidos asociados de forma privada a la cuenta y las respuestas anónimas de bienvenida.</li>
       <li><b>Google</b>: solo si eliges «Continuar con Google», para confirmar tu cuenta.</li>
     </ul>

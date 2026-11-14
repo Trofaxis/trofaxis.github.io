@@ -16,7 +16,7 @@ import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
 import { viewCasos } from './ui/casos.js';
 import { viewLotes } from './ui/vista-lotes.js';
-import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual, descargarRespaldoMapa } from './ui/mapa.js';
+import { montarMapa, reiniciarMapa, marcarSitioEnMapa, centrarMapa, ubicacionActual, descargarRespaldoMapa, usarSesion } from './ui/mapa.js';
 import { descargarImagenPlan } from './ui/plan-imagen.js';
 import { apiRadar } from './apiradar/diagnostico.js';
 import { marcarManual } from './ui/clima.js';
@@ -95,6 +95,7 @@ function sesionLista() {
   renovando ??= nube.renovarSesion(n.sesion).then((s) => { guardarSesion(s); n.sesion = s; return s; }).finally(() => { renovando = null; });
   return renovando;
 }
+usarSesion(sesionLista); // el NDVI del lote pide la sesión ya renovada
 
 function applyTheme(){const r=document.documentElement;r.setAttribute('data-theme',S.theme==='dark'?'dark':'light');
 }

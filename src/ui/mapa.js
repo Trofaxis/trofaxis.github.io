@@ -16,6 +16,7 @@ import { centroide, loteEn, siguienteIdLote, puntoClima, lugarClima, resumenLote
 import { obtenerAhora } from '../clima/ahora.js';
 import { conPlan } from '../fert/calculo.js';
 import { tarjetaClima, tarjetaLote, listaLotes } from './lotes.js';
+import { pedirNdvi, leerNdviCache, guardarNdviCache } from '../nube/ndvi.js';
 
 const C = CONFIG.mapa, C_AR = CONFIG.apiradar;
 let U = cargarUbicacion();
@@ -26,6 +27,10 @@ let optsLotes = {};
 let borrador = []; // vértices del lote que se está dibujando
 let loteSel = null;
 let climaAhora = { estado: '', clave: '' };
+let ndviLotes = {}; // estado del NDVI por id de lote (solo en memoria; la caché va en src/nube/ndvi.js)
+// La sesión la maneja src/app.js (renueva el token); aquí solo se pide cuando hace falta.
+let obtenerSesion = async () => S.nube?.sesion ?? null;
+export function usarSesion(fn) { if (typeof fn === 'function') obtenerSesion = fn; }
 let msg = '';
 let fallas = 0;
 let zonaUtm = 16; // zona UTM con la que se leen las coordenadas de los árboles (16 N: oeste de Honduras; 17 N: este)
@@ -35,7 +40,7 @@ let textoArboles = '';
 export const ubicacionActual = () => U;
 
 // Al empezar otra finca o borrar los datos, la ubicación anterior se borra también.
-export function reiniciarMapa() { borrarUbicacion(); U = ubicacionVacia(); modo = 'ver'; msg = ''; borrador = []; loteSel = null; climaAhora = { estado: '', clave: '' }; S.climaUI = { estado: '', msg: '', llenos: [] }; }
+export function reiniciarMapa() { borrarUbicacion(); U = ubicacionVacia(); modo = 'ver'; msg = ''; borrador = []; loteSel = null; climaAhora = { estado: '', clave: '' }; ndviLotes = {}; S.climaUI = { estado: '', msg: '', llenos: [] }; }
 
 const fmt = (x) => x.toFixed(5);
 
@@ -105,7 +110,7 @@ export function panelLotesMapa(opts = {}) {
   const b = (m, t, extra = '', cls = '') => `<button type="button" class="btn sm${cls}" data-mapa="${m}" ${extra}>${t}</button>`;
   const lote = U.lotes.find((l) => l.id === loteSel);
   const mes = new Date().getMonth();
-  const tarjeta = lote ? tarjetaLote(lote, resumenLote(lote, conPlan(S.farm), mes), { mes, cultivos: (S.farm.cultivos ?? []).map((c) => c.nombre).filter(Boolean), riesgo: opts.riesgo }) : '';
+  const tarjeta = lote ? tarjetaLote(lote, resumenLote(lote, conPlan(S.farm), mes), { mes, cultivos: (S.farm.cultivos ?? []).map((c) => c.nombre).filter(Boolean), riesgo: opts.riesgo, ndvi: estadoNdvi(lote) }) : '';
   return `<div class="mapa-bloque lotes-bloque">
     ${S.demo ? '<p class="muted small"><b>Ejemplo:</b> la finca demostrativa es ficticia y no tiene lotes. Puedes probar dibujando cualquiera.</p>' : ''}
     <div class="lotes-escena">
@@ -120,7 +125,7 @@ export function panelLotesMapa(opts = {}) {
     </div>
     <div id="mapa-info" class="small" aria-live="polite">${infoHtml()}</div>
     ${listaLotes(U.lotes, loteSel)}
-    <p class="muted small">Los lotes se guardan en este dispositivo, igual que el mapa: no se suben a la nube ni van en el archivo de la finca. Para el clima de ahora se envía a Open-Meteo el centro del lote redondeado a ~1 km. Imagen satelital Sentinel-2 de ${esc(C.capa.atribucion.match(/data (\d{4})/)?.[1] ?? 'un año fijo')}: no es la de hoy.</p>
+    <p class="muted small">Los lotes se guardan en este dispositivo, igual que el mapa: no se suben a la nube ni van en el archivo de la finca. Para el clima de ahora se envía a Open-Meteo el centro del lote redondeado a ~1 km. El contorno sale del dispositivo solo si pides su NDVI. Imagen satelital Sentinel-2 de ${esc(C.capa.atribucion.match(/data (\d{4})/)?.[1] ?? 'un año fijo')}: no es la de hoy.</p>
   </div>`;
 }
 
@@ -381,6 +386,28 @@ function actualizarClimaAhora(forzar = false) {
     (r) => { if (climaAhora.clave === clave) { climaAhora = { estado: 'listo', clave, lugar: climaAhora.lugar, datos: r.datos, aviso: r.aviso }; pintarClima(); } },
     (err) => { if (climaAhora.clave === clave) { climaAhora = { estado: 'error', clave, lugar: climaAhora.lugar, msg: err.message }; pintarClima(); } });
 }
+// NDVI del lote: lo pedido en esta visita, si no lo guardado en las últimas horas, si no el botón para pedirlo.
+function estadoNdvi(lote) {
+  const e = ndviLotes[lote.id];
+  if (e && e.estado !== 'listo') return e;
+  const c = leerNdviCache(lote);
+  if (c) return { estado: 'listo', datos: c.datos, obtenido: c.obtenido };
+  return S.nube?.sesion ? { estado: 'inicial' } : { estado: 'sin-sesion' };
+}
+async function pedirNdviLote() {
+  const lote = U.lotes.find((x) => x.id === loteSel);
+  if (!lote || ndviLotes[lote.id]?.estado === 'cargando') return;
+  ndviLotes[lote.id] = { estado: 'cargando' }; rerender();
+  try {
+    const datos = await pedirNdvi(lote.contorno, await obtenerSesion());
+    guardarNdviCache(lote, datos);
+    ndviLotes[lote.id] = { estado: 'listo', datos };
+  } catch (err) {
+    ndviLotes[lote.id] = { estado: 'error', msg: err?.message || 'No se pudo obtener el NDVI.' };
+  }
+  if (variante === 'lotes' && U.lotes.some((x) => x.id === lote.id)) rerender();
+}
+
 function pintarClima() { const el = document.getElementById('lotes-clima'); if (el) el.innerHTML = tarjetaClima(climaAhora); }
 
 // Botones del bloque (delegado una sola vez en el documento).
@@ -394,6 +421,7 @@ document.addEventListener('click', (e) => {
   if (a === 'respaldo-subir') { subirRespaldo(); return; }
   if (a === 'imagen') { descargarImagenPlan({ R: null, finca: S.farm, ubic: U, cfg: CONFIG }).then((m) => { msg = m; rerender(); }); return; }
   if (a === 'clima-ahora') { actualizarClimaAhora(true); return; }
+  if (a === 'ndvi') { pedirNdviLote(); return; }
   if (a === 'modo-lote') {
     if (U.lotes.length >= C.maxLotes) msg = `Ya hay ${C.maxLotes} lotes, el máximo.`;
     else { modo = 'lote'; borrador = []; loteSel = null; }

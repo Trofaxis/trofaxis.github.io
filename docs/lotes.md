@@ -17,8 +17,42 @@ ahora), `src/ui/lotes.js` (tarjetas), `src/ui/mapa.js` (`panelLotesMapa`) y `src
 - **Riesgo**: el índice de la finca (el mismo número de Inicio). Trofaxis no calcula riesgo por lote: para eso hará falta
   registrar las actividades de cada lote. La tarjeta lo dice.
 
+## NDVI del lote
+
+En la tarjeta del lote, con la sesión iniciada, el botón «Ver NDVI del lote» pide a la función `ndvi` de Supabase
+(`supabase/functions/ndvi/handler.js`) el NDVI de los últimos `CONFIG.ndvi.dias` días. La app solo llama cuando la
+persona pulsa el botón, porque es lo único que saca el contorno del lote del dispositivo (está en el aviso de privacidad).
+
+- **Fuente**: Statistical API de Copernicus Data Space Ecosystem, Sentinel-2 L2A, píxel de 10 m, un intervalo por día
+  ([documentación](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Statistical.html)). NDVI =
+  (B08 − B04) / (B08 + B04) (Rouse et al., 1974).
+- **Nubes**: no cuentan los píxeles de las clases SCL de `CONFIG.ndvi.scl` (sin dato, saturado, sombra de nube, nube
+  media y alta, cirro, nieve). Una fecha se usa si al menos `CONFIG.ndvi.minValidos` del lote se ve despejado. Las dos
+  son criterio propio: la documentación de Copernicus no recomienda un conjunto.
+- **Qué muestra**: el NDVI medio de la última fecha despejada, su mínimo y máximo dentro del lote, el cambio respecto a
+  la fecha despejada anterior (estable si es menor a `CONFIG.ndvi.cambioMin`, criterio propio) y una línea con todas las
+  fechas. No interpreta el valor como bueno o malo ni dice la causa de un cambio: eso depende del cultivo y su etapa.
+- **Privacidad**: la función verifica la sesión, reenvía el contorno a Copernicus en UTM y devuelve solo la serie. No
+  guarda ni registra el contorno. La app guarda la serie `CONFIG.ndvi.cacheHoras` horas por lote (`biogap:ndvi:v1`).
+- **Cuota**: la cuenta gratuita de Copernicus («Copernicus General Users») tiene un límite mensual de solicitudes y de
+  unidades de proceso. Por eso hace falta sesión, la caché de 24 h y un tope de 1000 ha por lote.
+
+### Activarlo (una sola vez)
+
+1. Cuenta en https://dataspace.copernicus.eu y cliente OAuth en
+   https://shapps.dataspace.copernicus.eu/dashboard/#/account/settings → «OAuth clients» → «Create» (sin marcar SPA).
+2. En Supabase → Edge Functions → Secrets: `CDSE_CLIENT_ID` y `CDSE_CLIENT_SECRET`. Nunca en el repositorio.
+3. Desplegar desde la carpeta del proyecto Supabase vinculada:
+
+   ```
+   supabase functions deploy ndvi
+   ```
+
+   `SUPABASE_URL` y `SUPABASE_ANON_KEY` ya vienen en las funciones. Si el cliente OAuth vence, el botón dirá que no se
+   pudo entrar a Copernicus: se crea otro y se cambian los dos secretos.
+
 ## Lo que no hace todavía
 
-- NDVI o vigor del cultivo por lote: siguiente fase, con Sentinel-2 por Copernicus Data Space. Necesita una cuenta,
-  una función en Supabase y actualizar el aviso de privacidad, porque el polígono tendría que salir del teléfono.
-- La imagen satelital es Sentinel-2 cloudless de un año fijo (ver la atribución del mapa), no la de hoy.
+- Riesgo, plagas o recomendaciones por lote: hacen falta registros por lote.
+- La imagen del mapa es Sentinel-2 cloudless de un año fijo (ver la atribución del mapa), no la de hoy, y se ve borrosa
+  de cerca porque el píxel es de 10 m.

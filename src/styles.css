@@ -330,6 +330,12 @@ polyline.mapa-contorno{fill:none;stroke-dasharray:6 4}
 .lc-pie{font-size:12px;color:var(--muted)}
 .lc-cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .lc-act{margin:2px 0 6px;padding-left:18px}
+.lc-ndvi{font:600 22px/1.1 var(--f-mono)}
+.lc-tend{font-weight:600;white-space:nowrap}
+.lc-sube{color:var(--good)} .lc-baja{color:var(--crit)} .lc-estable{color:var(--muted)}
+.lc-linea{display:block;width:100%;max-width:240px;height:42px;margin:4px 0}
+.lc-linea polyline{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.lc-linea circle{fill:var(--accent)}
 .lc-lista{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}
 .lc-lista .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .lc-color{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.3)}

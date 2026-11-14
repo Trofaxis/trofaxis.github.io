@@ -225,6 +225,20 @@ export const CONFIG = {
   // Nube (Etapa 2 de la memoria de casos): proyecto Supabase "biogap".
   // La clave publicable es pública por diseño; el acceso lo limita la seguridad por filas (RLS) de la base.
   // NUNCA pongas aquí la clave service_role. Con url o clave vacías, la app funciona solo en local.
+  // NDVI por lote (vista de lotes): función «ndvi» de Supabase, que consulta la Statistical API de Copernicus Data Space
+  // con imágenes Sentinel-2 L2A de 10 m. Solo con sesión iniciada y cuando la persona lo pide. Ver docs/lotes.md.
+  ndvi: {
+    funcion: 'ndvi', // supabase/functions/ndvi
+    dias: 60, // días hacia atrás en que se buscan imágenes (criterio propio; Sentinel-2 pasa cada ~5 días en el trópico)
+    // Clases de la capa SCL de Sentinel-2 que no cuentan: sin dato, saturado, sombra de nube, nube media y alta, cirro y nieve
+    // (criterio propio sobre la clasificación de ESA; la documentación de Copernicus no recomienda un conjunto).
+    scl: [0, 1, 3, 8, 9, 10, 11],
+    minValidos: 0.6, // una fecha se usa si al menos el 60 % del lote se ve sin nubes (criterio propio)
+    cambioMin: 0.05, // cambio de NDVI menor a esto se muestra como «estable» (criterio propio)
+    cacheHoras: 24, // horas que se reutiliza el NDVI de un lote en este dispositivo (criterio propio, cuida la cuota)
+    esperaMs: 40000, // tiempo máximo de espera (criterio propio)
+  },
+
   nube: {
     url: 'https://kfybqlknlkxrqphwopfx.supabase.co',
     clavePublicable: 'sb_publishable_GZY64ytTNLaL9898VrIGKA_P0ZdFOXb',
