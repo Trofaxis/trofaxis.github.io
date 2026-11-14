@@ -12,13 +12,37 @@ import { VINCULOS } from '../src/cerebro/vinculos.js';
 
 const codigo = await cargarCodigo();
 
-test('las 23 tesis (piloto y lote 1 de riego y suelo) están en la bóveda y todas sus líneas están verificadas', () => {
+test('las 40 tesis (piloto, lote 1 de riego y suelo, y fertilización y suelo) están en la bóveda y todas sus líneas están verificadas', () => {
   const r = construir(codigo);
   assert.deepEqual(r.errores, []);
-  assert.equal(r.tesis.length, 23);
+  assert.equal(r.tesis.length, 40);
   const lineas = TESIS.tesis.reduce((s, t) => s + t.items.length, 0);
-  assert.ok(lineas >= 70, `solo ${lineas} líneas`);
+  assert.ok(lineas >= 200, `solo ${lineas} líneas`);
   for (const t of TESIS.tesis) for (const it of t.items) assert.ok(it.coincidencia, `${t.clave}: «${it.cita}» sin verificar`);
+});
+
+// Lote de fertilización y suelo (2026-11-14): tesis de Cornell, Purdue y Wageningen.
+const FERTILIZACION = ['anderson-2013', 'fallas-2022', 'flores-lopez-2009', 'huijsmans-2003', 'major-2009', 'molodovskaya-2010',
+  'pacenka-2012', 'recha-2011', 'schoumans-2015', 'schroder-1998', 'sigunga-1997', 'trinh-2007', 'uwimana-2019',
+  'van-der-eijk-1997', 'vanek-2011', 'xiao-2016', 'zhu-2024'];
+
+test('las 17 tesis de fertilización y suelo traen al menos tres líneas verificadas cada una', () => {
+  for (const clave of FERTILIZACION) {
+    const t = TESIS.tesis.find((x) => x.clave === clave);
+    assert.ok(t, `falta ${clave}`);
+    assert.ok(t.items.length >= 3, `${clave}: solo ${t.items.length} líneas`);
+    assert.ok(t.items.every((it) => it.coincidencia), `${clave}: hay líneas sin verificar`);
+  }
+});
+
+test('las relaciones de fertilización llegan a lo que se mide (suelo, agua, aire, cultivo), no directo a un riesgo de Trofaxis', () => {
+  // Qué vínculo apoyan lo decide Diego en un PR aparte; aquí ninguna toca un puntaje.
+  const pares = TESIS.relaciones.filter((r) => r.tesis.some((c) => FERTILIZACION.includes(c)));
+  assert.ok(pares.length >= 40, `solo ${pares.length} pares`);
+  for (const p of pares) {
+    assert.ok(!p.a.startsWith('riesgo.'), `${p.de} → ${p.a} va directo a un riesgo`);
+    assert.deepEqual(p.vinculos, [], `${p.de} → ${p.a} quedó unido a ${p.vinculos.join(', ')}`);
+  }
 });
 
 test('una línea de tesis exige sentido, base, página y una frase verificable', () => {
