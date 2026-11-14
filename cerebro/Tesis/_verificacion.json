@@ -1,10 +1,49 @@
 {
+  "alpizar-2000": {
+    "texto_sha256": "af5496dd98aa25848c53af5765d473d4b6c1430b215d4008d7fee33a4e9d775c",
+    "items": {
+      "0240866e7cd549b0": "aproximada (OCR, 0.83)",
+      "cbfa64a143e76acd": "aproximada (OCR, 0.86)",
+      "448013188e1e55a2": "aproximada (OCR, 0.84)",
+      "43455b3d06c76d9e": "aproximada (OCR, 0.94)",
+      "5d0dfaa532e8b383": "aproximada (OCR, 0.90)",
+      "0a7d9815e74a06bc": "aproximada (OCR, 0.90)",
+      "d17f8277fff27c6e": "aproximada (OCR, 0.82)",
+      "0be2e94427111c7b": "aproximada (OCR, 0.96)"
+    }
+  },
+  "benavides-jara-2014": {
+    "texto_sha256": "93eb8c7a762ad5c20d64b8a4cf11ba1ec203ba65d8e846fa114e86396bfa3b86",
+    "items": {
+      "49a658e75ea3309c": "exacta",
+      "efc26392498f5074": "exacta",
+      "2cb0880bd7dd7e5d": "exacta",
+      "836e9a0fb5e03077": "exacta",
+      "a9650008ec78706c": "exacta"
+    }
+  },
+  "brenes-2004": {
+    "texto_sha256": "252c9a534a5e1da012511f83786174d5ffb31d078791f45ae94ab373aac265d5",
+    "items": {
+      "d18a6a0d20c7c074": "exacta",
+      "59c4249486394b33": "exacta",
+      "40f224ec28a928f6": "exacta",
+      "8fbee6c508522fc7": "exacta"
+    }
+  },
   "castillo-2007": {
     "texto_sha256": "4b5a3b0985cf3332925eff3418e164ab2dd5f064689a0bc9cac85559cb5fa80b",
     "items": {
       "c6cde3cd034ed5b8": "exacta",
       "9c2984dad23927a2": "exacta",
       "c5180b27d3e9440e": "exacta"
+    }
+  },
+  "cerrato-2022": {
+    "texto_sha256": "45a235d2263547484ab72be8d624af3954a9aa37786cb87b926c4be085e75b6f",
+    "items": {
+      "e69ea070ed245700": "exacta",
+      "f309c4b7d38dfe67": "exacta"
     }
   },
   "chi-bautista-2011": {
@@ -14,6 +53,14 @@
       "ca8c4c6362011e12": "exacta",
       "8e93f56521b667c4": "exacta",
       "1c02fcba84e60a57": "exacta"
+    }
+  },
+  "echeverria-2015": {
+    "texto_sha256": "8904e2348db9c582440221a49cea99c2579c8d25b1575b51d758900697737c2b",
+    "items": {
+      "bfacb97d22d8189f": "exacta",
+      "746de0b77c7a6a64": "exacta",
+      "a0ab967775e83df5": "exacta"
     }
   },
   "flores-2002": {
@@ -55,6 +102,14 @@
       "1e057be9d4a93955": "exacta"
     }
   },
+  "mata-2021": {
+    "texto_sha256": "86dbe7be4474dafa2f4360703d344849b071a6928939904518ad78777576c844",
+    "items": {
+      "61642a98ecc45c42": "exacta",
+      "9053f6e32b297ff3": "exacta",
+      "6aafee65e3805e02": "exacta"
+    }
+  },
   "mejia-reyes-2020": {
     "texto_sha256": "b85d424fbf6e2a1143713e1eae248cd2acd463d4edd229f09f40d0c9ee8e6a18",
     "items": {
@@ -68,6 +123,15 @@
       "9e987317f313908d": "exacta",
       "5e28beaf315ae6c6": "exacta",
       "9c6e898626d9f3e3": "exacta"
+    }
+  },
+  "ordonez-ventura-2015": {
+    "texto_sha256": "9da820f27a1b356e4e64ce5780eba8731f5efed1f16f8a66e42898d3f6a354d0",
+    "items": {
+      "216ac881ac4c8e11": "exacta",
+      "1593c49247650841": "exacta",
+      "acdb6a0015358506": "exacta",
+      "c6310a9715d79f11": "exacta"
     }
   },
   "osorio": {
@@ -91,12 +155,41 @@
       "d4f7b87a759f17b2": "exacta"
     }
   },
+  "plaza-2004": {
+    "texto_sha256": "29729786724fe8f29136a506d54c6acb6df0fbaf387794144fbf490b87fc6306",
+    "items": {
+      "9a6a1be87ea8d82a": "exacta",
+      "b522cd18106cfde8": "exacta",
+      "86dc974a7cdbc7f1": "exacta",
+      "9cc6b7725b8fe37e": "exacta",
+      "e11ef1c02c6b455c": "exacta",
+      "e3ad49371f33493f": "exacta",
+      "49532ef174ff85aa": "exacta",
+      "2c22fe731738d581": "exacta"
+    }
+  },
   "poquiviqui-1998": {
     "texto_sha256": "229fa2a98232eb79d15cd7ed342f4ddb736170fb4876f0abcb83ae5744f3fa64",
     "items": {
       "33d6811d95e74934": "aproximada (OCR, 0.94)",
       "cca65f1163ad909a": "aproximada (OCR, 0.94)",
       "9471450b7a6cd0a7": "aproximada (OCR, 0.95)"
+    }
+  },
+  "rios-2024": {
+    "texto_sha256": "c09bed886b03d2f938422f8901727f1d3ad231aac5b666a86c8361bd1f88da41",
+    "items": {
+      "20c1b988f447795f": "exacta",
+      "9744d05e42b1c9b2": "exacta"
+    }
+  },
+  "saltos-2009": {
+    "texto_sha256": "e37d3016d327d12592eebafe9110f7792ef29c3d8615877d167591b9f3cfdf55",
+    "items": {
+      "be7598f6b7ce4fad": "exacta",
+      "dcc2349e220016ff": "exacta",
+      "1939eb5367681347": "exacta",
+      "e037b49b133c2f86": "exacta"
     }
   },
   "t215-1990": {

@@ -12,10 +12,10 @@ import { VINCULOS } from '../src/cerebro/vinculos.js';
 
 const codigo = await cargarCodigo();
 
-test('las 13 tesis del piloto están en la bóveda y todas sus líneas están verificadas', () => {
+test('las 23 tesis (piloto y lote 1 de riego y suelo) están en la bóveda y todas sus líneas están verificadas', () => {
   const r = construir(codigo);
   assert.deepEqual(r.errores, []);
-  assert.equal(r.tesis.length, 13);
+  assert.equal(r.tesis.length, 23);
   const lineas = TESIS.tesis.reduce((s, t) => s + t.items.length, 0);
   assert.ok(lineas >= 70, `solo ${lineas} líneas`);
   for (const t of TESIS.tesis) for (const it of t.items) assert.ok(it.coincidencia, `${t.clave}: «${it.cita}» sin verificar`);
@@ -100,7 +100,7 @@ test('la huella de una línea depende de la frase y la página, no de los espaci
 
 test('el explorador del cerebro lista las tesis y muestra cada línea con su página', async () => {
   const { explorar, detalleTesis } = await import('../src/admin/cerebro.js');
-  assert.equal(explorar({ tipo: 'tesis' }).tesis.length, 13);
+  assert.equal(explorar({ tipo: 'tesis' }).tesis.length, TESIS.tesis.length);
   assert.ok(explorar({ texto: 'goteo codo' }).tesis.some((t) => t.clave === 'molina-2009'));
   const html = detalleTesis(TESIS.tesis.find((t) => t.clave === 'molina-2009'));
   assert.match(html, /pág\. 4 del PDF/);
@@ -142,7 +142,7 @@ test('el explorador lista las relaciones de las tesis y cada una muestra su fras
   assert.ok(explorar({ texto: 'densidad rendimiento' }).relaciones.includes(par('cultivo.densidad', 'cultivo.rendimiento')));
   const html = detalleRelacion(par('cultivo.densidad', 'cultivo.rendimiento'));
   assert.match(html, /Densidad de siembra → Rendimiento del cultivo/);
-  assert.match(html, /medido: sube \(2\)/);
+  assert.match(html, /medido: sube \(3\)/);
   assert.match(html, /pág\. \d+ del PDF/);
   assert.match(html, /Poquiviqui López \(1998\)/);
   assert.match(html, /no suma al puntaje/);

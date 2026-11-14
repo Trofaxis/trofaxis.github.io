@@ -290,6 +290,27 @@ export const BOVEDA = {
       "url": "https://open-meteo.com/en/docs/historical-weather-api",
       "origen": "código"
     },
+    "alpizar-2000": {
+      "cita": "Alpízar Vargas, N. F. (2000). Uso de lisímetros para evaluar el movimiento de nitrógeno y potasio en suelos bananeros de Coyoles, Honduras, con potencial de lixiviación. Proyecto especial de Ingeniero Agrónomo, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2000-T005.pdf",
+      "tesis": true
+    },
+    "benavides-jara-2014": {
+      "cita": "Benavides Cabezas, Á. V. y Jara Velasteguí, E. I. (2014). Comparación de tres sistemas de riego para la producción de arroz con tres densidades de siembra en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2014-013.pdf",
+      "tesis": true
+    },
+    "brenes-2004": {
+      "cita": "Brenes Muñoz, T. (2004). Evaluación de biodisponibilidad de nutrientes bajo tres sistemas de riego y dos niveles de ácido húmico para caña de azúcar en el Valle de Cantarranas, Honduras. Trabajo de graduación, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2004-T009.pdf",
+      "tesis": true
+    },
     "castillo-2007": {
       "cita": "Castillo Samudio, R. R. (2007). Efecto de la aplicación de TRICHOZAM® (Trichoderma harzianum) en la producción de maíz dulce (Zea mays) variedad Golden Baby. Proyecto especial, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
@@ -297,11 +318,25 @@ export const BOVEDA = {
       "acceso": "tesis leída: T2376.pdf",
       "tesis": true
     },
+    "cerrato-2022": {
+      "cita": "Cerrato Dubon, E. A. (2022). Efecto de la sombra en la conservación de humedad de suelo y la productividad de café en el sistema agroforestal de la finca Santa Teresa, El Paraíso, Honduras. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: IAD-2022-T009.pdf",
+      "tesis": true
+    },
     "chi-bautista-2011": {
       "cita": "Chi Serrano, A. A. y Bautista Delcid, S. E. (2011). Efecto de dos descargas y dos distanciamientos entre surcos y cuatro láminas de riego en caña de azúcar. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: T3195.pdf",
+      "tesis": true
+    },
+    "echeverria-2015": {
+      "cita": "Echeverría Bodden, O. A. (2015). Efecto de tres sistemas de riego y dos variedades en el rendimiento de arroz (Oryza sativa) bajo dos métodos de siembra. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2015-031.pdf",
       "tesis": true
     },
     "flores-2002": {
@@ -318,6 +353,13 @@ export const BOVEDA = {
       "acceso": "tesis leída: CPA-2015-042.pdf",
       "tesis": true
     },
+    "mata-2021": {
+      "cita": "Mata Vigil, I. I. (2021). Evaluación de tres láminas de riego en suelos de diferentes texturas en el desarrollo de frijol (Phaseolus vulgaris L.). Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2021-T068.pdf",
+      "tesis": true
+    },
     "mejia-reyes-2020": {
       "cita": "Mejía Suazo, D. A. y Reyes Zelaya, A. N. (2020). Exploración para la producción de forraje verde hidropónico de maíz y sorgo para la alimentación de ganado lechero: revisión de literatura. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
@@ -332,11 +374,39 @@ export const BOVEDA = {
       "acceso": "tesis leída: T2795.pdf",
       "tesis": true
     },
+    "ordonez-ventura-2015": {
+      "cita": "Ordoñez Bonilla, J. A. y Ventura Hernández, A. J. (2015). Evaluación técnica de tres laterales de riego por goteo a baja presión en un huerto biointensivo. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2015-064.pdf",
+      "tesis": true
+    },
+    "plaza-2004": {
+      "cita": "Plaza Tumbaco, F. X. (2004). Determinación del requerimiento hídrico de cuatro pastos mediante el uso de lisímetros bajo condiciones de El Zamorano, Honduras. Proyecto especial de Ingeniero Agrónomo, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2004-T068.pdf",
+      "tesis": true
+    },
     "poquiviqui-1998": {
       "cita": "Poquiviqui López, G. V. (1998). Comportamiento de dos variedades de algodón (Gossypium hirsutum L.) sembradas a tres densidades con el uso de un regulador de crecimiento en Zamorano. Proyecto especial, Escuela Agrícola Panamericana, Zamorano, Honduras.",
       "url": "",
       "origen": "tesis",
       "acceso": "tesis leída: CPA -1998-T 086.pdf",
+      "tesis": true
+    },
+    "rios-2024": {
+      "cita": "Ríos Morantes, F. J. (2024). Caracterización de la capacidad de retención de agua de cinco lotes contrastantes en manejo en Zamorano. Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: CPA-2024-T065.pdf",
+      "tesis": true
+    },
+    "saltos-2009": {
+      "cita": "Saltos Intriago, J. M. (2009). Evaluación del efecto de dos láminas de riego y dos sustratos en la producción de pepino bajo condiciones de macro túnel en El Zamorano, Honduras. Proyecto especial de Ingeniero Agrónomo, Escuela Agrícola Panamericana, El Zamorano, Honduras.",
+      "url": "",
+      "origen": "tesis",
+      "acceso": "tesis leída: T2841.pdf",
       "tesis": true
     },
     "t215-1990": {
