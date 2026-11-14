@@ -11,6 +11,8 @@ import { notasObsidian, zip } from '../cerebro/obsidian.js';
 import { VARIABLES, VINCULOS, SENTIDOS, pesoDe, resumenVinculos } from '../cerebro/vinculos.js';
 import { normalizar } from '../riego/referencias.js';
 import { TESIS } from '../cerebro/tesis.js';
+import { auditar } from '../cerebro/auditoria.js';
+import { FICHAS, CAPAS, DATOS } from '../cerebro/diccionario.js';
 
 const ESTADO_CLASE = { 'con fuente': 'cb-fuente', 'criterio propio': 'cb-propio', 'por validar': 'cb-validar' };
 const LINEA = { tema: 'pertenece al tema', fuente: 'misma fuente', formula: 'se usan juntos en la fórmula de', mecanismo: 'vínculo', tesis: 'relación de una tesis' };
@@ -243,6 +245,54 @@ function pendientes(hoy = new Date()) {
   </section>`;
 }
 
+// Auditoría de integridad: lo que una persona tiene que revisar antes de confiar en el cerebro (src/cerebro/auditoria.js).
+// Solo muestra: los arreglos van en el repo con un PR.
+const btnTesis = (clave) => `<button type="button" class="btn sm cb-ir" data-cb-tesis="${esc(clave)}">${esc(clave)}</button>`;
+const kpi = (n, txt, mal) => `<li class="cb-kpi${mal ? ' cb-kpi-mal' : ''}"><b>${n}</b><span class="small">${esc(txt)}</span></li>`;
+const lado = (xs) => xs.map((x) => `${esc(x.cultivo)} (${btnTesis(x.tesis)})`).join(', ');
+export function viewAuditoria(a = auditar()) {
+  const r = a.resumen;
+  const fichasUsadas = Object.keys(FICHAS).length;
+  return `<section class="card cb-auditoria" aria-labelledby="cb-aud-t"><h2 id="cb-aud-t">Auditoría de integridad</h2>
+    <p class="muted small">Lo que hay que revisar antes de confiar en el cerebro. «Verificada» quiere decir que la frase está en esa página del PDF; no quiere decir que una persona confirmó la interpretación. Las tesis dan relaciones, no medidas de un lote. Nada de esto cambia un puntaje, y los arreglos se hacen en el repo con un PR.</p>
+    ${a.errores.length ? `<p class="small"><span class="pill cb-conflicto">${a.errores.length} errores</span></p><ul class="small">${a.errores.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+    <ul class="cb-kpis">
+      ${kpi(`${r.revisadas}/${r.tesis}`, 'tesis revisadas por una persona', r.revisadas < r.tesis)}
+      ${kpi(`${r.exactas}/${r.lineas}`, 'líneas con frase exacta', r.ocr > 0)}
+      ${kpi(`${r.conFicha}/${r.variables}`, 'variables con ficha (unidad, tipo, capa)', r.conFicha < r.variables)}
+      ${kpi(r.contradicciones, 'pares con resultados distintos', r.contradicciones > 0)}
+      ${kpi(r.porRevisar, 'posibles duplicados', r.porRevisar > 0)}
+      ${kpi(r.huecos, 'uniones clave sin ninguna relación', r.huecos > 0)}
+    </ul>
+    <details><summary>Tesis sin revisión humana (${a.sinRevisar.length})</summary>
+      <p class="small muted">Para marcarla: llenar <code>revisado_por</code> y <code>revisado_fecha</code> en <code>cerebro/Tesis/&lt;clave&gt;.md</code> después de leer sus líneas contra el PDF.</p>
+      <p class="cb-grupos">${a.sinRevisar.map(btnTesis).join(' ')}</p></details>
+    <details><summary>Líneas leídas por OCR, a revisar a mano (${a.ocr.length})</summary>
+      <ul class="small">${a.ocr.map((x) => `<li>${btnTesis(x.tesis)} pág. ${esc(x.pagina)} · ${esc(x.coincidencia)}: «${esc(x.cita)}»</li>`).join('')}</ul></details>
+    <details><summary>Resultados distintos para el mismo par (${a.contradicciones.length})</summary>
+      <p class="small muted">Solo líneas medidas. Casi siempre se explica por el cultivo, el suelo o el lugar: una relación no se aplica a un lote de otro contexto.</p>
+      <ul class="small">${a.contradicciones.map((c) => `<li><b>${esc(c.nombre)}</b>${c.opuesto ? ' <span class="pill cb-conflicto">sube y baja</span>' : ''}<br>
+        ${c.sube.length ? `sube: ${lado(c.sube)}<br>` : ''}${c.baja.length ? `baja: ${lado(c.baja)}<br>` : ''}${c.sinEfecto.length ? `sin efecto significativo: ${lado(c.sinEfecto)}` : ''}</li>`).join('')}</ul></details>
+    <details><summary>Posibles duplicados del diccionario (${a.porRevisar.length})</summary>
+      <p class="small muted">No se unen solos: cada par se decide en un PR.</p>
+      <ul class="small">${a.porRevisar.map((p) => `<li><b>${p.nombres.map(esc).join(' · ')}</b>: ${esc(p.motivo)}</li>`).join('')}</ul></details>
+    <details><summary>Uniones entre capas (bióticas y abióticas)</summary>
+      <p class="small muted">Cuántas relaciones de tesis y vínculos de Trofaxis unen cada par de capas. En 0 no hay ninguna evidencia escrita: el cerebro no puede decir cómo se afectan.</p>
+      <table class="small cb-tabla"><thead><tr><th scope="col">Unión</th><th scope="col">Tesis</th><th scope="col">Vínculos</th></tr></thead>
+      <tbody>${a.capas.uniones.map((u) => `<tr${u.total ? '' : ' class="cb-hueco"'}><td>${esc(u.nombre)}</td><td>${u.tesis}</td><td>${u.vinculos}</td></tr>`).join('')}</tbody></table></details>
+    <details><summary>Variables de una sola tesis (${a.aisladas.length})</summary>
+      <ul class="small">${a.aisladas.map((x) => `<li>${esc(x.nombre)} <span class="muted">(${esc(x.id)})</span>: ${btnTesis(x.tesis)}</li>`).join('')}</ul></details>
+    <details><summary>Umbrales o datos con cifra sin unidad (${a.sinUnidad.length})</summary>
+      <p class="small muted">A veces es un conteo o un pH y está bien; revisar que no falte la unidad.</p>
+      <ul class="small">${a.sinUnidad.map((x) => `<li>${btnTesis(x.tesis)} ${esc(x.seccion)}, pág. ${esc(x.pagina)}: ${esc(x.texto)}</li>`).join('')}</ul></details>
+    <details><summary>Diccionario de variables (${fichasUsadas})</summary>
+      <p class="small muted">De dónde saldría el dato de cada variable para un lote. Trofaxis hoy solo trae el clima (Open-Meteo); lo demás depende de registros, análisis o muestreo de la finca.</p>
+      <p class="small">${Object.entries(a.porDato).map(([d, n]) => `<span class="pill">${esc(DATOS[d] ?? d)}: ${n}</span>`).join(' ')}</p>
+      <table class="small cb-tabla"><thead><tr><th scope="col">Variable</th><th scope="col">Unidad</th><th scope="col">Tipo</th><th scope="col">Capa</th><th scope="col">Escala</th><th scope="col">Dato por lote</th></tr></thead>
+      <tbody>${Object.entries(FICHAS).map(([id, x]) => `<tr><td>${esc(nombreTesisVar(id))} <span class="muted">(${esc(id)})</span></td><td>${esc(x.unidad)}</td><td>${esc(x.tipo)}</td><td>${esc(CAPAS[x.capa])}</td><td>${esc(x.escala)}</td><td>${esc(DATOS[x.dato])}</td></tr>`).join('')}</tbody></table></details>
+  </section>`;
+}
+
 export function viewCerebro() {
   const r = resumen(HECHOS), rv = resumenVinculos();
   const sel = G.sel ? porId(G.sel) : null;
@@ -273,7 +323,8 @@ export function viewCerebro() {
     <details><summary>Lo que el cerebro todavía no sabe</summary><ul>${PENDIENTES.map((p) => `<li><b>${esc(p.fuente)}:</b> ${esc(p.falta)}</li>`).join('')}</ul>
       <p class="muted small">Sin IA, el cerebro no responde preguntas libres, no razona sobre casos sin regla escrita y no lee documentos por sí solo: cada dato entra a mano con su fuente.</p></details>
   </section>
-  ${pendientes()}`;
+  ${pendientes()}
+  ${viewAuditoria()}`;
 }
 
 // --- Dibujo e interacción (se monta después de cada render de la vista) ----------------------------------------

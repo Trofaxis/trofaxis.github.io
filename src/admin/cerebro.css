@@ -68,3 +68,11 @@
 .admin-cab .btn{margin-left:auto}
 .cb-grupos{display:flex;flex-direction:column;gap:10px;padding-left:18px}
 .cb-grupos .btn{margin:2px 0;white-space:normal;text-align:left}
+.cb-kpis{list-style:none;padding:0;margin:8px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cb-kpi{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px}
+.cb-kpi b{font-size:1.4rem}
+.cb-kpi-mal b{color:var(--warn)}
+.cb-auditoria details{margin-top:6px}
+.cb-tabla{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
+.cb-tabla th,.cb-tabla td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.cb-hueco td{color:var(--crit)}
