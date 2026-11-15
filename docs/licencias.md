@@ -61,6 +61,14 @@ Revisado el 2026-10-11 contra las páginas oficiales de cada proveedor (enlaces 
 - **A decidir.** Escribir a la universidad para preguntar por el uso comercial de los valores ya copiados, o reemplazarlos por valores de la hoja de seguridad o de la etiqueta de cada producto. Hasta tener respuesta, el catálogo se mantiene como proyecto académico, con cita.
 - **Fuente.** https://sitem.herts.ac.uk/aeru/ppdb/
 
+## 7. Videos de la página de presentación (Mixkit y Pixabay)
+
+- **Qué usa.** La página `/conoce/` muestra diez tomas de video de archivo, recortadas y comprimidas, alojadas en `conoce/media/`. La app no las usa. La lista con la dirección de cada toma está en [conoce.md](conoce.md).
+- **Mixkit (4 tomas).** Cada página dice «for commercial or personal use, under the Mixkit Stock Video Free License» (revisado el 2026-11-14). **No verificado:** el texto completo de la licencia.
+- **Pixabay (6 tomas).** Licencia de contenido de Pixabay: uso gratuito, sin atribución obligatoria y con permiso para adaptar; no permite distribuir el contenido tal cual ni usarlo de forma engañosa (resumen revisado el 2026-11-15). **No verificado:** el texto completo, que es el vinculante.
+- **A decidir.** Nada mientras la página sea informativa. Antes de cobrar por la app o de pagar publicidad con esta página: leer el texto completo de las dos licencias o cambiar las tomas por videos propios.
+- **Fuentes.** https://mixkit.co/license/ · https://pixabay.com/service/license-summary/
+
 ## Otras citas de la app (no son servicios)
 
 La FAO, el cuadro de la SAG de Honduras, Pesticide Stewardship y los artículos con DOI se citan como fuente de fórmulas, umbrales y valores. Esta revisión no revisó si alguna de esas publicaciones restringe copiar valores a un producto comercial. Si el producto se vuelve comercial, conviene repasar cada una.

@@ -1,7 +1,8 @@
 // Pantalla de entrada y menú de cuenta (2026-10-16).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizarCuenta, mostrarEntrada, inicial } from '../src/core/cuenta.js';
+import { readFileSync } from 'node:fs';
+import { normalizarCuenta, mostrarEntrada, entradaPedida, inicial } from '../src/core/cuenta.js';
 import { sesionDeHash } from '../src/nube/cliente.js';
 import { S } from '../src/core/state.js';
 import { viewEntrar, htmlCuenta } from '../src/ui/entrar.js';
@@ -21,6 +22,26 @@ test('la entrada sale sin sesión, salvo en la bienvenida o si eligió seguir si
   assert.equal(mostrarEntrada({ ...base, vista: 'bienvenida' }), false);
   assert.equal(mostrarEntrada({ ...base, nubeActiva: false }), false);
   assert.equal(mostrarEntrada({ ...base, cuenta: normalizarCuenta({ sinCuenta: true }) }), false);
+});
+
+test('/?entrar abre la entrada aunque sea la primera vez o se haya elegido seguir sin cuenta', () => {
+  assert.equal(entradaPedida('?entrar'), true);
+  assert.equal(entradaPedida('?entrar=1&otro=2'), true);
+  assert.equal(entradaPedida(''), false);
+  assert.equal(entradaPedida('?entrada'), false);
+  const base = { nubeActiva: true, sesion: null, vista: 'bienvenida', cuenta: normalizarCuenta({ sinCuenta: true }), pedida: true };
+  assert.equal(mostrarEntrada(base), true);
+  assert.equal(mostrarEntrada({ ...base, pedida: false }), false);
+  // Con sesión abierta o sin nube no hay nada que mostrar, se pida o no.
+  assert.equal(mostrarEntrada({ ...base, sesion: { token: 't' } }), false);
+  assert.equal(mostrarEntrada({ ...base, nubeActiva: false }), false);
+});
+
+test('app.js quita ?entrar de la dirección antes de cualquier inicio de sesión', () => {
+  const app = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
+  assert.match(app, /const pideEntrar = entradaPedida\(location\.search\);\nif \(pideEntrar\) history\.replaceState\(null, '', location\.pathname \+ location\.hash\);/);
+  assert.ok(app.indexOf('const pideEntrar') < app.indexOf('aplicarSesionAuth(delHash)'), 'la dirección se limpia antes de aplicar o pedir una sesión');
+  assert.match(app, /pedida: pideEntrar/);
 });
 
 test('la sesión que vuelve de Google dice que el proveedor es google', () => {
