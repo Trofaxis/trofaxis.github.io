@@ -5,7 +5,9 @@
 //  2. Existe navigator.install() (Web Install API, anunciada para Chrome 156 de escritorio). Hace lo mismo aunque la
 //     oferta no haya llegado y, si Trofaxis ya estaba instalada, el navegador ofrece abrirla.
 //  3. Computadora con Chrome o Edge y sin oferta. Casi siempre es que Trofaxis ya está instalada (el navegador no
-//     ofrece instalar dos veces): el botón pasa a «Abrir Trofaxis» y la abre en su propia ventana.
+//     ofrece instalar dos veces): el botón pasa a «Abrir Trofaxis», la abre en su propia ventana y la página dice
+//     que ya está instalada. La página no puede preguntárselo al navegador: lo sabe con certeza por la marca
+//     CLAVE_INSTALADA, que deja la app cuando corre en su propia ventana (pwa.js), y si no, lo presume.
 //  4. Navegadores que no dejan instalar desde un botón (iPhone, iPad, Safari, Firefox en Android). Se dice en una
 //     frase el único gesto que hace falta y la app queda a un clic.
 //  5. Firefox en computadora no instala aplicaciones web: el botón dice «Abrir Trofaxis» y la abre ahí mismo.
@@ -91,6 +93,10 @@ export const ESPERA_OFERTA_MS = 2500;
 export const GRACIA_MS = 4000;
 export const AVISO_VISIBLE_MS = 8000;
 
+// La app la escribe cuando corre en su propia ventana o se acaba de instalar, y la borra cuando el navegador vuelve a
+// ofrecer la instalación (pwa.js usa la misma clave; hay una prueba). Así esta página sabe que ya está instalada.
+export const CLAVE_INSTALADA = 'biogap:instalada:v1';
+
 export const TEXTOS = {
   instalar: 'Instalar Trofaxis',
   abrir: 'Abrir Trofaxis',
@@ -98,15 +104,19 @@ export const TEXTOS = {
   instalando: 'Instalando Trofaxis…',
   instalada: 'Trofaxis quedó instalada. Búscala en tu escritorio o entre tus aplicaciones.',
   cancelada: 'No se instaló. Puedes pulsar «Instalar Trofaxis» cuando quieras.',
-  abierta: 'Abrimos Trofaxis en otra ventana.',
-  notaInstalada: 'Ya está instalada en este equipo.',
-  notaSinOferta: 'Tu navegador no ofrece instalarla aquí. Lo usual es que ya la tengas instalada: ábrela con un clic.',
+  // Al abrirla en vez de instalarla se dice por qué: si no, parece que la instalación falló.
+  abiertaInstalada: 'Trofaxis ya está instalada en este equipo. La abrimos.',
+  abiertaSinOferta: 'Abrimos Trofaxis. Tu navegador no ofrece instalarla aquí: lo usual es que ya esté instalada.',
+  notaInstalada: 'Trofaxis ya está instalada en este equipo.',
+  notaSinOferta: 'Tu navegador no ofrece instalarla aquí: lo usual es que ya esté instalada en este equipo.',
+  hojaLista: 'Ya puedes instalarla',
+  hojaListaGesto: 'Tu navegador ya lo permite: un toque y confirmas.',
 };
 
 // En localhost el service worker serviría el código guardado y no el que se acaba de editar (misma regla que pwa.js).
 const esLocal = (host) => ['localhost', '127.0.0.1'].includes(host);
 
-// Conecta los botones [data-instalar], la nota de la sección, el aviso y la hoja del gesto.
+// Conecta los botones [data-instalar], la nota de la sección, la línea de estado, el aviso y la hoja del gesto.
 // alNavegar: ir a la app en esta misma ventana · abrirAparte: abrirla en otra (si está instalada, en su propia ventana).
 export function montarInstalar({
   ventana = window,
@@ -121,23 +131,35 @@ export function montarInstalar({
   const aviso = doc.getElementById('instalar-aviso');
   const nota = doc.getElementById('instalar-nota');
   const botones = [...doc.querySelectorAll('[data-instalar]')];
+  const estados = [...doc.querySelectorAll('[data-estado-instalar]')];
   const modoApp = ventana.matchMedia?.('(display-mode: standalone)');
   const esLaApp = () => modoApp?.matches === true || nav.standalone === true;
   const despues = (fn, ms) => ventana.setTimeout(fn, ms);
   const tieneApi = typeof nav.install === 'function';
 
+  const leerMarca = () => { try { return ventana.localStorage?.getItem(CLAVE_INSTALADA) === '1'; } catch { return false; } };
+  const marcar = (si) => {
+    try {
+      if (si) ventana.localStorage?.setItem(CLAVE_INSTALADA, '1'); else ventana.localStorage?.removeItem(CLAVE_INSTALADA);
+    } catch { /* sin almacenamiento, la página funciona igual */ }
+  };
+
   let pendiente = null;      // la oferta del navegador, guardada para el clic
   let instalada = esLaApp(); // dentro de la app instalada, o recién instalada
-  let sinOferta = !info.instala; // el botón abre la app: aquí no se instala, o en computadora no llegó la oferta
+  let sabida = leerMarca();  // la app dejó dicho que está instalada en este equipo
+  let sinOferta = !info.instala || sabida; // el botón abre la app: aquí no se instala, ya está instalada o no llegó la oferta
   let cancelada = false;     // la persona dijo que no en el cuadro del navegador
   let apiFallo = false;
   let ocupado = false;
   let recien = false;
   let turno = 0;
+  let dicho = '';
+  let hojaAbierta = false;
   const enEspera = [];
 
   const decir = (texto) => {
     if (!aviso) return;
+    dicho = texto;
     aviso.textContent = texto;
     aviso.hidden = !texto;
     const mio = ++turno;
@@ -145,6 +167,7 @@ export function montarInstalar({
   };
   // El rótulo siempre dice lo que va a hacer el clic.
   const abre = () => instalada || (sinOferta && !pendiente);
+  const seSabe = () => instalada || sabida; // con certeza; si no, «ya instalada» es solo lo usual
   const rotular = () => {
     const texto = ocupado ? TEXTOS.preparando : abre() ? TEXTOS.abrir : TEXTOS.instalar;
     for (const b of botones) {
@@ -153,7 +176,14 @@ export function montarInstalar({
     }
     doc.documentElement.classList.toggle('instalable', Boolean(pendiente));
     doc.documentElement.classList.toggle('abre-app', !ocupado && abre());
-    if (nota) nota.textContent = instalada ? TEXTOS.notaInstalada : abre() && info.instala ? TEXTOS.notaSinOferta : info.nota;
+    const yaEsta = abre() && info.instala;
+    const estado = seSabe() ? TEXTOS.notaInstalada : TEXTOS.notaSinOferta;
+    if (nota) nota.textContent = yaEsta ? estado : info.nota;
+    // Junto a los botones de la portada: que no parezca que instalar falló.
+    for (const e of estados) {
+      (e.querySelector('[data-estado-texto]') ?? e).textContent = yaEsta ? estado : '';
+      e.hidden = !yaEsta;
+    }
   };
 
   // Deja el app shell guardado para que la app instalada abra sin conexión desde la primera vez.
@@ -163,23 +193,34 @@ export function montarInstalar({
   };
 
   // Lo único que se muestra cuando el botón no puede instalar: una frase con el gesto y la app a un clic.
+  // conOferta: la oferta llegó con la hoja abierta (en el teléfono puede tardar); la hoja deja de pedir un gesto
+  // y ofrece instalar con un toque.
+  const llenarHoja = (conOferta) => {
+    dialogo.querySelector('[data-guia-titulo]').textContent = conOferta ? TEXTOS.hojaLista : info.titulo;
+    dialogo.querySelector('[data-guia-gesto]').textContent = conOferta ? TEXTOS.hojaListaGesto : info.gesto;
+    const detalle = dialogo.querySelector('[data-guia-detalle]');
+    detalle.textContent = conOferta ? '' : info.detalle ?? '';
+    detalle.hidden = conOferta || !info.detalle;
+    dialogo.querySelector('[data-guia-icono]').hidden = conOferta || info.compartir !== true;
+    const instalar = dialogo.querySelector('[data-guia-instalar]');
+    if (instalar) instalar.hidden = !conOferta;
+    const abrirAhora = dialogo.querySelector('[data-guia-abrir]');
+    if (abrirAhora) abrirAhora.hidden = conOferta;
+  };
   const guiar = () => {
     if (!dialogo) return;
-    dialogo.querySelector('[data-guia-titulo]').textContent = info.titulo;
-    dialogo.querySelector('[data-guia-gesto]').textContent = info.gesto;
-    const detalle = dialogo.querySelector('[data-guia-detalle]');
-    detalle.textContent = info.detalle ?? '';
-    detalle.hidden = !info.detalle;
-    dialogo.querySelector('[data-guia-icono]').hidden = info.compartir !== true;
+    llenarHoja(false);
+    hojaAbierta = true;
     if (typeof dialogo.showModal === 'function') dialogo.showModal(); else dialogo.setAttribute('open', '');
   };
+  const cerrarHoja = () => { hojaAbierta = false; dialogo?.close?.(); };
 
   // Dentro de la app, o donde no se instala, se abre aquí mismo. En otra ventana, Chrome y Edge la abren en la suya
   // si está instalada (y en una pestaña nueva si no lo está).
   const abrir = () => {
     if (esLaApp() || !info.instala) { alNavegar('/'); return; }
     abrirAparte('/');
-    decir(TEXTOS.abierta);
+    decir(seSabe() ? TEXTOS.abiertaInstalada : TEXTOS.abiertaSinOferta);
   };
 
   const ofrecer = async () => {
@@ -199,6 +240,7 @@ export function montarInstalar({
     try {
       await nav.install(); // instala o, si ya estaba instalada, el navegador ofrece abrirla
       instalada = true;
+      marcar(true);
       rotular();
       prepararSinConexion();
     } catch (error) {
@@ -231,7 +273,10 @@ export function montarInstalar({
     ev.preventDefault(); // se guarda para ofrecerlo cuando la persona pulse el botón
     pendiente = ev;
     sinOferta = false;
+    sabida = false; // el navegador ofrece instalarla: ya no está instalada
+    marcar(false);
     rotular();
+    if (hojaAbierta) llenarHoja(true);
     for (const fin of [...enEspera]) fin(true);
   });
   ventana.addEventListener('appinstalled', () => {
@@ -239,19 +284,28 @@ export function montarInstalar({
     instalada = true;
     sinOferta = false;
     recien = true;
+    marcar(true);
     rotular();
     decir(TEXTOS.instalada);
-    dialogo?.close?.();
+    cerrarHoja();
     prepararSinConexion();
     entrarSiEsLaApp();
     despues(entrarSiEsLaApp, 900);
   });
   modoApp?.addEventListener?.('change', entrarSiEsLaApp);
+  // La app, al abrirse en su propia ventana, deja la marca: lo que se presumía pasa a saberse.
+  ventana.addEventListener('storage', (ev) => {
+    if (ev?.key !== CLAVE_INSTALADA) return;
+    sabida = leerMarca();
+    if (sabida && !pendiente) sinOferta = true;
+    rotular();
+    if (sabida && dicho === TEXTOS.abiertaSinOferta) decir(TEXTOS.abiertaInstalada);
+  });
 
   const alPulsar = async () => {
     if (ocupado) return;
     decir('');
-    if (instalada) { abrir(); return; }
+    if (instalada || (sabida && !pendiente)) { abrir(); return; }
     if (pendiente) { await ofrecer(); return; }
     if (tieneApi && !apiFallo) { await instalarConApi(); return; }
     if (info.oferta && !sinOferta && !cancelada) {
@@ -267,12 +321,14 @@ export function montarInstalar({
     guiar();
   };
   for (const b of botones) b.addEventListener('click', alPulsar);
-  for (const b of dialogo?.querySelectorAll('[data-cerrar]') ?? []) b.addEventListener('click', () => dialogo.close());
+  for (const b of dialogo?.querySelectorAll('[data-cerrar]') ?? []) b.addEventListener('click', cerrarHoja);
   // Un clic en el fondo de la hoja la cierra.
-  dialogo?.addEventListener('click', (ev) => { if (ev.target === dialogo) dialogo.close(); });
+  dialogo?.addEventListener('click', (ev) => { if (ev.target === dialogo) cerrarHoja(); });
+  dialogo?.addEventListener('close', () => { hojaAbierta = false; });
+  dialogo?.querySelector('[data-guia-instalar]')?.addEventListener('click', () => { cerrarHoja(); return alPulsar(); });
 
   // En computadora, si el navegador no ofreció instalar al poco de cargar, el botón pasa a abrir la app.
-  if (info.oferta && info.escritorio && !tieneApi && !instalada) {
+  if (info.oferta && info.escritorio && !tieneApi && !instalada && !sabida) {
     const vencer = () => despues(() => {
       if (pendiente || cancelada || instalada || ocupado) return;
       sinOferta = true;
@@ -282,5 +338,5 @@ export function montarInstalar({
   }
 
   rotular();
-  return { navegador, estaInstalada: () => instalada, hayOferta: () => Boolean(pendiente), abre };
+  return { navegador, estaInstalada: () => instalada, hayOferta: () => Boolean(pendiente), abre, seSabe };
 }

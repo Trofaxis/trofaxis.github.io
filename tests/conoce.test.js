@@ -24,7 +24,7 @@ const { conPlan } = await import('../src/fert/calculo.js');
 const { mesesRueda, ruedaAnio } = await import('../src/ui/rueda.js');
 const { TESIS } = await import('../src/cerebro/tesis.js');
 const rueda = await import('../conoce/rueda-demo.js');
-const { detectarNavegador, guiaDe, NAVEGADORES, TEXTOS, ESPERA_OFERTA_MS, GRACIA_MS, AVISO_VISIBLE_MS, montarInstalar } = await import('../conoce/instalar.js');
+const { detectarNavegador, guiaDe, NAVEGADORES, TEXTOS, ESPERA_OFERTA_MS, GRACIA_MS, AVISO_VISIBLE_MS, CLAVE_INSTALADA, montarInstalar } = await import('../conoce/instalar.js');
 
 // La evaluación tal como la hace el inicio de la app con la finca demostrativa.
 const finca = conPlan(demoFarm());
@@ -174,7 +174,13 @@ test('ni guiones ni estilos en línea: todo vive en archivos de la carpeta', () 
 
 test('la página no envía nada a ningún servidor ni guarda datos de quien la visita', () => {
   for (const [nombre, js] of guiones) {
-    assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|sendBeacon|WebSocket|localStorage|document\.cookie/, nombre);
+    assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|sendBeacon|WebSocket|document\.cookie/, nombre);
+    // Lo único que la página guarda en el equipo no es de la persona: la marca de que Trofaxis ya está instalada,
+    // la misma que deja la app. Cualquier otro uso de localStorage hace fallar esta prueba.
+    const usos = [...js.matchAll(/localStorage\??\.(\w+)\(([^)]*)\)/g)].map((m) => `${m[1]}(${m[2]})`);
+    const permitidos = nombre === 'instalar.js' ? ['getItem(CLAVE_INSTALADA)', "setItem(CLAVE_INSTALADA, '1')", 'removeItem(CLAVE_INSTALADA)'] : [];
+    assert.deepEqual(usos, permitidos, `${nombre}: almacenamiento`);
+    assert.equal((js.match(/localStorage/g) ?? []).length, permitidos.length, `${nombre}: todo uso de localStorage está en la lista`);
     const urls = [...js.matchAll(/https?:\/\/[^\s'"`)]+/g)].map((m) => m[0]);
     assert.deepEqual(urls.filter((u) => u !== 'http://www.w3.org/2000/svg'), [], `${nombre}: direcciones externas`);
   }
@@ -332,13 +338,15 @@ test('ningún navegador recibe una lista de pasos: una nota y un gesto de una fr
   assert.match(seccion, /<p class="instalar-nota" id="instalar-nota">[^<]+<\/p>/);
   assert.match(hoja, /data-guia-titulo/);
   assert.match(hoja, /<p data-guia-gesto>[^<]+<\/p>/);
-  assert.match(hoja, /<a class="btn oro grande" href="\/" data-abrir-app>Abrir Trofaxis ahora<\/a>/, 'la app queda a un clic');
+  assert.match(hoja, /<a class="btn oro grande" href="\/" data-abrir-app data-guia-abrir>Abrir Trofaxis ahora<\/a>/, 'la app queda a un clic');
+  assert.match(hoja, /<button type="button" class="btn oro grande" data-guia-instalar hidden>Instalar Trofaxis<\/button>/, 'y, si el navegador ya lo permite, instalar a un toque');
+  assert.match(html, /<p class="portada-estado" data-estado-instalar hidden>/, 'la portada dice si ya está instalada');
   assert.match(html, /<symbol id="i-compartir"/);
   assert.match(html, /Firefox para computadora no instala aplicaciones web/, 'también lo dicen las preguntas frecuentes');
 });
 
 // Lo mínimo del navegador para probar el botón «Instalar Trofaxis» sin abrir uno.
-function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, host = 'trofaxis.github.io', api = null } = {}) {
+function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, host = 'trofaxis.github.io', api = null, marca = false } = {}) {
   const nodo = (extra = {}) => ({
     textContent: '', hidden: false, dataset: {}, atributos: {}, escuchas: {},
     addEventListener(tipo, fn) { (this.escuchas[tipo] ??= []).push(fn); },
@@ -347,17 +355,24 @@ function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, 
     ...extra,
   });
   const botones = [0, 1].map(() => { const rotulo = nodo(); return nodo({ rotulo, querySelector: (sel) => (sel === '[data-rotulo]' ? rotulo : null) }); });
-  const hoja = { titulo: nodo(), gesto: nodo(), detalle: nodo({ hidden: true }), icono: nodo({ hidden: true }) };
-  const partes = { '[data-guia-titulo]': hoja.titulo, '[data-guia-gesto]': hoja.gesto, '[data-guia-detalle]': hoja.detalle, '[data-guia-icono]': hoja.icono };
+  const hoja = { titulo: nodo(), gesto: nodo(), detalle: nodo({ hidden: true }), icono: nodo({ hidden: true }), instalar: nodo({ hidden: true }), abrir: nodo() };
+  const partes = {
+    '[data-guia-titulo]': hoja.titulo, '[data-guia-gesto]': hoja.gesto, '[data-guia-detalle]': hoja.detalle, '[data-guia-icono]': hoja.icono,
+    '[data-guia-instalar]': hoja.instalar, '[data-guia-abrir]': hoja.abrir,
+  };
   const dialogo = nodo({ abierto: false, querySelector: (sel) => partes[sel] ?? null, showModal() { this.abierto = true; }, close() { this.abierto = false; } });
   const aviso = nodo({ hidden: true });
   const nota = nodo();
+  const estado1 = nodo({ hidden: true }); // la línea junto a los botones de la portada
   const clases = new Set();
+  // El almacenamiento del navegador: la app deja ahí la marca de «instalada».
+  const guardado = new Map(marca ? [[CLAVE_INSTALADA, '1']] : []);
+  const almacen = { getItem: (k) => guardado.get(k) ?? null, setItem: (k, v) => guardado.set(k, String(v)), removeItem: (k) => guardado.delete(k) };
   const doc = {
     readyState: 'complete',
     documentElement: { classList: { toggle: (c, si) => (si ? clases.add(c) : clases.delete(c)) } },
     getElementById: (id) => ({ 'dlg-instalar': dialogo, 'instalar-aviso': aviso, 'instalar-nota': nota })[id] ?? null,
-    querySelectorAll: (sel) => (sel === '[data-instalar]' ? botones : []),
+    querySelectorAll: (sel) => ({ '[data-instalar]': botones, '[data-estado-instalar]': [estado1] })[sel] ?? [],
   };
   const escuchas = {};
   const registros = [];
@@ -370,6 +385,7 @@ function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, 
   if (api) navigator.install = api;
   const ventana = {
     navigator,
+    localStorage: almacen,
     location: { hostname: host, href: '' },
     matchMedia: () => modo,
     addEventListener: (tipo, fn) => { (escuchas[tipo] ??= []).push(fn); },
@@ -378,7 +394,10 @@ function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, 
   };
   const estado = montarInstalar({ ventana, doc, alNavegar: (url) => visitas.push(url) });
   return {
-    estado, botones, dialogo, hoja, aviso, nota, clases, registros, visitas, aperturas, modo,
+    estado, botones, dialogo, hoja, aviso, nota, clases, registros, visitas, aperturas, modo, guardado,
+    enPortada: estado1,
+    // La app, en otra ventana, escribe o borra la marca: esta página recibe el evento «storage».
+    marcarDesdeLaApp: (si) => { if (si) guardado.set(CLAVE_INSTALADA, '1'); else guardado.delete(CLAVE_INSTALADA); (escuchas.storage ?? []).forEach((fn) => fn({ key: CLAVE_INSTALADA })); },
     rotulos: () => botones.map((b) => b.rotulo.textContent),
     emitir: (tipo, ev = {}) => (escuchas[tipo] ?? []).forEach((fn) => fn(ev)),
     pulsar: (b) => Promise.all(b.escuchas.click.map((fn) => fn({ target: b }))),
@@ -447,7 +466,8 @@ test('recién instalada y todavía en el navegador (teléfono), el botón abre l
   assert.deepEqual(e.visitas, []);
   await e.pulsar(e.botones[1]);
   assert.deepEqual(e.aperturas, APARTE);
-  assert.equal(e.aviso.textContent, TEXTOS.abierta);
+  assert.equal(e.aviso.textContent, TEXTOS.abiertaInstalada, 'se acaba de instalar: se sabe');
+  assert.equal(e.guardado.get(CLAVE_INSTALADA), '1', 'queda anotado para la próxima visita');
 });
 
 test('si la persona cancela, se le dice y puede volver a intentarlo', async () => {
@@ -483,19 +503,58 @@ test('ya instalada en la computadora: el navegador no ofrece instalar y el botó
   assert.equal(e.estado.abre(), true);
   assert.ok(e.clases.has('abre-app'), 'sin la flecha de descarga: ya no instala');
   assert.equal(e.nota.textContent, TEXTOS.notaSinOferta);
+  assert.equal(e.enPortada.hidden, false, 'junto a los botones de la portada también se dice');
+  assert.equal(e.enPortada.textContent, TEXTOS.notaSinOferta);
+  assert.equal(e.estado.seSabe(), false, 'sin la marca de la app, solo se presume');
   await e.pulsar(e.botones[0]);
   assert.deepEqual(e.aperturas, APARTE, 'en otra ventana: si está instalada, Chrome y Edge la abren en la suya');
   assert.equal(e.dialogo.abierto, false, 'antes aquí salía una lista de pasos');
-  assert.equal(e.aviso.textContent, TEXTOS.abierta);
+  assert.equal(e.aviso.textContent, TEXTOS.abiertaSinOferta, 'el aviso dice por qué no se instaló: que no parezca un fallo');
   assert.deepEqual(e.visitas, []);
+  // La app se abre en su propia ventana y deja la marca: lo presumido pasa a saberse, también en el aviso visible.
+  e.marcarDesdeLaApp(true);
+  assert.equal(e.estado.seSabe(), true);
+  assert.equal(e.aviso.textContent, TEXTOS.abiertaInstalada);
+  assert.equal(e.nota.textContent, TEXTOS.notaInstalada);
+  assert.equal(e.enPortada.textContent, TEXTOS.notaInstalada);
   // Si la oferta llega tarde (red lenta), el botón vuelve a instalar.
   const tarde = ofertaFalsa();
   e.emitir('beforeinstallprompt', tarde);
   assert.deepEqual(e.rotulos(), SOLO_INSTALAR);
   assert.equal(e.clases.has('abre-app'), false);
   assert.equal(e.nota.textContent, NAVEGADORES.chrome.nota);
+  assert.equal(e.enPortada.hidden, true);
+  assert.equal(e.guardado.has(CLAVE_INSTALADA), false, 'si el navegador ofrece instalarla, ya no está instalada: se borra la marca');
   await e.pulsar(e.botones[0]);
   assert.equal(tarde.ofrecido, 1);
+});
+
+test('con la marca que deja la app, la página sabe desde el principio que ya está instalada', async () => {
+  const app = leer('pwa.js');
+  assert.ok(app.includes(`const CLAVE_INSTALADA = '${CLAVE_INSTALADA}';`), 'la app y la página usan la misma clave');
+  assert.match(app, /if \(enVentanaPropia\(\)\) anotarInstalada\(true\);/, 'la app la anota al correr en su propia ventana');
+  for (const equipo of [{ ua: UA_CHROME }, ANDROID]) {
+    const e = entornoInstalar({ ...equipo, marca: true });
+    assert.deepEqual(e.rotulos(), SOLO_ABRIR, 'sin esperar el plazo');
+    assert.equal(e.estado.seSabe(), true);
+    assert.equal(e.enPortada.hidden, false);
+    assert.equal(e.enPortada.textContent, TEXTOS.notaInstalada);
+    assert.equal(e.nota.textContent, TEXTOS.notaInstalada);
+    await e.pulsar(e.botones[0]);
+    assert.deepEqual(e.aperturas, APARTE);
+    assert.equal(e.aviso.textContent, TEXTOS.abiertaInstalada);
+    assert.equal(e.dialogo.abierto, false);
+  }
+  // Marca vieja (la desinstalaron): en cuanto el navegador ofrece instalar, manda la oferta.
+  const e = entornoInstalar({ ua: UA_CHROME, marca: true });
+  const oferta = ofertaFalsa();
+  e.emitir('beforeinstallprompt', oferta);
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR);
+  assert.equal(e.estado.seSabe(), false);
+  assert.equal(e.guardado.has(CLAVE_INSTALADA), false);
+  await e.pulsar(e.botones[0]);
+  assert.equal(oferta.ofrecido, 1);
+  assert.deepEqual(e.aperturas, []);
 });
 
 test('un clic antes de que llegue la oferta la espera, sin perder el clic', async () => {
@@ -527,7 +586,18 @@ test('un clic antes de que llegue la oferta la espera, sin perder el clic', asyn
   await toque;
   assert.equal(movil.dialogo.abierto, true);
   assert.equal(movil.hoja.gesto.textContent, NAVEGADORES.android.gesto);
+  assert.equal(movil.hoja.instalar.hidden, true);
   assert.deepEqual(movil.aperturas, []);
+  // La oferta llega con la hoja abierta: la hoja deja de pedir un gesto y ofrece instalar con un toque.
+  const tarde = ofertaFalsa();
+  movil.emitir('beforeinstallprompt', tarde);
+  assert.equal(movil.hoja.titulo.textContent, TEXTOS.hojaLista);
+  assert.equal(movil.hoja.gesto.textContent, TEXTOS.hojaListaGesto);
+  assert.equal(movil.hoja.instalar.hidden, false);
+  assert.equal(movil.hoja.abrir.hidden, true, 'una sola acción principal');
+  await Promise.all(movil.hoja.instalar.escuchas.click.map((fn) => fn({ target: movil.hoja.instalar })));
+  assert.equal(tarde.ofrecido, 1, 'ese toque abre el cuadro de instalación del navegador');
+  assert.equal(movil.dialogo.abierto, false);
 });
 
 test('donde el navegador no deja instalar desde un botón, se dice un solo gesto', async () => {
