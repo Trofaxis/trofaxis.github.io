@@ -1,6 +1,6 @@
 # Trofaxis
 
-**App:** https://trofaxis.github.io
+**App:** https://trofaxis.github.io · **Página de presentación:** https://trofaxis.github.io/conoce/ ([docs/conoce.md](docs/conoce.md))
 
 *Antes «BioG.A.P. Biodiversity Manager». Las claves internas (`biogap:` en el navegador, `biogap-finca` y `biogap-mapa` en los archivos) conservan el nombre viejo para no perder datos guardados ni respaldos.*
 
@@ -93,6 +93,7 @@ src/
 │  ├─ xlsx.js, csv.js   lectura de archivos sin dependencias externas
 │  └─ extraer.js        de las celdas a los datos, por etiquetas
 └─ ui/                  vistas: dashboard, cuestionario, plantillas, riego, fertilización, plaguicidas, casos, ajustes y gráficos
+conoce/                 página de presentación (/conoce/): instalar Trofaxis, iniciar sesión, videos; ver docs/conoce.md
 docs/formulas.md        fórmula, supuestos y estado de calibración de cada módulo
 docs/catalogo-riego.md  fórmulas, rangos y reglas del módulo de riego
 docs/adr/               decisiones de diseño

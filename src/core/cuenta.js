@@ -26,9 +26,14 @@ export function guardarCuenta(c) {
 export function borrarCuentaRecordada() { try { localStorage.removeItem(CLAVE); } catch { /* sin almacenamiento */ } }
 
 // La entrada sale al abrir la app si la nube está activa, no hay sesión, no es la bienvenida de primera vez
-// y el usuario no eligió «Seguir sin cuenta».
-export function mostrarEntrada({ nubeActiva, sesion, vista, cuenta }) {
-  return Boolean(nubeActiva) && !sesion && vista !== 'bienvenida' && !cuenta.sinCuenta;
+// y el usuario no eligió «Seguir sin cuenta». Si llega pedida (/?entrar), sale aunque sea la primera vez o
+// aunque antes se eligiera seguir sin cuenta: quien pulsa «Iniciar sesión» quiere ver esa pantalla.
+export function mostrarEntrada({ nubeActiva, sesion, vista, cuenta, pedida = false }) {
+  if (!nubeActiva || sesion) return false;
+  return Boolean(pedida) || (vista !== 'bienvenida' && !cuenta.sinCuenta);
 }
+
+// Los enlaces «Iniciar sesión» y «Crear cuenta» de la página de presentación (/conoce/) abren la app con ?entrar.
+export const entradaPedida = (search) => new URLSearchParams(search || '').has('entrar');
 
 export const inicial = (email) => (String(email || '').trim()[0] || '?').toUpperCase();

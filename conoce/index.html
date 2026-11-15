@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Trofaxis · El riesgo ambiental de tu finca, antes de la auditoría</title>
+  <meta name="description" content="Trofaxis cruza tus cultivos, aplicaciones, riego y clima y te muestra, mes a mes, dónde chocan con los polinizadores, el agua y el suelo. Alineado a GLOBALG.A.P. IFA v6. Se instala en tu computadora y en tu teléfono.">
+  <meta name="theme-color" content="#0C2A1D">
+  <link rel="canonical" href="https://trofaxis.github.io/conoce/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_HN">
+  <meta property="og:site_name" content="Trofaxis">
+  <meta property="og:title" content="Trofaxis: el riesgo ambiental de tu finca, antes de la auditoría">
+  <meta property="og:description" content="Cinco temas ambientales cruzados mes a mes, con la fuente de cada cálculo. Alineado a GLOBALG.A.P. IFA v6.">
+  <meta property="og:url" content="https://trofaxis.github.io/conoce/">
+  <meta property="og:image" content="https://trofaxis.github.io/conoce/media/compartir.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/trofaxis-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/trofaxis-192.png">
+  <link rel="preload" href="/src/fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/src/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/src/fonts/fuentes.css">
+  <link rel="stylesheet" href="conoce.css">
+  <noscript><link rel="stylesheet" href="sin-js.css"></noscript>
+</head>
+<body>
+  <!-- Íconos: Lucide (lucide.dev, licencia ISC), los mismos que usa la app. -->
+  <svg width="0" height="0" class="sprite" aria-hidden="true">
+    <symbol id="i-hoja" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+    <symbol id="i-instalar" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-pausa" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-si" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-no" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  </svg>
+
+  <!-- Pantalla de carga: la rueda del año se arma mes a mes. Sin JavaScript se quita sola (sin-js.css y conoce.css). -->
+  <div class="carga" id="carga" role="status">
+    <div class="carga-escena" data-carga-escena>
+      <svg class="carga-rueda" viewBox="-212 -212 424 424" aria-hidden="true">
+        <defs>
+          <mask id="carga-barrido" maskUnits="userSpaceOnUse" x="-212" y="-212" width="424" height="424">
+            <circle class="c-barrido" r="118" pathLength="100"/>
+          </mask>
+        </defs>
+        <g class="c-fondos">
+          <circle r="161" pathLength="120"/><circle r="137" pathLength="120"/><circle r="113" pathLength="120"/><circle r="89" pathLength="120"/><circle class="c-nucleo" r="65" pathLength="120"/>
+        </g>
+        <g class="c-anillos" mask="url(#carga-barrido)">
+          <circle class="c-lluvia" r="161" pathLength="120"/><circle class="c-flor" r="137" pathLength="120"/><circle class="c-aplic" r="113" pathLength="120"/><circle class="c-ciclo" r="89" pathLength="120"/><circle class="c-coinc c-nucleo" r="65" pathLength="120"/>
+        </g>
+        <path class="c-cuna" data-carga-cuna d="M0,-50L0,-178A178,178 0 0 1 89,-154.2L25,-43.3A50,50 0 0 0 0,-50Z"/>
+        <g class="c-orbita"><circle class="c-sol" cx="0" cy="-192" r="5"/></g>
+      </svg>
+      <span class="carga-logo" aria-hidden="true"><svg class="ic"><use href="#i-hoja"/></svg></span>
+    </div>
+    <p class="carga-marca">Trofaxis</p>
+    <p class="carga-texto"><span data-carga-texto>Armando la rueda del año</span><span class="carga-mes" data-carga-mes aria-hidden="true">Ene</span></p>
+    <button type="button" class="carga-saltar" data-carga-saltar hidden>Entrar ya</button>
+  </div>
+
+  <a class="saltar" href="#contenido">Ir al contenido</a>
+
+  <header class="barra" id="barra">
+    <div class="barra-in ancho">
+      <a class="marca" href="#inicio" aria-label="Trofaxis, inicio">
+        <span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-hoja"/></svg></span>
+        <span>Trofaxis</span>
+      </a>
+      <nav class="barra-nav" id="menu" aria-label="Secciones">
+        <a href="#temas">Qué mide</a>
+        <a href="#como">Cómo funciona</a>
+        <a href="#rueda">La rueda</a>
+        <a href="#evidencia">Evidencia</a>
+        <a href="#planes">Planes</a>
+        <a href="#preguntas">Preguntas</a>
+        <a class="solo-menu" href="/?entrar" data-abrir-app>Iniciar sesión</a>
+        <a class="solo-menu" href="/?entrar" data-abrir-app>Crear cuenta</a>
+      </nav>
+      <div class="barra-acciones">
+        <a class="enlace-barra" href="/?entrar" data-abrir-app>Iniciar sesión</a>
+        <button type="button" class="btn oro" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
+        <button type="button" class="menu-btn" id="menu-btn" aria-controls="menu" aria-expanded="false" aria-label="Abrir el menú"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+      </div>
+    </div>
+    <div class="barra-avance" aria-hidden="true"><i></i></div>
+  </header>
+
+  <main id="contenido">
+    <section class="portada" id="inicio" aria-labelledby="titulo">
+      <div class="portada-fondo" aria-hidden="true">
+        <img class="portada-img" src="media/portada.webp" srcset="media/portada-movil.webp 800w, media/portada.webp 1600w" sizes="100vw" width="1600" height="900" alt="" fetchpriority="high" decoding="async">
+        <video class="portada-video" muted playsinline loop preload="none" tabindex="-1" data-video data-src="media/portada-720.mp4" data-src-chico="media/portada-480.mp4"></video>
+      </div>
+      <div class="portada-in ancho">
+        <div class="portada-texto">
+          <h1 id="titulo"><span class="linea">El riesgo ambiental</span> <span class="linea">de tu finca, antes</span> <span class="linea">de la auditoría.</span></h1>
+          <p class="bajada">Trofaxis cruza tus cultivos, tus aplicaciones, tu riego y el clima de tu ubicación, y te muestra mes a mes dónde chocan con los polinizadores, el agua y el suelo. Alineado a GLOBALG.A.P. IFA v6.</p>
+          <div class="acciones">
+            <button type="button" class="btn oro grande" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
+            <a class="btn claro grande" href="/?entrar" data-abrir-app>Crear cuenta</a>
+          </div>
+          <p class="portada-nota">¿Ya tienes cuenta? <a href="/?entrar" data-abrir-app>Inicia sesión</a>. ¿Solo quieres mirar? <a href="/" data-abrir-app>Abre la finca de ejemplo</a>.</p>
+        </div>
+
+        <aside class="tablero" data-tablero aria-label="Resultado de la finca demostrativa. Datos de ejemplo.">
+          <p class="tablero-cab"><span>Finca demostrativa</span><span class="chip-ej">Ejemplo</span></p>
+          <p class="tablero-frase">Tu finca está en <span class="marca-nivel" data-nivel-texto>riesgo alto</span></p>
+          <p class="tablero-indice"><b data-dato="indice.v" data-contar>69</b><span>de 100</span></p>
+          <div class="escala" data-escala aria-hidden="true"><i class="e-bajo"></i><i class="e-medio"></i><i class="e-alto"></i><span class="e-marca"></span></div>
+          <ul class="tablero-temas" data-temas>
+            <li data-tema="poli"><span>Polinizadores</span><span class="barrita"><i></i></span><b data-dato="temas.poli">88</b></li>
+            <li data-tema="agua"><span>Agua</span><span class="barrita"><i></i></span><b data-dato="temas.agua">71</b></li>
+            <li data-tema="suelo"><span>Suelo</span><span class="barrita"><i></i></span><b data-dato="temas.suelo">63</b></li>
+            <li data-tema="fert"><span>Fertilización</span><span class="barrita"><i></i></span><b data-dato="temas.fert">60</b></li>
+            <li data-tema="troficas"><span>Cadenas tróficas</span><span class="barrita"><i></i></span><b data-dato="temas.troficas">58</b></li>
+          </ul>
+          <p class="tablero-aviso" data-aviso-mes hidden></p>
+          <p class="tablero-pie">Datos ficticios. Mismo motor que la app.</p>
+        </aside>
+      </div>
+      <button type="button" class="pausa" data-pausa aria-pressed="false" hidden><svg class="ic" aria-hidden="true"><use href="#i-pausa" data-pausa-icono/></svg><span data-pausa-texto>Pausar movimiento</span></button>
+    </section>
+
+    <section class="fuentes" aria-labelledby="fuentes-t">
+      <p class="fuentes-t" id="fuentes-t">Cada cálculo dice de dónde sale</p>
+      <div class="cinta" data-cinta>
+        <ul class="cinta-lista">
+          <li>FAO-56 para el riego</li>
+          <li>Cociente de peligro de la FAO para polinizadores</li>
+          <li>DL50 de abejas del PPDB, Universidad de Hertfordshire</li>
+          <li>Cuadro de fungicidas de la SAG Honduras</li>
+          <li>Clima histórico de Open-Meteo</li>
+          <li>NDVI con Sentinel-2 de Copernicus</li>
+          <li>Secciones de GLOBALG.A.P. IFA v6</li>
+          <li><span data-dato="cifras.tesis">40</span> tesis leídas página por página</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="seccion temas" id="temas" aria-labelledby="temas-t">
+      <div class="ancho">
+        <div class="cabeza doble">
+          <h2 id="temas-t">Cinco temas ambientales, cruzados entre sí</h2>
+          <p>Cada tema responde una pregunta concreta sobre tu finca y dice qué sección de IFA v6 toca. Lo que pasa en uno cambia la lectura del otro: una aplicación en mes de floración pesa distinto que la misma aplicación en mes seco.</p>
+        </div>
+
+        <div class="historias" data-historias>
+          <div class="escenario">
+            <div class="escenario-videos" aria-hidden="true">
+              <video muted playsinline loop preload="none" tabindex="-1" poster="media/tema-polinizadores.webp" data-historia-video="poli" data-src="media/tema-polinizadores.mp4"></video>
+              <video muted playsinline loop preload="none" tabindex="-1" data-poster="media/tema-agua.webp" data-historia-video="agua" data-src="media/tema-agua.mp4"></video>
+              <video muted playsinline loop preload="none" tabindex="-1" data-poster="media/tema-fertilizacion.webp" data-historia-video="fert" data-src="media/tema-fertilizacion.mp4"></video>
+              <video muted playsinline loop preload="none" tabindex="-1" data-poster="media/tema-suelo.webp" data-historia-video="suelo" data-src="media/tema-suelo.mp4"></video>
+              <video muted playsinline loop preload="none" tabindex="-1" data-poster="media/tema-troficas.webp" data-historia-video="troficas" data-src="media/tema-troficas.mp4"></video>
+            </div>
+            <div class="escenario-textos">
+              <article class="historia" id="historia-poli" role="tabpanel" aria-labelledby="pes-poli" data-historia="poli">
+                <h3>¿Tus aplicaciones caen en meses de floración?</h3>
+                <p>Trofaxis cruza los meses en que aplicas con los meses en que florecen las plantas que visitan las abejas, y calcula el cociente de peligro de cada ingrediente activo con su DL50 por contacto.</p>
+                <p class="historia-meta"><span>IFA v6: 22 Biodiversidad, 31 MIP y 32 Fitosanitarios</span><span class="ej">Finca de ejemplo: <b data-dato="temas.poli">88</b> de 100</span></p>
+              </article>
+              <article class="historia" id="historia-agua" role="tabpanel" aria-labelledby="pes-agua" data-historia="agua" hidden>
+                <h3>¿Tu riego aplica lo que el cultivo necesita?</h3>
+                <p>Carga tu diseño de riego y Trofaxis lo revisa contra FAO-56: coeficientes de cultivo, etapas y profundidad de raíces. También cuenta la cercanía de la finca a quebradas y otros cuerpos de agua.</p>
+                <p class="historia-meta"><span>IFA v6: 30 Agua</span><span class="ej">Finca de ejemplo: <b data-dato="temas.agua">71</b> de 100</span></p>
+              </article>
+              <article class="historia" id="historia-fert" role="tabpanel" aria-labelledby="pes-fert" data-historia="fert" hidden>
+                <h3>¿Cuánto nitrógeno queda expuesto a la lluvia?</h3>
+                <p>Con tu plan de fertilización, Trofaxis compara lo aplicado con el objetivo del cultivo y revisa el fraccionamiento, el método y los kilos de nitrógeno que caen en meses de lluvia fuerte.</p>
+                <p class="historia-meta"><span>IFA v6: 29 Fertilizantes</span><span class="ej">Finca de ejemplo: <b data-dato="temas.fert">60</b> de 100</span></p>
+              </article>
+              <article class="historia" id="historia-suelo" role="tabpanel" aria-labelledby="pes-suelo" data-historia="suelo" hidden>
+                <h3>¿Cuántos meses pasa tu suelo desnudo bajo la lluvia?</h3>
+                <p>La labranza, la pendiente y los meses de suelo descubierto se cruzan con los meses de lluvia fuerte. Donde coinciden, Trofaxis marca el mes.</p>
+                <p class="historia-meta"><span>IFA v6: 28 Suelo</span><span class="ej">Finca de ejemplo: <b data-dato="temas.suelo">63</b> de 100</span></p>
+              </article>
+              <article class="historia" id="historia-troficas" role="tabpanel" aria-labelledby="pes-troficas" data-historia="troficas" hidden>
+                <h3>¿Tus aplicaciones golpean también a los enemigos naturales?</h3>
+                <p>Trofaxis señala los productos de amplio espectro que se aplican con la plaga presente y las aplicaciones en mes de cosecha, y recuerda verificar el intervalo de seguridad de la etiqueta.</p>
+                <p class="historia-meta"><span>IFA v6: 22 Biodiversidad y 31 MIP</span><span class="ej">Finca de ejemplo: <b data-dato="temas.troficas">58</b> de 100</span></p>
+              </article>
+            </div>
+          </div>
+          <div class="pestanas" role="tablist" aria-label="Temas ambientales">
+            <button type="button" role="tab" id="pes-poli" aria-controls="historia-poli" aria-selected="true" data-pestana="poli"><span>Polinizadores</span><i class="avance" aria-hidden="true"></i></button>
+            <button type="button" role="tab" id="pes-agua" aria-controls="historia-agua" aria-selected="false" tabindex="-1" data-pestana="agua"><span>Agua</span><i class="avance" aria-hidden="true"></i></button>
+            <button type="button" role="tab" id="pes-fert" aria-controls="historia-fert" aria-selected="false" tabindex="-1" data-pestana="fert"><span>Fertilización</span><i class="avance" aria-hidden="true"></i></button>
+            <button type="button" role="tab" id="pes-suelo" aria-controls="historia-suelo" aria-selected="false" tabindex="-1" data-pestana="suelo"><span>Suelo</span><i class="avance" aria-hidden="true"></i></button>
+            <button type="button" role="tab" id="pes-troficas" aria-controls="historia-troficas" aria-selected="false" tabindex="-1" data-pestana="troficas"><span>Cadenas tróficas</span><i class="avance" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion como" id="como" aria-labelledby="como-t">
+      <div class="ancho">
+        <div class="cabeza doble">
+          <h2 id="como-t">De tu finca a tu plan, en tres pasos</h2>
+          <p>No hace falta un consultor para empezar. Si tienes a mano lo que sembraste, lo que aplicaste y cómo riegas, ya tienes con qué.</p>
+        </div>
+        <ol class="pasos">
+          <li class="paso" data-ver>
+            <div class="paso-texto">
+              <span class="paso-n" aria-hidden="true">1</span>
+              <h3>Responde lo básico</h3>
+              <p>Siete pantallas con lo mínimo: tu finca, tu cultivo, tu riego, tus aplicaciones y las abejas y árboles de tu entorno. Si prefieres mirar antes, abre la finca de ejemplo.</p>
+            </div>
+            <figure class="captura"><img src="media/paso-cuestionario.webp" width="1080" height="627" loading="lazy" decoding="async" alt="Cuestionario rápido de Trofaxis: primera de siete pantallas, con el nombre de la finca y su área total."></figure>
+          </li>
+          <li class="paso" data-ver>
+            <div class="paso-texto">
+              <span class="paso-n" aria-hidden="true">2</span>
+              <h3>Lee tu año completo</h3>
+              <p>El índice resume tu riesgo de 0 a 100. La rueda muestra en qué meses se cruzan la lluvia, la floración, las aplicaciones y la cosecha, y cuáles de esos cruces son un riesgo.</p>
+            </div>
+            <figure class="captura"><img src="media/app-inicio.webp" width="2160" height="1350" loading="lazy" decoding="async" alt="Pantalla de inicio de Trofaxis con la finca demostrativa: índice ambiental de 69 sobre 100 y la rueda del año."></figure>
+          </li>
+          <li class="paso" data-ver>
+            <div class="paso-texto">
+              <span class="paso-n" aria-hidden="true">3</span>
+              <h3>Atiende lo urgente y llega lista a la auditoría</h3>
+              <p>Trofaxis ordena las acciones por urgencia y explica el porqué de cada una. En «Auditoría» lleva la cuenta de tus no conformidades y de tu margen de Minor Musts.</p>
+            </div>
+            <figure class="captura doble">
+              <img src="media/paso-urgente.webp" width="825" height="806" loading="lazy" decoding="async" alt="Lista «Lo más urgente» de Trofaxis con tres acciones para proteger a los polinizadores.">
+              <img src="media/paso-auditoria.webp" width="1704" height="735" loading="lazy" decoding="async" alt="Vista «Prepararte para GLOBALG.A.P.» con el margen de Minor Musts de la finca demostrativa.">
+            </figure>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="seccion rueda-sec" id="rueda" aria-labelledby="rueda-t">
+      <div class="ancho rueda-in">
+        <div class="rueda-texto">
+          <h2 id="rueda-t">Doce meses de tu finca en una sola rueda</h2>
+          <p>Cada anillo es algo que pasa en la finca. Donde dos anillos se encuentran en el mismo mes, puede haber un riesgo, y Trofaxis lo cuenta al centro.</p>
+          <ul class="leyenda" aria-label="Qué significa cada anillo">
+            <li><i class="sw lluvia"></i>Lluvia fuerte</li>
+            <li><i class="sw flor"></i>Floración que visitan los polinizadores</li>
+            <li><i class="sw aplic"></i>Aplicación de plaguicidas</li>
+            <li><i class="sw siembra"></i>Siembra</li>
+            <li><i class="sw cosecha"></i>Cosecha</li>
+            <li><i class="sw coinc"></i>Coincidencias de riesgo</li>
+          </ul>
+          <div class="mes-detalle" data-rueda-detalle>
+            <p class="mes-nombre" data-mes-nombre>Toca un mes</p>
+            <ul data-mes-lista></ul>
+          </div>
+          <p class="rueda-nota">Es la finca demostrativa: sus datos son ficticios y se calculan con el mismo motor que usa la app. <a href="/" data-abrir-app>Ábrela en Trofaxis</a>.</p>
+        </div>
+        <div class="rueda-lienzo" data-rueda>
+          <noscript><img src="media/app-inicio.webp" width="2160" height="1350" alt="Rueda del año de la finca demostrativa en Trofaxis."></noscript>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion compara" id="comparacion" aria-labelledby="compara-t">
+      <div class="ancho">
+        <div class="cabeza">
+          <h2 id="compara-t">Lo que cambia cuando todo vive en un mismo lugar</h2>
+        </div>
+        <div class="compara-cols">
+          <div class="col antes" data-ver>
+            <h3>Con cuadernos y hojas sueltas</h3>
+            <ul>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-no"/></svg>Las aplicaciones, el riego y la fertilización se anotan en lugares distintos y nadie los cruza.</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-no"/></svg>El choque entre una aplicación y la floración se descubre cuando ya pasó.</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-no"/></svg>La fuente de cada número hay que volver a buscarla en cada auditoría.</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-no"/></svg>El margen de incumplimientos menores se cuenta a mano.</li>
+            </ul>
+          </div>
+          <div class="col ahora" data-ver>
+            <h3>Con Trofaxis</h3>
+            <ul>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Un solo registro de la finca alimenta los cinco temas y el índice.</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>La rueda marca el mes del choque y la lista de acciones dice qué mover.</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Cada acción trae su «¿Por qué?» y cada valor, su referencia. Lo que no tiene fuente dice «criterio propio».</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>El margen de Minor Musts se calcula solo con lo que registras.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion evidencia" id="evidencia" aria-labelledby="evidencia-t">
+      <div class="ancho">
+        <div class="cabeza doble">
+          <h2 id="evidencia-t">Si un número no tiene fuente, la app lo dice</h2>
+          <p>Trofaxis no inventa umbrales. Cada valor lleva su referencia, y lo que todavía es criterio del equipo aparece marcado como «criterio propio» hasta que se calibre con fincas reales.</p>
+        </div>
+        <dl class="cifras" data-cifras>
+          <div><dt><span data-dato="cifras.temas" data-contar>5</span></dt><dd>temas ambientales en un solo índice</dd></div>
+          <div><dt><span data-dato="cifras.ingredientes" data-contar>53</span></dt><dd>ingredientes activos con su DL50 para abejas</dd></div>
+          <div><dt><span data-dato="cifras.productosSag" data-contar>132</span></dt><dd>fungicidas del cuadro de referencia de la SAG</dd></div>
+          <div><dt><span data-dato="cifras.aniosClima" data-contar>10</span></dt><dd>años de clima histórico por ubicación</dd></div>
+          <div><dt><span data-dato="cifras.tesis" data-contar>40</span></dt><dd>tesis leídas</dd></div>
+          <div><dt><span data-dato="cifras.frases" data-contar>215</span></dt><dd>frases citadas con su página</dd></div>
+        </dl>
+        <div class="citas">
+          <figure class="cita principal" data-ver>
+            <blockquote data-cita="echeverria-2015"><p>El sistema de goteo fue el que utilizó la menor cantidad de agua durante el ciclo usando un total de 9,075 m³/ha que es un 59% menos de agua utilizada que el sistema de riego por inundación, y un 31% menos que el sistema de riego por aspersión.</p></blockquote>
+            <figcaption>Echeverría Bodden, O. A. (2015). <cite>Efecto de tres sistemas de riego y dos variedades en el rendimiento de arroz (Oryza sativa) bajo dos métodos de siembra.</cite> Proyecto especial de graduación, Escuela Agrícola Panamericana, Zamorano, Honduras. Página 19.</figcaption>
+          </figure>
+          <figure class="cita" data-ver>
+            <blockquote data-cita="alpizar-2000"><p>El movimiento del agua a través del perfil del suelo es el factor que causa mayor lixiviación</p></blockquote>
+            <figcaption>Alpízar Vargas, N. F. (2000). <cite>Uso de lisímetros para evaluar el movimiento de nitrógeno y potasio en suelos bananeros de Coyoles, Honduras, con potencial de lixiviación.</cite> Proyecto especial de Ingeniero Agrónomo, Zamorano, Honduras. Página 8.</figcaption>
+          </figure>
+          <figure class="cita" data-ver>
+            <blockquote data-cita="osorio"><p><span aria-hidden="true">[…] </span>manejar los árboles mediante podas o control de rebrotes, lo cual ayudaría a reducir significativamente la cantidad de flores durante la época de floración.</p></blockquote>
+            <figcaption>Osorio Banegas, N. E. (2025). <cite>Evaluación de la distribución de Spathodea campanulata P. Beauv. (Bignoniaceae) en el campus de la Universidad Zamorano, Honduras.</cite> Proyecto Especial de Graduación, Universidad Zamorano. Página 35.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion instalar" id="instalar" aria-labelledby="instalar-t">
+      <div class="ancho instalar-in">
+        <div class="instalar-texto">
+          <h2 id="instalar-t">Se instala en tu computadora y en tu teléfono</h2>
+          <p>Trofaxis se instala desde el navegador, sin tienda de aplicaciones. Queda con su propio ícono y su propia ventana, y abre aunque en el campo no haya señal. El clima, el mapa y el NDVI sí necesitan conexión.</p>
+          <div class="acciones">
+            <button type="button" class="btn oro grande" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
+            <a class="btn borde grande" href="/" data-abrir-app>Usarla en el navegador</a>
+          </div>
+          <p class="instalar-aviso" id="instalar-aviso" role="status" hidden></p>
+          <div class="pasos-nav" id="instalar-pasos">
+            <p class="pasos-nav-t" data-pasos-titulo>Cómo se instala</p>
+            <ol data-pasos>
+              <li>Pulsa «Instalar Trofaxis».</li>
+              <li>Confirma en el cuadro de tu navegador.</li>
+              <li>Abre Trofaxis desde tu escritorio o tu pantalla de inicio.</li>
+            </ol>
+            <button type="button" class="enlace" data-ver-pasos>Ver los pasos para otro navegador</button>
+          </div>
+        </div>
+        <div class="equipos" aria-hidden="true">
+          <div class="equipo-pc"><img src="media/app-inicio.webp" width="2160" height="1350" loading="lazy" decoding="async" alt=""></div>
+          <div class="equipo-movil"><img src="media/app-movil.webp" width="780" height="1688" loading="lazy" decoding="async" alt=""></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion planes" id="planes" aria-labelledby="planes-t">
+      <div class="ancho">
+        <div class="cabeza doble">
+          <h2 id="planes-t">Planes</h2>
+          <p>Trofaxis está en etapa piloto. Hoy se usa completa y sin costo; los planes de pago todavía no están definidos.</p>
+        </div>
+        <div class="planes-cols">
+          <article class="plan activo">
+            <h3>Piloto abierto</h3>
+            <p class="plan-precio">Sin costo <span>durante el piloto</span></p>
+            <ul>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Los cinco temas, el índice y la rueda del año</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Riego, fertilización y plaguicidas con sus referencias</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Lotes en el mapa, clima de tu ubicación y NDVI</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Plan de acciones y preparación para la auditoría</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>App instalable que abre sin conexión</li>
+              <li><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg>Cuenta opcional para guardar tu finca en la nube</li>
+            </ul>
+            <div class="acciones">
+              <button type="button" class="btn oro" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
+              <a class="btn borde" href="/?entrar" data-abrir-app>Crear cuenta</a>
+            </div>
+          </article>
+          <article class="plan">
+            <h3>Para exportadoras y equipos</h3>
+            <p class="plan-precio">Por definir</p>
+            <p>Los planes de pago y sus precios aún no están definidos. Si trabajas con varias fincas o quieres sumar la tuya al piloto, escríbenos y lo vemos contigo.</p>
+            <div class="acciones">
+              <a class="btn borde" href="mailto:support.trofaxis@gmail.com?subject=Trofaxis%20para%20mi%20equipo">Escribir al equipo</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion preguntas" id="preguntas" aria-labelledby="preguntas-t">
+      <div class="ancho angosto">
+        <div class="cabeza">
+          <h2 id="preguntas-t">Preguntas frecuentes</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>¿Trofaxis reemplaza la auditoría de GLOBALG.A.P.?</summary>
+            <p>No. Trofaxis te ayuda a prepararte: ordena tus riesgos ambientales según las secciones de IFA v6 y te muestra qué atender primero. La certificación la decide el organismo de certificación. Trofaxis no está afiliada ni avalada por GLOBALG.A.P.</p>
+          </details>
+          <details>
+            <summary>¿Dónde quedan los datos de mi finca?</summary>
+            <p>En tu equipo. Sin iniciar sesión, los datos de tu finca no salen de tu navegador; solo se consultan el clima y el mapa de tu zona. Si inicias sesión, tu finca también se guarda en la nube para abrirla desde otros equipos. El detalle está en la <a href="/privacidad/">política de privacidad</a>.</p>
+          </details>
+          <details>
+            <summary>¿Funciona sin internet?</summary>
+            <p>Sí. Después de abrirla una vez con conexión, la app instalada abre y calcula sin señal. El clima de tu ubicación, la imagen satelital del mapa y el NDVI de los lotes necesitan conexión.</p>
+          </details>
+          <details>
+            <summary>¿Qué tan confiable es el índice?</summary>
+            <p>Es un prototipo. Los pesos y algunos umbrales todavía están por calibrar con fincas reales y aparecen marcados como «criterio propio». Úsalo para ordenar prioridades y revisar tu manejo, no como un dictamen.</p>
+          </details>
+          <details>
+            <summary>¿Necesito una cuenta?</summary>
+            <p>No. Puedes seguir sin cuenta y todo se guarda en tu navegador. Con una cuenta (Google o un enlace de un solo uso a tu correo) tu finca se guarda en la nube. No hay contraseñas.</p>
+          </details>
+          <details>
+            <summary>¿Cuánto cuesta?</summary>
+            <p>Hoy, nada: está en etapa piloto. Los planes de pago aún no están definidos y se anunciarán en esta página.</p>
+          </details>
+          <details>
+            <summary>¿En qué equipos se instala?</summary>
+            <p>En Windows, Mac y Linux con Chrome o Edge, en Mac con Safari, y en teléfonos y tabletas Android y iPhone. Firefox para computadora no instala aplicaciones web, pero puedes usar Trofaxis ahí como una página normal.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cierre" aria-labelledby="cierre-t">
+      <div class="cierre-fondo" aria-hidden="true">
+        <video muted playsinline loop preload="none" tabindex="-1" data-poster="media/cierre.webp" data-video data-src="media/cierre-720.mp4"></video>
+      </div>
+      <div class="ancho cierre-in">
+        <h2 id="cierre-t">Empieza con la finca de ejemplo. Sigue con la tuya.</h2>
+        <div class="acciones">
+          <button type="button" class="btn oro grande" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
+          <a class="btn claro grande" href="/?entrar" data-abrir-app>Crear cuenta</a>
+          <a class="btn claro grande" href="/?entrar" data-abrir-app>Iniciar sesión</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <div class="ancho pie-in">
+      <div class="pie-marca">
+        <a class="marca" href="#inicio" aria-label="Trofaxis, inicio">
+          <span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-hoja"/></svg></span>
+          <span>Trofaxis</span>
+        </a>
+        <p>Riesgo ambiental de tu finca, alineado a GLOBALG.A.P. IFA v6.</p>
+      </div>
+      <nav class="pie-nav" aria-label="Enlaces del pie">
+        <a href="/" data-abrir-app>Abrir la app</a>
+        <a href="/?entrar" data-abrir-app>Iniciar sesión</a>
+        <a href="/privacidad/">Privacidad</a>
+        <a href="mailto:support.trofaxis@gmail.com">Contacto</a>
+      </nav>
+      <div class="pie-notas">
+        <p>GLOBALG.A.P. es una marca de su titular. Trofaxis no está afiliada ni avalada por GLOBALG.A.P.</p>
+        <p>Los datos de la finca demostrativa son ficticios. Videos de Mixkit y Pixabay.</p>
+      </div>
+    </div>
+  </footer>
+
+  <dialog class="dlg" id="dlg-instalar" aria-labelledby="dlg-t">
+    <div class="dlg-in">
+      <div class="dlg-cab">
+        <h2 id="dlg-t" data-pasos-titulo>Instalar Trofaxis</h2>
+        <button type="button" class="dlg-x" data-cerrar aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <ol class="dlg-pasos" data-pasos></ol>
+      <p class="dlg-nota" data-pasos-nota hidden></p>
+      <p class="dlg-otros-t">Ver los pasos para</p>
+      <div class="dlg-otros">
+        <button type="button" data-navegador="chrome" aria-pressed="false">Chrome</button>
+        <button type="button" data-navegador="edge" aria-pressed="false">Edge</button>
+        <button type="button" data-navegador="safari-mac" aria-pressed="false">Safari en Mac</button>
+        <button type="button" data-navegador="ios" aria-pressed="false">iPhone o iPad</button>
+        <button type="button" data-navegador="android" aria-pressed="false">Android</button>
+        <button type="button" data-navegador="firefox" aria-pressed="false">Firefox</button>
+      </div>
+      <p class="dlg-pie">Los nombres de los menús pueden cambiar un poco según la versión de tu navegador. <a href="/" data-abrir-app>Usar Trofaxis sin instalar</a></p>
+    </div>
+  </dialog>
+
+  <script type="module" src="conoce.js"></script>
+</body>
+</html>

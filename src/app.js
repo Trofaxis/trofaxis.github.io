@@ -10,7 +10,7 @@ import { viewWizard, STEPS, SECCIONES } from './ui/wizard.js';
 import { aplicarRapido } from './core/rapido.js';
 import { viewBienvenida, PASOS_BV } from './ui/bienvenida.js';
 import { viewEntrar, htmlCuenta } from './ui/entrar.js';
-import { leerCuenta, guardarCuenta, borrarCuentaRecordada, mostrarEntrada } from './core/cuenta.js';
+import { leerCuenta, guardarCuenta, borrarCuentaRecordada, mostrarEntrada, entradaPedida } from './core/cuenta.js';
 import { mostrarBienvenida, guardarBienvenida, leerBienvenida } from './core/bienvenida.js';
 import { viewTemplates } from './ui/templates.js';
 import { viewSettings } from './ui/settings.js';
@@ -54,6 +54,11 @@ const nube = crearCliente();
 const puenteCapacitor = crearPuenteCapacitor(window.Capacitor);
 const delHash = sesionDeHash(location.hash); // al volver del enlace del correo
 if (delHash) history.replaceState(null, '', location.pathname + location.search);
+// /?entrar viene de «Iniciar sesión» o «Crear cuenta» en /conoce/. Se quita de la dirección antes de cualquier
+// inicio de sesión, para que el regreso de Google o del correo vuelva a la dirección limpia.
+const pideEntrar = entradaPedida(location.search);
+if (pideEntrar) history.replaceState(null, '', location.pathname + location.hash);
+let bienvenidaPendiente = false; // la entrada pedida pasó por delante de la bienvenida de primera vez
 S.nube.sesion = delHash || cargarSesion();
 // Pantalla de entrada: al volver de Google o del correo se va directo al tablero y se recuerda la cuenta.
 S.cuenta = leerCuenta();
@@ -62,7 +67,10 @@ if (delHash) {
 } else if (S.nube.sesion && !S.cuenta.email) {
   // Sesiones abiertas antes de esta pantalla: se recuerda la cuenta para la próxima entrada.
   S.cuenta = { email: S.nube.sesion.email || '', proveedor: S.nube.sesion.proveedor || '', sinCuenta: false }; guardarCuenta(S.cuenta);
-} else if (mostrarEntrada({ nubeActiva: nube.activo, sesion: S.nube.sesion, vista: S.view, cuenta: S.cuenta })) S.view = 'entrar';
+} else if (mostrarEntrada({ nubeActiva: nube.activo, sesion: S.nube.sesion, vista: S.view, cuenta: S.cuenta, pedida: pideEntrar })) {
+  bienvenidaPendiente = S.view === 'bienvenida';
+  S.view = 'entrar';
+}
 
 function aplicarSesionAuth(sesion, redibujar = false) {
   guardarSesion(sesion);
@@ -308,7 +316,10 @@ const accionesCuenta = {
   },
   'entrar-olvidar': () => { S.cuenta = { ...S.cuenta, email: '', proveedor: '' }; guardarCuenta(S.cuenta); },
   'entrar-correo': () => { S.entrarCorreo = true; },
-  'entrar-sin-cuenta': () => { S.cuenta = { ...S.cuenta, sinCuenta: true }; guardarCuenta(S.cuenta); S.entrarCorreo = false; S.view = 'dashboard'; },
+  'entrar-sin-cuenta': () => {
+    S.cuenta = { ...S.cuenta, sinCuenta: true }; guardarCuenta(S.cuenta); S.entrarCorreo = false;
+    S.view = bienvenidaPendiente ? 'bienvenida' : 'dashboard'; bienvenidaPendiente = false;
+  },
   'cuenta-salir': () => { S.cuentaMenu = false; S.confirmarSalir = true; },
   'salir-cancelar': () => { S.confirmarSalir = false; },
   'salir-confirmar': () => { S.confirmarSalir = false; nubeAccion('nube-salir'); return false; },
