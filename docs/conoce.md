@@ -12,12 +12,12 @@ conoce/
 ├─ conoce.css      estilos (mismos colores y tipografías de la app)
 ├─ sin-js.css      solo sin JavaScript: quita la pantalla de carga
 ├─ conoce.js       pantalla de carga, videos, temas, rueda, cifras
-├─ instalar.js     botón «Instalar Trofaxis» y pasos por navegador
+├─ instalar.js     botón «Instalar Trofaxis»: un clic, sin listas de pasos
 ├─ rueda-demo.js   geometría de la rueda del año (la misma de src/ui/rueda.js)
 ├─ datos-demo.js   GENERADO: números de la finca demostrativa, cifras y citas
 └─ media/          videos, carteles y capturas de la app
 scripts/conoce-datos.mjs   genera conoce/datos-demo.js
-tests/conoce.test.js       29 pruebas
+tests/conoce.test.js       34 pruebas
 ```
 
 No usa dependencias ni compilación. `npm run build` la copia tal cual a `dist/conoce/`. No entra en el app shell del service worker: los videos no ocupan el almacenamiento de la app instalada.
@@ -49,14 +49,50 @@ Una prueba impide agregar precios, nombres de usuarios reales o frases de aval s
 
 La página enlaza el manifiesto de la app (`/manifest.webmanifest`, alcance `/`). Lo que se instala es Trofaxis, que abre en `/`, no la página.
 
-| Navegador | Qué hace el botón |
-|---|---|
-| Chrome y Edge (Windows, Mac, Linux, Android) | Abre el cuadro de instalación del navegador (evento `beforeinstallprompt`). Si la persona acepta, se registra el service worker para que la app abra sin conexión desde la primera vez. |
-| Safari en Mac, iPhone y iPad | El navegador no ofrece ese cuadro: se muestran los tres pasos («Añadir al Dock» o «Añadir a pantalla de inicio»). |
-| Firefox en computadora | No instala aplicaciones web: se dice así y se sugiere Chrome o Edge, o usarla en el navegador. |
-| Ya instalada | El botón pasa a «Abrir Trofaxis». |
+**Regla (Diego, 2026-11-15): instalar es un clic. La página no muestra listas de pasos en ningún navegador.** Una prueba falla si vuelve a aparecer una lista en la sección «Instalar» o en la hoja del botón.
 
-El navegador decide cuándo ofrece la instalación (exige HTTPS y un manifiesto válido). En `localhost` no se registra el service worker, igual que en `pwa.js`. **Pendiente de probar en el sitio publicado**: la instalación real desde `/conoce/` en Chrome y en Edge solo se puede confirmar con HTTPS.
+| Caso | Qué hace el botón |
+|---|---|
+| Chrome y Edge con la oferta del navegador (`beforeinstallprompt`) | «Instalar Trofaxis» abre el cuadro de instalación del navegador. La persona confirma ahí y la pestaña pasa a ser la ventana de la app: la página entra sola a Trofaxis (`/`). Al aceptar se registra el service worker para que la app abra sin conexión desde la primera vez. |
+| Navegador con `navigator.install()` (Web Install API) | Igual, sin depender de la oferta. Si ya estaba instalada, el navegador la abre. |
+| Chrome o Edge de computadora sin oferta | El navegador no avisa a la página cuando la app ya está instalada: simplemente no manda la oferta. Pasado el plazo, el botón dice «Abrir Trofaxis» y un clic la abre en su propia ventana. |
+| iPhone, iPad, Safari en Mac, Firefox en Android, otros | Ningún sitio puede instalar desde un botón. Se muestra una hoja con **un gesto en una frase** (en iPhone, el ícono de Compartir y «Agregar a Inicio») y el botón «Abrir Trofaxis ahora». |
+| Firefox en computadora | No instala aplicaciones web. El botón dice «Abrir Trofaxis» desde el principio y la abre en la misma pestaña. |
+| Dentro de la app instalada | «Abrir Trofaxis» lleva a `/`. |
+
+Un clic que llega antes que la oferta la espera («Preparando…») en vez de perderse. Si la persona cancela el cuadro del navegador, se le dice y el botón sigue sirviendo.
+
+### Por qué salían instrucciones (causa, 2026-11-15)
+
+La versión anterior mostraba tres pasos cada vez que el navegador no mandaba la oferta, y además una lista «Cómo se instala» fija en la sección. El caso más común sin oferta en Chrome y Edge es que **Trofaxis ya está instalada en ese equipo**: quien ya la tenía veía «Instalar Trofaxis» y, al pulsar, una lista de pasos. Reproducido en Chromium 153.
+
+### Lo que se midió y lo que no
+
+Probado en Chromium 153 de escritorio (Linux, ventana real, con el bloqueo de ventanas emergentes activo), 2026-11-15:
+
+- Perfil nuevo: la oferta llega en menos de 1 s después de cargar, sin ninguna interacción previa. La guía de web.dev (<https://web.dev/articles/install-criteria>, actualizada el 2024-09-19) todavía habla de un clic y 30 s de uso; en escritorio no se observó ese requisito. **En Android no se midió.**
+- Un clic en «Instalar Trofaxis» abre el cuadro del navegador; al aceptar, la ventana de la app queda abierta en `/`.
+- Con la app ya instalada no llega ninguna oferta. `window.open('/', '_blank', 'noopener')` desde el clic abre la ventana de la app instalada.
+- `navigator.getInstalledRelatedApps()` devolvió una lista vacía con la app instalada (con `related_applications` en el manifiesto, URL relativa y absoluta), así que no sirve para saber si ya está instalada. No se usa.
+
+Sin probar: Chrome en Android, iPhone y Safari reales, Edge, Firefox, y `navigator.install()` sin opciones experimentales (envío previsto para Chrome 156 de escritorio, fecha estimada; aviso de envío del 2026-09-21 en blink-dev: <https://groups.google.com/a/chromium.org/d/msgid/blink-dev/dc40448e-61c3-468f-929c-b17bfa21771fn%40chromium.org>). Estos casos solo tienen pruebas con un navegador simulado (`tests/conoce.test.js`). En `localhost` no se registra el service worker, igual que en `pwa.js`.
+
+### Tiempos (criterio propio)
+
+Están como constantes en `conoce/instalar.js`:
+
+| Constante | Valor | Para qué |
+|---|---|---|
+| `GRACIA_MS` | 4000 ms | Plazo desde que carga la página para dar por hecho que el navegador no va a ofrecer la instalación. La oferta medida llega en menos de 1 s; el resto es margen para redes lentas. Si llega después, el botón vuelve a «Instalar Trofaxis». |
+| `ESPERA_OFERTA_MS` | 2500 ms | Cuánto espera un clic temprano. Queda por debajo del tiempo que el navegador da a un clic para abrir una ventana (unos 5 s en Chromium); abrir la app después de esa espera se probó. |
+| `AVISO_VISIBLE_MS` | 8000 ms | Cuánto se ve el aviso («Trofaxis quedó instalada…»). |
+
+### Límites que la página no puede saltar
+
+- El cuadro «Instalar» lo pone el navegador y exige que la persona confirme. Ninguna página puede instalar sin esa confirmación.
+- En iPhone y iPad, Apple no permite que un sitio se instale desde un botón: el mínimo son dos toques desde Compartir. Con un solo toque solo se llega por la App Store.
+- Riesgo aceptado: si en una computadora nunca se instaló y aun así el navegador no manda la oferta (casos no medidos; por ejemplo, una ventana de incógnito), «Abrir Trofaxis» la abre en una pestaña. Funciona igual, pero no queda instalada.
+- La descarga con un clic «de tienda» depende de publicar en Microsoft Store y Google Play (`docs/microsoft-store.md`, `docs/android.md`).
 
 ## Iniciar sesión y crear cuenta
 

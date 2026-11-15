@@ -271,12 +271,12 @@ h1 .linea{display:block}
 .instalar-in{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,5vw,72px);align-items:center}
 .instalar-texto>p{margin-top:18px;font-size:1.12rem;color:#4B4023;max-width:33rem}
 .instalar .acciones{margin-top:28px}
-.instalar-aviso{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--blanco);border:1px solid #EBD9A8;font-weight:600}
-.pasos-nav{margin-top:28px;padding-top:20px;border-top:1px solid rgba(43,28,0,.2);font-size:15px;color:#4B4023}
-.pasos-nav-t{font:500 12.5px var(--f-mono);color:var(--maiz-tinta)}
-.pasos-nav ol,.dlg-pasos{display:flex;flex-direction:column;gap:10px;margin:12px 0 14px;counter-reset:paso}
-.pasos-nav li,.dlg-pasos li{display:grid;grid-template-columns:26px 1fr;gap:12px;counter-increment:paso}
-.pasos-nav li::before,.dlg-pasos li::before{content:counter(paso);display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--maiz);color:var(--maiz-tinta);font:600 13px var(--f-mono)}
+.instalar-nota{margin-top:18px;font-size:15px;color:#4B4023;max-width:33rem}
+/* El resultado del clic se ve desde cualquier botón de la página, no solo en esta sección. */
+.instalar-aviso{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));z-index:60;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:14px;background:var(--tinta);color:#fff;font-weight:600;font-size:15px;text-align:center;box-shadow:0 22px 44px -18px rgba(0,0,0,.65)}
+[data-instalar][aria-busy="true"]{cursor:progress;opacity:.82}
+/* Si el botón abre la app, no lleva la flecha de descarga. */
+.abre-app [data-instalar] .ic{display:none}
 .equipos{position:relative;padding:0 9% 9% 0}
 .equipo-pc{border:9px solid var(--tinta);border-radius:20px;overflow:hidden;background:var(--tinta);aspect-ratio:16/10;box-shadow:0 50px 80px -50px rgba(43,28,0,.7)}
 .equipo-pc img{display:block;width:100%;height:100%;object-fit:cover;object-position:top left;border-radius:10px}
@@ -323,21 +323,20 @@ h1 .linea{display:block}
 .pie-notas{display:flex;flex-direction:column;gap:10px;font-size:13px}
 .pie :focus-visible{outline-color:var(--maiz)}
 
-/* Cuadro con los pasos de instalación por navegador. */
+/* Hoja del gesto: lo único que se muestra cuando el botón no puede instalar por su cuenta. */
 .dlg{width:min(540px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:none;border-radius:24px;background:var(--blanco);color:var(--tinta);box-shadow:0 60px 120px -40px rgba(0,0,0,.6)}
 .dlg::backdrop{background:rgba(6,20,14,.66)}
 .dlg-in{padding:26px 26px 22px}
 .dlg-cab{display:flex;justify-content:space-between;align-items:start;gap:16px}
 .dlg h2{font-size:1.7rem;line-height:1.1}
 .dlg-x{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--linea);background:var(--papel);cursor:pointer}
-.dlg-pasos{margin:20px 0 6px;font-size:16px}
-.dlg-nota{margin-top:6px;font-size:14px;color:var(--gris)}
-.dlg-otros-t{margin-top:22px;font:500 12.5px var(--f-mono);color:var(--gris)}
-.dlg-otros{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.dlg-otros button{padding:8px 12px;border-radius:99px;border:1px solid var(--linea-2);background:var(--blanco);font-weight:500;font-size:14px;cursor:pointer}
-.dlg-otros button[aria-pressed="true"]{background:var(--monte);border-color:var(--monte);color:#fff}
-.dlg-pie{margin-top:20px;padding-top:16px;border-top:1px solid var(--linea);font-size:13.5px;color:var(--gris)}
-.dlg-pie a{color:var(--monte);font-weight:600}
+.dlg-gesto{display:flex;gap:16px;align-items:center;margin-top:20px;font-size:1.18rem;line-height:1.35}
+.dlg-ico{display:grid;place-items:center;flex:none;width:58px;height:58px;border-radius:16px;background:var(--polen);color:var(--maiz-tinta)}
+.dlg-ico .ic{width:28px;height:28px}
+.dlg-nota{margin-top:10px;font-size:14px;color:var(--gris)}
+.dlg .acciones{margin-top:24px}
+.dlg .acciones .btn{flex:1 1 100%}
+.dlg-pie{margin-top:14px;font-size:13.5px;color:var(--gris);text-align:center}
 
 @media (min-width:901px){
   .cabeza.doble{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(32px,5vw,72px);align-items:end;max-width:none}

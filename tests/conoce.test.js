@@ -24,7 +24,7 @@ const { conPlan } = await import('../src/fert/calculo.js');
 const { mesesRueda, ruedaAnio } = await import('../src/ui/rueda.js');
 const { TESIS } = await import('../src/cerebro/tesis.js');
 const rueda = await import('../conoce/rueda-demo.js');
-const { detectarNavegador, pasosDe, NAVEGADORES, montarInstalar } = await import('../conoce/instalar.js');
+const { detectarNavegador, guiaDe, NAVEGADORES, TEXTOS, ESPERA_OFERTA_MS, GRACIA_MS, AVISO_VISIBLE_MS, montarInstalar } = await import('../conoce/instalar.js');
 
 // La evaluación tal como la hace el inicio de la app con la finca demostrativa.
 const finca = conPlan(demoFarm());
@@ -292,7 +292,7 @@ test('la página usa el manifiesto de la app: lo que se instala es Trofaxis, no 
   assert.equal([...html.matchAll(/<span data-rotulo>Instalar Trofaxis<\/span>/g)].length, botones.length);
 });
 
-test('se reconoce el navegador para dar los pasos correctos', () => {
+test('se reconoce el navegador para saber qué puede hacer el botón', () => {
   const casos = [
     ['chrome', { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', plataforma: 'Win32' }],
     ['edge', { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0', plataforma: 'Win32' }],
@@ -302,7 +302,7 @@ test('se reconoce el navegador para dar los pasos correctos', () => {
     ['ios', { ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1', plataforma: 'iPhone', toques: 5 }],
     // iPadOS se presenta como Mac; se distingue por la pantalla táctil.
     ['ios', { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15', plataforma: 'MacIntel', toques: 5 }],
-    // Chrome en iPhone no puede instalar por su cuenta: se dan los pasos de iOS.
+    // Chrome en iPhone no puede instalar por su cuenta: vale el gesto de iOS.
     ['ios', { ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0.0.0 Mobile/15E148 Safari/604.1', plataforma: 'iPhone', toques: 5 }],
     ['android', { ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36', plataforma: 'Linux armv81', toques: 5 }],
     ['firefox-android', { ua: 'Mozilla/5.0 (Android 14; Mobile; rv:132.0) Gecko/132.0 Firefox/132.0', plataforma: 'Linux armv81', toques: 5 }],
@@ -312,126 +312,290 @@ test('se reconoce el navegador para dar los pasos correctos', () => {
   assert.equal(detectarNavegador(), 'otro');
 });
 
-test('cada navegador tiene tres pasos y no se promete instalar donde no se puede', () => {
+test('ningún navegador recibe una lista de pasos: una nota y un gesto de una frase', () => {
   for (const [id, info] of Object.entries(NAVEGADORES)) {
-    assert.equal(info.pasos.length, 3, id);
-    assert.equal(typeof info.instala, 'boolean', id);
+    for (const campo of ['nombre', 'nota', 'titulo', 'gesto']) assert.equal(typeof info[campo], 'string', `${id}.${campo}`);
+    for (const campo of ['oferta', 'escritorio', 'instala']) assert.equal(typeof info[campo], 'boolean', `${id}.${campo}`);
+    assert.equal(info.pasos, undefined, id);
+    assert.ok(info.gesto.length <= 100, `${id}: el gesto es corto (${info.gesto.length})`);
+    assert.doesNotMatch(info.gesto, /\n|\d[.)]\s/, `${id}: sin numeración`);
   }
+  assert.deepEqual(Object.keys(NAVEGADORES).filter((id) => NAVEGADORES[id].oferta), ['chrome', 'edge', 'android'], 'los que entregan su cuadro de instalación');
   assert.equal(NAVEGADORES.firefox.instala, false, 'Firefox para computadora no instala aplicaciones web');
-  assert.match(NAVEGADORES.firefox.pasos.join(' '), /Chrome o en Edge/);
-  assert.equal(pasosDe('no-existe'), NAVEGADORES.otro);
-  // Los botones del cuadro de pasos apuntan a navegadores que existen.
-  const elegibles = [...html.matchAll(/data-navegador="([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(elegibles.length >= 6);
-  for (const id of elegibles) assert.ok(NAVEGADORES[id], `data-navegador="${id}"`);
+  assert.match(NAVEGADORES.firefox.nota, /Chrome o Edge/);
+  assert.match(NAVEGADORES.ios.gesto, /Compartir/);
+  assert.equal(guiaDe('no-existe'), NAVEGADORES.otro);
+  // La página no trae listas de pasos ni el selector de navegadores.
+  const seccion = html.slice(html.indexOf('id="instalar"'), html.indexOf('id="planes"'));
+  const hoja = html.slice(html.indexOf('<dialog'), html.indexOf('</dialog>'));
+  for (const trozo of [seccion, hoja]) assert.doesNotMatch(trozo, /<ol|<li|data-pasos|data-navegador|Cómo se instala/);
+  assert.match(seccion, /<p class="instalar-nota" id="instalar-nota">[^<]+<\/p>/);
+  assert.match(hoja, /data-guia-titulo/);
+  assert.match(hoja, /<p data-guia-gesto>[^<]+<\/p>/);
+  assert.match(hoja, /<a class="btn oro grande" href="\/" data-abrir-app>Abrir Trofaxis ahora<\/a>/, 'la app queda a un clic');
+  assert.match(html, /<symbol id="i-compartir"/);
   assert.match(html, /Firefox para computadora no instala aplicaciones web/, 'también lo dicen las preguntas frecuentes');
 });
 
 // Lo mínimo del navegador para probar el botón «Instalar Trofaxis» sin abrir uno.
-function entornoInstalar({ ua, enApp = false, host = 'trofaxis.github.io' } = {}) {
+function entornoInstalar({ ua, plataforma = 'Win32', toques = 0, enApp = false, host = 'trofaxis.github.io', api = null } = {}) {
   const nodo = (extra = {}) => ({
-    textContent: '', hidden: false, dataset: {}, hijos: [], atributos: {}, escuchas: {},
+    textContent: '', hidden: false, dataset: {}, atributos: {}, escuchas: {},
     addEventListener(tipo, fn) { (this.escuchas[tipo] ??= []).push(fn); },
     setAttribute(k, v) { this.atributos[k] = v; },
-    replaceChildren(...h) { this.hijos = h; },
     querySelector: () => null, querySelectorAll: () => [],
     ...extra,
   });
-  const partes = (mapa) => ({ querySelector: (sel) => mapa[sel] ?? null });
   const botones = [0, 1].map(() => { const rotulo = nodo(); return nodo({ rotulo, querySelector: (sel) => (sel === '[data-rotulo]' ? rotulo : null) }); });
-  const navegadores = ['chrome', 'ios'].map((id) => nodo({ dataset: { navegador: id } }));
-  const dlg = { titulo: nodo(), lista: nodo(), nota: nodo() };
-  const dialogo = nodo({
-    abierto: false, ...partes({ '[data-pasos-titulo]': dlg.titulo, '[data-pasos]': dlg.lista, '[data-pasos-nota]': dlg.nota }),
-    querySelectorAll: (sel) => (sel === '[data-navegador]' ? navegadores : []),
-    showModal() { this.abierto = true; }, close() { this.abierto = false; },
-  });
+  const hoja = { titulo: nodo(), gesto: nodo(), detalle: nodo({ hidden: true }), icono: nodo({ hidden: true }) };
+  const partes = { '[data-guia-titulo]': hoja.titulo, '[data-guia-gesto]': hoja.gesto, '[data-guia-detalle]': hoja.detalle, '[data-guia-icono]': hoja.icono };
+  const dialogo = nodo({ abierto: false, querySelector: (sel) => partes[sel] ?? null, showModal() { this.abierto = true; }, close() { this.abierto = false; } });
   const aviso = nodo({ hidden: true });
-  const enLinea = { titulo: nodo(), lista: nodo() };
-  const pasos = nodo(partes({ '[data-pasos-titulo]': enLinea.titulo, '[data-pasos]': enLinea.lista }));
+  const nota = nodo();
   const clases = new Set();
   const doc = {
+    readyState: 'complete',
     documentElement: { classList: { toggle: (c, si) => (si ? clases.add(c) : clases.delete(c)) } },
-    getElementById: (id) => ({ 'dlg-instalar': dialogo, 'instalar-aviso': aviso, 'instalar-pasos': pasos })[id] ?? null,
+    getElementById: (id) => ({ 'dlg-instalar': dialogo, 'instalar-aviso': aviso, 'instalar-nota': nota })[id] ?? null,
     querySelectorAll: (sel) => (sel === '[data-instalar]' ? botones : []),
-    createElement: () => nodo(),
   };
   const escuchas = {};
   const registros = [];
-  const ventana = {
-    navigator: { userAgent: ua, platform: 'Win32', maxTouchPoints: 0, serviceWorker: { register: (...a) => { registros.push(a); return Promise.resolve(); } } },
-    location: { hostname: host, href: '' },
-    matchMedia: () => ({ matches: enApp }),
-    addEventListener: (tipo, fn) => { (escuchas[tipo] ??= []).push(fn); },
-  };
+  const relojes = [];
+  const aperturas = [];
   const visitas = [];
+  // «display-mode: standalone»: verdadero dentro de la ventana de la app instalada.
+  const modo = { matches: enApp, escuchas: [], addEventListener(tipo, fn) { this.escuchas.push(fn); }, cambiar(si) { this.matches = si; this.escuchas.forEach((fn) => fn()); } };
+  const navigator = { userAgent: ua, platform: plataforma, maxTouchPoints: toques, serviceWorker: { register: (...a) => { registros.push(a); return Promise.resolve(); } } };
+  if (api) navigator.install = api;
+  const ventana = {
+    navigator,
+    location: { hostname: host, href: '' },
+    matchMedia: () => modo,
+    addEventListener: (tipo, fn) => { (escuchas[tipo] ??= []).push(fn); },
+    setTimeout: (fn, ms) => { relojes.push({ fn, ms }); return relojes.length; },
+    open: (...a) => { aperturas.push(a); return null; },
+  };
   const estado = montarInstalar({ ventana, doc, alNavegar: (url) => visitas.push(url) });
   return {
-    estado, botones, dialogo, dlg, aviso, enLinea, clases, registros, visitas, navegadores,
+    estado, botones, dialogo, hoja, aviso, nota, clases, registros, visitas, aperturas, modo,
+    rotulos: () => botones.map((b) => b.rotulo.textContent),
     emitir: (tipo, ev = {}) => (escuchas[tipo] ?? []).forEach((fn) => fn(ev)),
     pulsar: (b) => Promise.all(b.escuchas.click.map((fn) => fn({ target: b }))),
+    // Hace vencer los temporizadores de esa duración.
+    vencer: (ms) => {
+      const tocan = relojes.filter((r) => r.ms === ms);
+      for (const r of tocan) relojes.splice(relojes.indexOf(r), 1);
+      for (const r of tocan) r.fn();
+    },
   };
+}
+// La oferta de instalación del navegador (evento beforeinstallprompt).
+function ofertaFalsa(outcome = 'accepted') {
+  const o = { prevenido: 0, ofrecido: 0, preventDefault() { o.prevenido++; }, prompt: async () => { o.ofrecido++; }, userChoice: Promise.resolve({ outcome }) };
+  return o;
 }
 const UA_CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 const UA_FIREFOX = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0';
+const UA_SAFARI = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15';
+const ANDROID = { ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36', plataforma: 'Linux armv81', toques: 5 };
+const IPHONE = { ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1', plataforma: 'iPhone', toques: 5 };
+const SOLO_INSTALAR = [TEXTOS.instalar, TEXTOS.instalar];
+const SOLO_ABRIR = [TEXTOS.abrir, TEXTOS.abrir];
+const APARTE = [['/', '_blank', 'noopener']];
 
-test('con la oferta del navegador, «Instalar Trofaxis» abre el cuadro de instalación de verdad', async () => {
+test('con la oferta del navegador, un clic abre su cuadro de instalación y al instalar se entra a la app', async () => {
   const e = entornoInstalar({ ua: UA_CHROME });
-  let prevenido = 0, ofrecido = 0;
-  const oferta = { preventDefault: () => { prevenido++; }, prompt: async () => { ofrecido++; }, userChoice: Promise.resolve({ outcome: 'accepted' }) };
+  const oferta = ofertaFalsa();
   e.emitir('beforeinstallprompt', oferta);
-  assert.equal(prevenido, 1, 'la oferta se guarda para el clic');
+  assert.equal(oferta.prevenido, 1, 'la oferta se guarda para el clic');
   assert.equal(e.estado.hayOferta(), true);
   assert.ok(e.clases.has('instalable'));
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR);
+  assert.equal(e.nota.textContent, NAVEGADORES.chrome.nota);
+  e.vencer(GRACIA_MS);
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR, 'con la oferta en mano, el plazo no cambia nada');
   await e.pulsar(e.botones[0]);
-  assert.equal(ofrecido, 1, 'se llamó a prompt() del navegador');
+  assert.equal(oferta.ofrecido, 1, 'se llamó a prompt() del navegador');
   assert.equal(e.dialogo.abierto, false, 'no hacen falta instrucciones');
-  assert.equal(e.aviso.textContent, 'Instalando Trofaxis…');
+  assert.deepEqual(e.aperturas, []);
+  assert.equal(e.aviso.textContent, TEXTOS.instalando);
   assert.deepEqual(e.registros, [['/sw.js', { scope: '/' }]], 'se deja lista la app para abrir sin conexión');
-  // Cada oferta sirve una sola vez: un segundo clic muestra los pasos en vez de fallar en silencio.
-  await e.pulsar(e.botones[1]);
-  assert.equal(ofrecido, 1);
-  assert.equal(e.dialogo.abierto, true);
-  // Cuando el navegador confirma la instalación, los botones pasan a abrir la app.
+  // El navegador confirma la instalación.
   e.emitir('appinstalled');
   assert.equal(e.estado.estaInstalada(), true);
-  assert.deepEqual(e.botones.map((b) => b.rotulo.textContent), ['Abrir Trofaxis', 'Abrir Trofaxis']);
-  assert.equal(e.dialogo.abierto, false);
-  await e.pulsar(e.botones[0]);
+  assert.deepEqual(e.rotulos(), SOLO_ABRIR);
+  assert.equal(e.nota.textContent, TEXTOS.notaInstalada);
+  assert.equal(e.aviso.textContent, TEXTOS.instalada);
+  assert.deepEqual(e.visitas, [], 'mientras la página siga en el navegador, no se mueve');
+  // Chrome y Edge de escritorio pasan esta pestaña a la ventana de la app: se entra sin otro clic.
+  e.modo.cambiar(true);
   assert.deepEqual(e.visitas, ['/']);
+  e.vencer(900);
+  assert.deepEqual(e.visitas, ['/'], 'una sola vez');
+  // El aviso se quita solo.
+  e.vencer(AVISO_VISIBLE_MS);
+  assert.equal(e.aviso.hidden, true);
+});
+
+test('recién instalada y todavía en el navegador (teléfono), el botón abre la app aparte', async () => {
+  const e = entornoInstalar(ANDROID);
+  e.emitir('beforeinstallprompt', ofertaFalsa());
+  await e.pulsar(e.botones[0]);
+  e.emitir('appinstalled');
+  e.vencer(900);
+  assert.deepEqual(e.visitas, []);
+  await e.pulsar(e.botones[1]);
+  assert.deepEqual(e.aperturas, APARTE);
+  assert.equal(e.aviso.textContent, TEXTOS.abierta);
 });
 
 test('si la persona cancela, se le dice y puede volver a intentarlo', async () => {
   const e = entornoInstalar({ ua: UA_CHROME });
-  e.emitir('beforeinstallprompt', { preventDefault() {}, prompt: async () => {}, userChoice: Promise.resolve({ outcome: 'dismissed' }) });
+  e.emitir('beforeinstallprompt', ofertaFalsa('dismissed'));
   await e.pulsar(e.botones[0]);
-  assert.match(e.aviso.textContent, /No se instaló/);
+  assert.equal(e.aviso.textContent, TEXTOS.cancelada);
   assert.equal(e.aviso.hidden, false);
   assert.deepEqual(e.registros, []);
   assert.equal(e.estado.estaInstalada(), false);
+  // Chromium entrega otra oferta después de cancelar: el botón vuelve a servir.
+  const segunda = ofertaFalsa();
+  e.emitir('beforeinstallprompt', segunda);
+  await e.pulsar(e.botones[0]);
+  assert.equal(segunda.ofrecido, 1);
+  // Si no la entregara, no se da por instalada: se muestra el gesto, en una frase.
+  const f = entornoInstalar({ ua: UA_CHROME });
+  f.emitir('beforeinstallprompt', ofertaFalsa('dismissed'));
+  await f.pulsar(f.botones[0]);
+  f.vencer(GRACIA_MS);
+  assert.deepEqual(f.rotulos(), SOLO_INSTALAR);
+  await f.pulsar(f.botones[0]);
+  assert.equal(f.dialogo.abierto, true);
+  assert.equal(f.hoja.gesto.textContent, NAVEGADORES.chrome.gesto);
+  assert.deepEqual(f.aperturas, []);
 });
 
-test('sin oferta del navegador, el botón muestra los pasos de ese navegador', async () => {
+test('ya instalada en la computadora: el navegador no ofrece instalar y el botón abre Trofaxis, sin instrucciones', async () => {
+  const e = entornoInstalar({ ua: UA_CHROME });
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR);
+  e.vencer(GRACIA_MS);
+  assert.deepEqual(e.rotulos(), SOLO_ABRIR, 'el rótulo dice lo que va a hacer el clic');
+  assert.equal(e.estado.abre(), true);
+  assert.ok(e.clases.has('abre-app'), 'sin la flecha de descarga: ya no instala');
+  assert.equal(e.nota.textContent, TEXTOS.notaSinOferta);
+  await e.pulsar(e.botones[0]);
+  assert.deepEqual(e.aperturas, APARTE, 'en otra ventana: si está instalada, Chrome y Edge la abren en la suya');
+  assert.equal(e.dialogo.abierto, false, 'antes aquí salía una lista de pasos');
+  assert.equal(e.aviso.textContent, TEXTOS.abierta);
+  assert.deepEqual(e.visitas, []);
+  // Si la oferta llega tarde (red lenta), el botón vuelve a instalar.
+  const tarde = ofertaFalsa();
+  e.emitir('beforeinstallprompt', tarde);
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR);
+  assert.equal(e.clases.has('abre-app'), false);
+  assert.equal(e.nota.textContent, NAVEGADORES.chrome.nota);
+  await e.pulsar(e.botones[0]);
+  assert.equal(tarde.ofrecido, 1);
+});
+
+test('un clic antes de que llegue la oferta la espera, sin perder el clic', async () => {
+  const e = entornoInstalar({ ua: UA_CHROME });
+  const clic = e.pulsar(e.botones[0]);
+  assert.deepEqual(e.rotulos(), [TEXTOS.preparando, TEXTOS.preparando]);
+  assert.equal(e.botones[0].atributos['aria-busy'], 'true');
+  await e.pulsar(e.botones[1]); // otro clic mientras tanto no hace nada
+  const oferta = ofertaFalsa();
+  e.emitir('beforeinstallprompt', oferta);
+  await clic;
+  assert.equal(oferta.ofrecido, 1, 'una sola vez');
+  assert.equal(e.botones[0].atributos['aria-busy'], 'false');
+  assert.equal(e.dialogo.abierto, false);
+  // Si no llega, en computadora se abre la app.
+  const pc = entornoInstalar({ ua: UA_CHROME });
+  const sinOferta = pc.pulsar(pc.botones[0]);
+  pc.vencer(ESPERA_OFERTA_MS);
+  await sinOferta;
+  assert.deepEqual(pc.aperturas, APARTE);
+  assert.equal(pc.dialogo.abierto, false);
+  assert.deepEqual(pc.rotulos(), SOLO_ABRIR);
+  // En el teléfono el botón no deja de ofrecer instalar; si la oferta no llega, se dice el gesto.
+  const movil = entornoInstalar(ANDROID);
+  movil.vencer(GRACIA_MS);
+  assert.deepEqual(movil.rotulos(), SOLO_INSTALAR);
+  const toque = movil.pulsar(movil.botones[0]);
+  movil.vencer(ESPERA_OFERTA_MS);
+  await toque;
+  assert.equal(movil.dialogo.abierto, true);
+  assert.equal(movil.hoja.gesto.textContent, NAVEGADORES.android.gesto);
+  assert.deepEqual(movil.aperturas, []);
+});
+
+test('donde el navegador no deja instalar desde un botón, se dice un solo gesto', async () => {
+  const iphone = entornoInstalar(IPHONE);
+  assert.equal(iphone.estado.navegador, 'ios');
+  assert.deepEqual(iphone.rotulos(), SOLO_INSTALAR);
+  assert.equal(iphone.nota.textContent, NAVEGADORES.ios.nota);
+  await iphone.pulsar(iphone.botones[0]);
+  assert.equal(iphone.dialogo.abierto, true);
+  assert.equal(iphone.hoja.titulo.textContent, 'En iPhone y iPad son dos toques');
+  assert.equal(iphone.hoja.gesto.textContent, NAVEGADORES.ios.gesto);
+  assert.equal(iphone.hoja.icono.hidden, false, 'con el ícono de Compartir');
+  assert.equal(iphone.hoja.detalle.textContent, NAVEGADORES.ios.detalle, 'el otro nombre del mismo botón, en letra chica');
+  const safari = entornoInstalar({ ua: UA_SAFARI, plataforma: 'MacIntel' });
+  await safari.pulsar(safari.botones[0]);
+  assert.equal(safari.hoja.gesto.textContent, NAVEGADORES['safari-mac'].gesto);
+  assert.equal(safari.hoja.icono.hidden, true);
+  assert.equal(safari.hoja.detalle.textContent, 'Requiere macOS Sonoma (14) o posterior.');
+  assert.equal(safari.hoja.detalle.hidden, false);
+});
+
+test('en Firefox de computadora no se promete instalar: el botón abre Trofaxis ahí mismo', async () => {
   const e = entornoInstalar({ ua: UA_FIREFOX });
   assert.equal(e.estado.navegador, 'firefox');
-  assert.deepEqual(e.botones.map((b) => b.rotulo.textContent), ['Instalar Trofaxis', 'Instalar Trofaxis']);
-  assert.deepEqual(e.enLinea.lista.hijos.map((li) => li.textContent), NAVEGADORES.firefox.pasos, 'los pasos también están a la vista en la sección');
+  assert.deepEqual(e.rotulos(), SOLO_ABRIR);
+  assert.equal(e.nota.textContent, NAVEGADORES.firefox.nota, 'la nota dice por qué');
   await e.pulsar(e.botones[0]);
-  assert.equal(e.dialogo.abierto, true);
-  assert.equal(e.dlg.titulo.textContent, 'Firefox (computadora)', 'no dice «Instalar en Firefox»: ahí no se puede');
-  assert.deepEqual(e.dlg.lista.hijos.map((li) => li.textContent), NAVEGADORES.firefox.pasos);
-  // Desde el cuadro se pueden ver los pasos de otro navegador.
-  e.navegadores[1].escuchas.click[0]();
-  assert.equal(e.dlg.titulo.textContent, 'Instalar en iPhone o iPad');
-  assert.equal(e.navegadores[1].atributos['aria-pressed'], 'true');
-  assert.equal(e.navegadores[0].atributos['aria-pressed'], 'false');
+  assert.deepEqual(e.visitas, ['/']);
+  assert.deepEqual(e.aperturas, []);
+  assert.equal(e.dialogo.abierto, false);
+});
+
+test('con navigator.install() el navegador instala, o abre la app si ya estaba', async () => {
+  let llamadas = 0;
+  const e = entornoInstalar({ ua: UA_CHROME, api: () => { llamadas++; return Promise.resolve(); } });
+  e.vencer(GRACIA_MS);
+  assert.deepEqual(e.rotulos(), SOLO_INSTALAR, 'no hace falta adivinar si ya está instalada');
+  await e.pulsar(e.botones[0]);
+  assert.equal(llamadas, 1);
+  assert.equal(e.estado.estaInstalada(), true);
+  assert.deepEqual(e.registros, [['/sw.js', { scope: '/' }]]);
+  assert.equal(e.dialogo.abierto, false);
+  // Con la oferta clásica en mano se usa esa.
+  let otras = 0;
+  const g = entornoInstalar({ ua: UA_CHROME, api: () => { otras++; return Promise.resolve(); } });
+  const oferta = ofertaFalsa();
+  g.emitir('beforeinstallprompt', oferta);
+  await g.pulsar(g.botones[0]);
+  assert.deepEqual([oferta.ofrecido, otras], [1, 0]);
+  // La persona cierra el cuadro del navegador.
+  const error = (name) => () => Promise.reject(Object.assign(new Error(name), { name }));
+  const c = entornoInstalar({ ua: UA_CHROME, api: error('AbortError') });
+  await c.pulsar(c.botones[0]);
+  assert.equal(c.aviso.textContent, TEXTOS.cancelada);
+  assert.equal(c.dialogo.abierto, false);
+  // Cualquier otro fallo: se dice el gesto.
+  const f = entornoInstalar({ ua: UA_CHROME, api: error('DataError') });
+  await f.pulsar(f.botones[0]);
+  assert.equal(f.dialogo.abierto, true);
+  assert.equal(f.hoja.gesto.textContent, NAVEGADORES.chrome.gesto);
 });
 
 test('dentro de la app instalada el botón abre Trofaxis, y en local no se registra el service worker', async () => {
   const e = entornoInstalar({ ua: UA_CHROME, enApp: true });
-  assert.deepEqual(e.botones.map((b) => b.rotulo.textContent), ['Abrir Trofaxis', 'Abrir Trofaxis']);
+  assert.deepEqual(e.rotulos(), SOLO_ABRIR);
   await e.pulsar(e.botones[0]);
   assert.deepEqual(e.visitas, ['/']);
+  assert.deepEqual(e.aperturas, []);
   const local = entornoInstalar({ ua: UA_CHROME, host: 'localhost' });
   local.emitir('appinstalled');
   assert.deepEqual(local.registros, []);
