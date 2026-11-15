@@ -38,6 +38,7 @@
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
     <symbol id="i-si" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
     <symbol id="i-no" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-compartir" viewBox="0 0 24 24"><path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/></symbol>
   </svg>
 
   <!-- Pantalla de carga: la rueda del año se arma mes a mes. Sin JavaScript se quita sola (sin-js.css y conoce.css). -->
@@ -330,16 +331,7 @@
             <button type="button" class="btn oro grande" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
             <a class="btn borde grande" href="/" data-abrir-app>Usarla en el navegador</a>
           </div>
-          <p class="instalar-aviso" id="instalar-aviso" role="status" hidden></p>
-          <div class="pasos-nav" id="instalar-pasos">
-            <p class="pasos-nav-t" data-pasos-titulo>Cómo se instala</p>
-            <ol data-pasos>
-              <li>Pulsa «Instalar Trofaxis».</li>
-              <li>Confirma en el cuadro de tu navegador.</li>
-              <li>Abre Trofaxis desde tu escritorio o tu pantalla de inicio.</li>
-            </ol>
-            <button type="button" class="enlace" data-ver-pasos>Ver los pasos para otro navegador</button>
-          </div>
+          <p class="instalar-nota" id="instalar-nota">En Chrome y Edge es un clic. En iPhone y iPad, dos toques desde el botón Compartir.</p>
         </div>
         <div class="equipos" aria-hidden="true">
           <div class="equipo-pc"><img src="media/app-inicio.webp" width="2160" height="1350" loading="lazy" decoding="async" alt=""></div>
@@ -458,24 +450,23 @@
     </div>
   </footer>
 
+  <p class="instalar-aviso" id="instalar-aviso" role="status" hidden></p>
+
   <dialog class="dlg" id="dlg-instalar" aria-labelledby="dlg-t">
     <div class="dlg-in">
       <div class="dlg-cab">
-        <h2 id="dlg-t" data-pasos-titulo>Instalar Trofaxis</h2>
+        <h2 id="dlg-t" data-guia-titulo>Está en el menú de tu navegador</h2>
         <button type="button" class="dlg-x" data-cerrar aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
       </div>
-      <ol class="dlg-pasos" data-pasos></ol>
-      <p class="dlg-nota" data-pasos-nota hidden></p>
-      <p class="dlg-otros-t">Ver los pasos para</p>
-      <div class="dlg-otros">
-        <button type="button" data-navegador="chrome" aria-pressed="false">Chrome</button>
-        <button type="button" data-navegador="edge" aria-pressed="false">Edge</button>
-        <button type="button" data-navegador="safari-mac" aria-pressed="false">Safari en Mac</button>
-        <button type="button" data-navegador="ios" aria-pressed="false">iPhone o iPad</button>
-        <button type="button" data-navegador="android" aria-pressed="false">Android</button>
-        <button type="button" data-navegador="firefox" aria-pressed="false">Firefox</button>
+      <div class="dlg-gesto">
+        <span class="dlg-ico" data-guia-icono hidden><svg class="ic" aria-hidden="true"><use href="#i-compartir"/></svg></span>
+        <p data-guia-gesto>Busca «Instalar app» o «Agregar a la pantalla de inicio» en el menú de tu navegador.</p>
       </div>
-      <p class="dlg-pie">Los nombres de los menús pueden cambiar un poco según la versión de tu navegador. <a href="/" data-abrir-app>Usar Trofaxis sin instalar</a></p>
+      <p class="dlg-nota" data-guia-detalle hidden></p>
+      <div class="acciones">
+        <a class="btn oro grande" href="/" data-abrir-app>Abrir Trofaxis ahora</a>
+      </div>
+      <p class="dlg-pie">En el navegador funciona igual, sin instalar nada.</p>
     </div>
   </dialog>
 

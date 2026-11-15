@@ -1,8 +1,16 @@
-// «Instalar Trofaxis» en la página de presentación (/conoce/).
-// Trofaxis es una aplicación web instalable (manifest.webmanifest, alcance «/»): en Chrome y Edge el navegador ofrece
-// su propio cuadro de instalación (evento beforeinstallprompt) y la app queda en el escritorio o en el teléfono.
-// Safari y Firefox no dan ese evento: ahí se muestran los pasos del navegador, sin prometer un botón que no existe.
-// detectarNavegador y pasosDe son funciones puras (se prueban en tests/conoce.test.js); montarInstalar toca el DOM.
+// «Instalar Trofaxis» en la página de presentación (/conoce/): que sea un clic, sin listas de pasos.
+// Trofaxis es una aplicación web instalable (manifest.webmanifest, alcance «/»). Qué hace el botón en cada caso:
+//  1. El navegador ya entregó su oferta (evento beforeinstallprompt: Chrome, Edge y Android). Un clic abre el cuadro de
+//     instalación del propio navegador. Esa confirmación la pone el navegador: ninguna página puede saltársela.
+//  2. Existe navigator.install() (Web Install API, anunciada para Chrome 156 de escritorio). Hace lo mismo aunque la
+//     oferta no haya llegado y, si Trofaxis ya estaba instalada, el navegador ofrece abrirla.
+//  3. Computadora con Chrome o Edge y sin oferta. Casi siempre es que Trofaxis ya está instalada (el navegador no
+//     ofrece instalar dos veces): el botón pasa a «Abrir Trofaxis» y la abre en su propia ventana.
+//  4. Navegadores que no dejan instalar desde un botón (iPhone, iPad, Safari, Firefox en Android). Se dice en una
+//     frase el único gesto que hace falta y la app queda a un clic.
+//  5. Firefox en computadora no instala aplicaciones web: el botón dice «Abrir Trofaxis» y la abre ahí mismo.
+// Lo medido en Chromium 153 está en docs/conoce.md. detectarNavegador y guiaDe son funciones puras (se prueban en
+// tests/conoce.test.js); montarInstalar toca el DOM.
 
 // ua: navigator.userAgent · plataforma: navigator.platform · toques: navigator.maxTouchPoints.
 export function detectarNavegador({ ua = '', plataforma = '', toques = 0 } = {}) {
@@ -17,106 +25,135 @@ export function detectarNavegador({ ua = '', plataforma = '', toques = 0 } = {})
   return 'otro';
 }
 
+// oferta: el navegador entrega su cuadro de instalación y basta un clic · escritorio: computadora, no teléfono ·
+// instala: se puede instalar ahí · nota: la línea bajo el botón de la sección «Instalar» · titulo, gesto y detalle:
+// lo único que se muestra cuando el botón no puede instalar por su cuenta. El gesto es una frase, nunca una lista.
 // Los nombres de los menús son los de cada navegador en español y pueden variar un poco entre versiones.
+const UN_CLIC = 'Un clic, confirmas en tu navegador y queda instalada.';
 export const NAVEGADORES = {
   chrome: {
-    nombre: 'Chrome (Windows, Mac o Linux)',
-    instala: true,
-    pasos: [
-      'Pulsa el ícono de instalar al final de la barra de direcciones (una pantalla con una flecha hacia abajo).',
-      'Si no lo ves, abre el menú ⋮ de Chrome, entra a «Transmitir, guardar y compartir» y elige «Instalar Trofaxis…».',
-      'Confirma con «Instalar». Trofaxis se abre en su propia ventana y queda en tu escritorio y en el menú de inicio.',
-    ],
+    nombre: 'Chrome', oferta: true, escritorio: true, instala: true, nota: UN_CLIC,
+    titulo: 'Está en tu barra de direcciones',
+    gesto: 'Pulsa el ícono de instalar, al final de la barra de direcciones.',
   },
   edge: {
-    nombre: 'Edge (Windows o Mac)',
-    instala: true,
-    pasos: [
-      'Pulsa el ícono de instalar al final de la barra de direcciones (tres cuadros y un signo +).',
-      'Si no lo ves, abre el menú … de Edge, entra a «Aplicaciones» y elige «Instalar Trofaxis».',
-      'Confirma con «Instalar». Puedes anclarla a la barra de tareas y al menú de inicio.',
-    ],
-  },
-  'safari-mac': {
-    nombre: 'Safari en Mac',
-    instala: true,
-    pasos: [
-      'En la barra de menús, abre «Archivo».',
-      'Elige «Añadir al Dock…».',
-      'Confirma con «Añadir». Trofaxis queda en el Dock como una app aparte.',
-    ],
-    nota: 'Requiere macOS Sonoma (14) o posterior.',
-  },
-  ios: {
-    nombre: 'iPhone o iPad',
-    instala: true,
-    pasos: [
-      'Pulsa el botón Compartir (un cuadro con una flecha hacia arriba).',
-      'Baja en la lista y elige «Añadir a pantalla de inicio».',
-      'Confirma con «Añadir». El ícono de Trofaxis queda junto a tus otras apps.',
-    ],
+    nombre: 'Edge', oferta: true, escritorio: true, instala: true, nota: UN_CLIC,
+    titulo: 'Está en tu barra de direcciones',
+    gesto: 'Pulsa el ícono de instalar, al final de la barra de direcciones.',
   },
   android: {
-    nombre: 'Android (Chrome)',
-    instala: true,
-    pasos: [
-      'Abre el menú ⋮ de Chrome.',
-      'Elige «Instalar app» o «Agregar a la pantalla principal».',
-      'Confirma con «Instalar». Trofaxis queda con tus otras apps.',
-    ],
+    nombre: 'Android', oferta: true, escritorio: false, instala: true,
+    nota: 'Un toque, confirmas y queda con tus otras apps.',
+    titulo: 'Está en el menú de tu navegador',
+    gesto: 'Abre el menú ⋮ y toca «Instalar app».',
+  },
+  ios: {
+    nombre: 'iPhone o iPad', oferta: false, escritorio: false, instala: true, compartir: true,
+    nota: 'En iPhone y iPad, Apple solo permite instalarla desde el botón Compartir. Son dos toques.',
+    titulo: 'En iPhone y iPad son dos toques',
+    gesto: 'Toca Compartir y luego «Agregar a Inicio».',
+    detalle: 'En algunos equipos dice «Añadir a pantalla de inicio».',
+  },
+  'safari-mac': {
+    nombre: 'Safari en Mac', oferta: false, escritorio: true, instala: true,
+    nota: 'En Safari se instala desde el menú Archivo.',
+    titulo: 'En Safari va por el menú Archivo',
+    gesto: 'Abre el menú Archivo y elige «Añadir al Dock».',
+    detalle: 'Requiere macOS Sonoma (14) o posterior.',
   },
   'firefox-android': {
-    nombre: 'Android (Firefox)',
-    instala: true,
-    pasos: [
-      'Abre el menú ⋮ de Firefox.',
-      'Elige «Instalar» o «Agregar a la pantalla de inicio».',
-      'Confirma. El ícono de Trofaxis queda en tu pantalla de inicio.',
-    ],
+    nombre: 'Firefox en Android', oferta: false, escritorio: false, instala: true,
+    nota: 'En Firefox se instala desde su menú.',
+    titulo: 'Está en el menú de Firefox',
+    gesto: 'Abre el menú ⋮ y toca «Instalar» o «Agregar a la pantalla de inicio».',
   },
   firefox: {
-    nombre: 'Firefox (computadora)',
-    instala: false,
-    pasos: [
-      'Firefox para computadora no instala aplicaciones web.',
-      'Abre esta página en Chrome o en Edge y pulsa «Instalar Trofaxis».',
-      'O usa Trofaxis en el navegador: funciona igual, solo que sin ícono propio.',
-    ],
+    nombre: 'Firefox en computadora', oferta: false, escritorio: true, instala: false,
+    nota: 'Firefox para computadora no instala aplicaciones web. Ábrela aquí mismo, o entra con Chrome o Edge para instalarla.',
+    titulo: 'Firefox no instala aplicaciones web',
+    gesto: 'Ábrela aquí mismo y funciona igual. Para instalarla, entra con Chrome o Edge.',
   },
   otro: {
-    nombre: 'Otro navegador',
-    instala: false,
-    pasos: [
-      'Busca en el menú de tu navegador una opción como «Instalar app» o «Agregar a la pantalla de inicio».',
-      'Si no aparece, abre esta página en Chrome o en Edge y pulsa «Instalar Trofaxis».',
-      'También puedes usar Trofaxis en el navegador, sin instalar nada.',
-    ],
+    nombre: 'otro navegador', oferta: false, escritorio: false, instala: true,
+    nota: 'Se instala desde el menú de tu navegador.',
+    titulo: 'Está en el menú de tu navegador',
+    gesto: 'Busca «Instalar app» o «Agregar a la pantalla de inicio» en el menú de tu navegador.',
   },
 };
 
-export const pasosDe = (id) => NAVEGADORES[id] ?? NAVEGADORES.otro;
+export const guiaDe = (id) => NAVEGADORES[id] ?? NAVEGADORES.otro;
+
+// Criterio propio. En Chromium 153 la oferta llegó entre 0,2 y 0,7 s después de cargar la página.
+// ESPERA: tras un clic sin oferta, cuánto se espera a que llegue. Debe caber en los 5 s que el navegador da por válido
+// un clic para abrir una ventana (a los 4,5 s la abrió; a los 6 s la bloqueó).
+export const ESPERA_OFERTA_MS = 2500;
+// GRACIA: en computadora, pasado este tiempo sin oferta se da por instalada y el botón pasa a «Abrir Trofaxis».
+export const GRACIA_MS = 4000;
+export const AVISO_VISIBLE_MS = 8000;
+
+export const TEXTOS = {
+  instalar: 'Instalar Trofaxis',
+  abrir: 'Abrir Trofaxis',
+  preparando: 'Preparando…',
+  instalando: 'Instalando Trofaxis…',
+  instalada: 'Trofaxis quedó instalada. Búscala en tu escritorio o entre tus aplicaciones.',
+  cancelada: 'No se instaló. Puedes pulsar «Instalar Trofaxis» cuando quieras.',
+  abierta: 'Abrimos Trofaxis en otra ventana.',
+  notaInstalada: 'Ya está instalada en este equipo.',
+  notaSinOferta: 'Tu navegador no ofrece instalarla aquí. Lo usual es que ya la tengas instalada: ábrela con un clic.',
+};
 
 // En localhost el service worker serviría el código guardado y no el que se acaba de editar (misma regla que pwa.js).
 const esLocal = (host) => ['localhost', '127.0.0.1'].includes(host);
 
-// Conecta los botones [data-instalar], el cuadro de pasos y los avisos. Devuelve el estado para las pruebas manuales.
-export function montarInstalar({ ventana = window, doc = document, alNavegar = (url) => { ventana.location.href = url; } } = {}) {
+// Conecta los botones [data-instalar], la nota de la sección, el aviso y la hoja del gesto.
+// alNavegar: ir a la app en esta misma ventana · abrirAparte: abrirla en otra (si está instalada, en su propia ventana).
+export function montarInstalar({
+  ventana = window,
+  doc = document,
+  alNavegar = (url) => { ventana.location.href = url; },
+  abrirAparte = (url) => { ventana.open(url, '_blank', 'noopener'); },
+} = {}) {
   const nav = ventana.navigator;
   const navegador = detectarNavegador({ ua: nav.userAgent, plataforma: nav.platform, toques: nav.maxTouchPoints });
+  const info = guiaDe(navegador);
   const dialogo = doc.getElementById('dlg-instalar');
   const aviso = doc.getElementById('instalar-aviso');
+  const nota = doc.getElementById('instalar-nota');
   const botones = [...doc.querySelectorAll('[data-instalar]')];
-  const dentroDeLaApp = ventana.matchMedia?.('(display-mode: standalone)').matches || nav.standalone === true;
-  let pendiente = null;
-  let instalada = dentroDeLaApp;
+  const modoApp = ventana.matchMedia?.('(display-mode: standalone)');
+  const esLaApp = () => modoApp?.matches === true || nav.standalone === true;
+  const despues = (fn, ms) => ventana.setTimeout(fn, ms);
+  const tieneApi = typeof nav.install === 'function';
 
-  const decir = (texto) => { if (aviso) { aviso.textContent = texto; aviso.hidden = !texto; } };
+  let pendiente = null;      // la oferta del navegador, guardada para el clic
+  let instalada = esLaApp(); // dentro de la app instalada, o recién instalada
+  let sinOferta = !info.instala; // el botón abre la app: aquí no se instala, o en computadora no llegó la oferta
+  let cancelada = false;     // la persona dijo que no en el cuadro del navegador
+  let apiFallo = false;
+  let ocupado = false;
+  let recien = false;
+  let turno = 0;
+  const enEspera = [];
+
+  const decir = (texto) => {
+    if (!aviso) return;
+    aviso.textContent = texto;
+    aviso.hidden = !texto;
+    const mio = ++turno;
+    if (texto) despues(() => { if (mio === turno) { aviso.textContent = ''; aviso.hidden = true; } }, AVISO_VISIBLE_MS);
+  };
+  // El rótulo siempre dice lo que va a hacer el clic.
+  const abre = () => instalada || (sinOferta && !pendiente);
   const rotular = () => {
+    const texto = ocupado ? TEXTOS.preparando : abre() ? TEXTOS.abrir : TEXTOS.instalar;
     for (const b of botones) {
-      const t = b.querySelector('[data-rotulo]') ?? b;
-      t.textContent = instalada ? 'Abrir Trofaxis' : 'Instalar Trofaxis';
+      (b.querySelector('[data-rotulo]') ?? b).textContent = texto;
+      b.setAttribute('aria-busy', String(ocupado));
     }
     doc.documentElement.classList.toggle('instalable', Boolean(pendiente));
+    doc.documentElement.classList.toggle('abre-app', !ocupado && abre());
+    if (nota) nota.textContent = instalada ? TEXTOS.notaInstalada : abre() && info.instala ? TEXTOS.notaSinOferta : info.nota;
   };
 
   // Deja el app shell guardado para que la app instalada abra sin conexión desde la primera vez.
@@ -125,68 +162,125 @@ export function montarInstalar({ ventana = window, doc = document, alNavegar = (
     nav.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
   };
 
-  const mostrarPasos = (id) => {
+  // Lo único que se muestra cuando el botón no puede instalar: una frase con el gesto y la app a un clic.
+  const guiar = () => {
     if (!dialogo) return;
-    const info = pasosDe(id);
-    dialogo.querySelector('[data-pasos-titulo]').textContent = info.instala ? `Instalar en ${info.nombre}` : info.nombre;
-    const lista = dialogo.querySelector('[data-pasos]');
-    lista.replaceChildren(...info.pasos.map((p) => Object.assign(doc.createElement('li'), { textContent: p })));
-    const nota = dialogo.querySelector('[data-pasos-nota]');
-    nota.textContent = info.nota ?? '';
-    nota.hidden = !info.nota;
-    for (const b of dialogo.querySelectorAll('[data-navegador]')) b.setAttribute('aria-pressed', String(b.dataset.navegador === id));
+    dialogo.querySelector('[data-guia-titulo]').textContent = info.titulo;
+    dialogo.querySelector('[data-guia-gesto]').textContent = info.gesto;
+    const detalle = dialogo.querySelector('[data-guia-detalle]');
+    detalle.textContent = info.detalle ?? '';
+    detalle.hidden = !info.detalle;
+    dialogo.querySelector('[data-guia-icono]').hidden = info.compartir !== true;
+    if (typeof dialogo.showModal === 'function') dialogo.showModal(); else dialogo.setAttribute('open', '');
   };
 
-  const abrirPasos = () => {
-    if (!dialogo) return;
-    mostrarPasos(navegador);
-    if (typeof dialogo.showModal === 'function') dialogo.showModal(); else dialogo.setAttribute('open', '');
+  // Dentro de la app, o donde no se instala, se abre aquí mismo. En otra ventana, Chrome y Edge la abren en la suya
+  // si está instalada (y en una pestaña nueva si no lo está).
+  const abrir = () => {
+    if (esLaApp() || !info.instala) { alNavegar('/'); return; }
+    abrirAparte('/');
+    decir(TEXTOS.abierta);
+  };
+
+  const ofrecer = async () => {
+    const oferta = pendiente;
+    pendiente = null; // cada oferta sirve una vez; si la persona cancela, el navegador entrega otra
+    rotular();
+    try {
+      await oferta.prompt();
+      const { outcome } = await oferta.userChoice;
+      if (outcome === 'accepted') { decir(TEXTOS.instalando); prepararSinConexion(); } else { cancelada = true; decir(TEXTOS.cancelada); }
+    } catch {
+      guiar();
+    }
+  };
+
+  const instalarConApi = async () => {
+    try {
+      await nav.install(); // instala o, si ya estaba instalada, el navegador ofrece abrirla
+      instalada = true;
+      rotular();
+      prepararSinConexion();
+    } catch (error) {
+      if (error?.name === 'AbortError') { cancelada = true; decir(TEXTOS.cancelada); return; }
+      apiFallo = true;
+      guiar();
+    }
+  };
+
+  // Tras un clic sin oferta: se espera un momento a que el navegador la entregue, sin perder el clic.
+  const esperarOferta = () => new Promise((resolver) => {
+    const fin = (llego) => {
+      const i = enEspera.indexOf(fin);
+      if (i < 0) return;
+      enEspera.splice(i, 1);
+      resolver(llego);
+    };
+    enEspera.push(fin);
+    despues(() => fin(false), ESPERA_OFERTA_MS);
+  });
+
+  // Chrome y Edge de escritorio pasan esta pestaña a la ventana de la app al instalar: se entra a la app sin otro clic.
+  const entrarSiEsLaApp = () => {
+    if (!recien || !esLaApp()) return;
+    recien = false;
+    alNavegar('/');
   };
 
   ventana.addEventListener('beforeinstallprompt', (ev) => {
     ev.preventDefault(); // se guarda para ofrecerlo cuando la persona pulse el botón
     pendiente = ev;
+    sinOferta = false;
     rotular();
+    for (const fin of [...enEspera]) fin(true);
   });
   ventana.addEventListener('appinstalled', () => {
     pendiente = null;
     instalada = true;
+    sinOferta = false;
+    recien = true;
     rotular();
-    decir('Trofaxis quedó instalada. Búscala en tu escritorio o entre tus aplicaciones.');
+    decir(TEXTOS.instalada);
     dialogo?.close?.();
     prepararSinConexion();
+    entrarSiEsLaApp();
+    despues(entrarSiEsLaApp, 900);
   });
+  modoApp?.addEventListener?.('change', entrarSiEsLaApp);
 
-  for (const b of botones) {
-    b.addEventListener('click', async () => {
-      if (instalada) { alNavegar('/'); return; }
-      if (!pendiente) { abrirPasos(); return; }
-      const oferta = pendiente;
-      pendiente = null; // el navegador solo deja usar cada oferta una vez
+  const alPulsar = async () => {
+    if (ocupado) return;
+    decir('');
+    if (instalada) { abrir(); return; }
+    if (pendiente) { await ofrecer(); return; }
+    if (tieneApi && !apiFallo) { await instalarConApi(); return; }
+    if (info.oferta && !sinOferta && !cancelada) {
+      ocupado = true;
       rotular();
-      try {
-        await oferta.prompt();
-        const { outcome } = await oferta.userChoice;
-        if (outcome === 'accepted') { decir('Instalando Trofaxis…'); prepararSinConexion(); } else decir('No se instaló. Puedes pulsar «Instalar Trofaxis» cuando quieras.');
-      } catch {
-        abrirPasos();
-      }
-    });
-  }
-  for (const b of dialogo?.querySelectorAll('[data-navegador]') ?? []) b.addEventListener('click', () => mostrarPasos(b.dataset.navegador));
+      const llego = await esperarOferta();
+      ocupado = false;
+      if (llego) { await ofrecer(); return; }
+      if (info.escritorio) sinOferta = true;
+      rotular();
+    }
+    if (sinOferta) { abrir(); return; }
+    guiar();
+  };
+  for (const b of botones) b.addEventListener('click', alPulsar);
   for (const b of dialogo?.querySelectorAll('[data-cerrar]') ?? []) b.addEventListener('click', () => dialogo.close());
-  // Un clic en el fondo del cuadro lo cierra.
+  // Un clic en el fondo de la hoja la cierra.
   dialogo?.addEventListener('click', (ev) => { if (ev.target === dialogo) dialogo.close(); });
 
-  // Pasos del navegador de quien visita, a la vista en la sección «Instalar» sin tener que abrir el cuadro.
-  const enLinea = doc.getElementById('instalar-pasos');
-  if (enLinea) {
-    const info = pasosDe(navegador);
-    enLinea.querySelector('[data-pasos-titulo]').textContent = info.instala ? `En ${info.nombre}` : info.nombre;
-    enLinea.querySelector('[data-pasos]').replaceChildren(...info.pasos.map((p) => Object.assign(doc.createElement('li'), { textContent: p })));
+  // En computadora, si el navegador no ofreció instalar al poco de cargar, el botón pasa a abrir la app.
+  if (info.oferta && info.escritorio && !tieneApi && !instalada) {
+    const vencer = () => despues(() => {
+      if (pendiente || cancelada || instalada || ocupado) return;
+      sinOferta = true;
+      rotular();
+    }, GRACIA_MS);
+    if (doc.readyState === 'complete') vencer(); else ventana.addEventListener('load', vencer, { once: true });
   }
-  for (const b of doc.querySelectorAll('[data-ver-pasos]')) b.addEventListener('click', abrirPasos);
 
   rotular();
-  return { navegador, estaInstalada: () => instalada, hayOferta: () => Boolean(pendiente) };
+  return { navegador, estaInstalada: () => instalada, hayOferta: () => Boolean(pendiente), abre };
 }
