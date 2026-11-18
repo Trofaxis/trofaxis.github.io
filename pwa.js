@@ -1,5 +1,9 @@
 const CLAVE_FINCA = 'biogap:v1';
 const CLAVE_SESION = 'biogap:sesion:v1';
+// La página de presentación (/conoce/) no puede preguntarle al navegador si Trofaxis ya está instalada. Se anota
+// aquí, cuando la app corre en su propia ventana o se acaba de instalar, para que esa página diga «Abrir Trofaxis» y
+// «ya está instalada» en vez de ofrecer instalarla otra vez. conoce/instalar.js usa la misma clave.
+const CLAVE_INSTALADA = 'biogap:instalada:v1';
 
 const banner = document.getElementById('estado-pwa');
 const mensaje = document.getElementById('mensaje-pwa');
@@ -21,6 +25,23 @@ function hayFincaGuardada() {
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE_FINCA) || 'null');
     return Boolean(guardado?.farm && typeof guardado.farm === 'object');
+  } catch {
+    return false;
+  }
+}
+
+function anotarInstalada(si) {
+  try {
+    if (si) localStorage.setItem(CLAVE_INSTALADA, '1');
+    else localStorage.removeItem(CLAVE_INSTALADA);
+  } catch {
+    // Sin almacenamiento disponible, la app funciona igual.
+  }
+}
+
+function enVentanaPropia() {
+  try {
+    return window.matchMedia?.('(display-mode: standalone)').matches === true || navigator.standalone === true;
   } catch {
     return false;
   }
@@ -134,13 +155,17 @@ document.addEventListener('focusout', (evento) => {
 window.addEventListener('beforeinstallprompt', (evento) => {
   evento.preventDefault();
   instalacionPendiente = evento;
+  anotarInstalada(false); // el navegador ofrece instalarla: no está instalada
   actualizarAviso();
 });
 
 window.addEventListener('appinstalled', () => {
   instalacionPendiente = null;
+  anotarInstalada(true);
   actualizarAviso();
 });
+
+if (enVentanaPropia()) anotarInstalada(true);
 
 accion.addEventListener('click', async () => {
   if (accion.dataset.accion === 'instalar' && instalacionPendiente) {

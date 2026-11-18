@@ -107,6 +107,7 @@
             <button type="button" class="btn oro grande" data-instalar><svg class="ic" aria-hidden="true"><use href="#i-instalar"/></svg><span data-rotulo>Instalar Trofaxis</span></button>
             <a class="btn claro grande" href="/?entrar" data-abrir-app>Crear cuenta</a>
           </div>
+          <p class="portada-estado" data-estado-instalar hidden><svg class="ic" aria-hidden="true"><use href="#i-si"/></svg><span data-estado-texto></span></p>
           <p class="portada-nota">¿Ya tienes cuenta? <a href="/?entrar" data-abrir-app>Inicia sesión</a>. ¿Solo quieres mirar? <a href="/" data-abrir-app>Abre la finca de ejemplo</a>.</p>
         </div>
 
@@ -464,7 +465,8 @@
       </div>
       <p class="dlg-nota" data-guia-detalle hidden></p>
       <div class="acciones">
-        <a class="btn oro grande" href="/" data-abrir-app>Abrir Trofaxis ahora</a>
+        <button type="button" class="btn oro grande" data-guia-instalar hidden>Instalar Trofaxis</button>
+        <a class="btn oro grande" href="/" data-abrir-app data-guia-abrir>Abrir Trofaxis ahora</a>
       </div>
       <p class="dlg-pie">En el navegador funciona igual, sin instalar nada.</p>
     </div>

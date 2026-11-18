@@ -17,7 +17,7 @@ conoce/
 ├─ datos-demo.js   GENERADO: números de la finca demostrativa, cifras y citas
 └─ media/          videos, carteles y capturas de la app
 scripts/conoce-datos.mjs   genera conoce/datos-demo.js
-tests/conoce.test.js       34 pruebas
+tests/conoce.test.js       35 pruebas
 ```
 
 No usa dependencias ni compilación. `npm run build` la copia tal cual a `dist/conoce/`. No entra en el app shell del service worker: los videos no ocupan el almacenamiento de la app instalada.
@@ -55,12 +55,24 @@ La página enlaza el manifiesto de la app (`/manifest.webmanifest`, alcance `/`)
 |---|---|
 | Chrome y Edge con la oferta del navegador (`beforeinstallprompt`) | «Instalar Trofaxis» abre el cuadro de instalación del navegador. La persona confirma ahí y la pestaña pasa a ser la ventana de la app: la página entra sola a Trofaxis (`/`). Al aceptar se registra el service worker para que la app abra sin conexión desde la primera vez. |
 | Navegador con `navigator.install()` (Web Install API) | Igual, sin depender de la oferta. Si ya estaba instalada, el navegador la abre. |
-| Chrome o Edge de computadora sin oferta | El navegador no avisa a la página cuando la app ya está instalada: simplemente no manda la oferta. Pasado el plazo, el botón dice «Abrir Trofaxis» y un clic la abre en su propia ventana. |
+| Chrome o Edge de computadora sin oferta | El navegador no avisa a la página cuando la app ya está instalada: simplemente no manda la oferta. Pasado el plazo, el botón dice «Abrir Trofaxis», un clic la abre en su propia ventana y la página dice que ya está instalada (ver «Ya instalada» abajo). |
 | iPhone, iPad, Safari en Mac, Firefox en Android, otros | Ningún sitio puede instalar desde un botón. Se muestra una hoja con **un gesto en una frase** (en iPhone, el ícono de Compartir y «Agregar a Inicio») y el botón «Abrir Trofaxis ahora». |
+| Android sin oferta todavía | La misma hoja con el gesto del menú. Si la oferta llega con la hoja abierta, la hoja cambia a «Ya puedes instalarla» con el botón «Instalar Trofaxis». |
 | Firefox en computadora | No instala aplicaciones web. El botón dice «Abrir Trofaxis» desde el principio y la abre en la misma pestaña. |
 | Dentro de la app instalada | «Abrir Trofaxis» lleva a `/`. |
 
 Un clic que llega antes que la oferta la espera («Preparando…») en vez de perderse. Si la persona cancela el cuadro del navegador, se le dice y el botón sigue sirviendo.
+
+### Ya instalada: que no parezca que instalar falló
+
+Diego lo probó publicado el 2026-11-15 en una computadora donde Trofaxis ya estaba instalada: el botón la abrió en su ventana y él entendió que «no se instala». La página no decía por qué. Ahora, cuando el botón abre la app en vez de instalarla:
+
+- junto a los botones de la portada y en la sección «Instalar» aparece «Trofaxis ya está instalada en este equipo.»;
+- el aviso al abrirla dice «Trofaxis ya está instalada en este equipo. La abrimos.».
+
+La página no puede preguntarle al navegador si la app está instalada. Lo sabe por una marca en `localStorage` (`biogap:instalada:v1`) que deja la app (`pwa.js`) cuando corre en su propia ventana o cuando el navegador confirma la instalación, y que se borra cuando el navegador vuelve a ofrecer instalarla. Con la marca, el botón dice «Abrir Trofaxis» desde que carga la página. Sin ella (app instalada antes de este cambio), la página lo presume pasado el plazo y lo dice así: «Tu navegador no ofrece instalarla aquí: lo usual es que ya esté instalada en este equipo.»; al abrirse la app en su ventana deja la marca y el texto pasa a ser el seguro.
+
+Otras formas de saberlo, probadas y descartadas en Chromium 153: `getInstalledRelatedApps()` devuelve vacío, y abrir la app con `window.open` **sin** `noopener` para preguntarle a la ventana nueva no sirve, porque entonces el navegador la abre como pestaña normal y no en la ventana de la app.
 
 ### Por qué salían instrucciones (causa, 2026-11-15)
 
@@ -73,6 +85,7 @@ Probado en Chromium 153 de escritorio (Linux, ventana real, con el bloqueo de ve
 - Perfil nuevo: la oferta llega en menos de 1 s después de cargar, sin ninguna interacción previa. La guía de web.dev (<https://web.dev/articles/install-criteria>, actualizada el 2024-09-19) todavía habla de un clic y 30 s de uso; en escritorio no se observó ese requisito. **En Android no se midió.**
 - Un clic en «Instalar Trofaxis» abre el cuadro del navegador; al aceptar, la ventana de la app queda abierta en `/`.
 - Con la app ya instalada no llega ninguna oferta. `window.open('/', '_blank', 'noopener')` desde el clic abre la ventana de la app instalada.
+- Con la marca de la app, la página dice «ya está instalada» desde que carga. Sin la marca lo presume a los 4 s y, al abrir la app, el texto pasa al seguro en menos de 1 s.
 - `navigator.getInstalledRelatedApps()` devolvió una lista vacía con la app instalada (con `related_applications` en el manifiesto, URL relativa y absoluta), así que no sirve para saber si ya está instalada. No se usa.
 
 Sin probar: Chrome en Android, iPhone y Safari reales, Edge, Firefox, y `navigator.install()` sin opciones experimentales (envío previsto para Chrome 156 de escritorio, fecha estimada; aviso de envío del 2026-09-21 en blink-dev: <https://groups.google.com/a/chromium.org/d/msgid/blink-dev/dc40448e-61c3-468f-929c-b17bfa21771fn%40chromium.org>). Estos casos solo tienen pruebas con un navegador simulado (`tests/conoce.test.js`). En `localhost` no se registra el service worker, igual que en `pwa.js`.
@@ -110,7 +123,7 @@ La rueda del año de la finca demostrativa se arma mes a mes mientras cargan las
 
 ## Seguridad
 
-Política de contenido propia en el HTML: todo `'self'`. No hay guiones ni estilos en línea, ni recursos de otros dominios (las tipografías son las de `src/fonts/`). La página no hace peticiones a ningún servidor ni guarda datos de quien la visita; solo recuerda en `sessionStorage` que ya mostró la pantalla de carga.
+Política de contenido propia en el HTML: todo `'self'`. No hay guiones ni estilos en línea, ni recursos de otros dominios (las tipografías son las de `src/fonts/`). La página no hace peticiones a ningún servidor ni guarda datos de quien la visita. Solo recuerda dos cosas, en el propio equipo: en `sessionStorage`, que ya mostró la pantalla de carga; y en `localStorage`, la marca `biogap:instalada:v1` (Trofaxis está instalada en este equipo), la misma que deja la app. Una prueba falla si la página usa `localStorage` para cualquier otra cosa.
 
 ## Videos
 
